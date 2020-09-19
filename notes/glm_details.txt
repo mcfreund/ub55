@@ -1,0 +1,18 @@
+[hilo GLM]
+
+preparation
+
+	- details: runwise, 1trpk somehow ('old' style or iresp trfm), appropriate block regressor (and block on off)
+	- alternate (t*hilo) structures for stroop, cts?
+		- trial balancing?
+		- VIFs?
+	- n nuisance regressors:
+		- decode task info from derivs? more stringent scrubbing?
+	- final check:
+		- VIFs, trial balancing, decode info.
+
+
+
+validation
+	
+	- univariate stats, reliability

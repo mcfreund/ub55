@@ -1,0 +1,26 @@
+threads:
+  - thread_name: "glm_Axcpt_Cues"
+    log_file: "glm_Axcpt_Cues.log"
+    scripts:
+      - "3dDeconvolve_Axcpt_Cues.sh"
+      - "3dREMLfit_Axcpt_Cues.sh"
+  - thread_name: "glm_Cuedts_CongruencySwitch"
+    log_file: "glm_Cuedts_CongruencySwitch.log"
+    scripts:
+      - "3dDeconvolve_Cuedts_CongruencySwitch.sh"
+      - "3dREMLfit_Cuedts_CongruencySwitch.sh"
+  - thread_name: "glm_Stern_ListLength"
+    log_file: "glm_Stern_ListLength.log"
+    scripts:
+      - "3dDeconvolve_Stern_ListLength.sh"
+      - "3dREMLfit_Stern_ListLength.sh"
+  - thread_name: "glm_Stroop_Congruency"
+    log_file: "glm_Stroop_Congruency.log"
+    scripts:
+      - "3dDeconvolve_Stroop_Congruency.sh"
+      - "3dREMLfit_Stroop_Congruency.sh"
+#  - thread_name: "test"
+#    log_file: "test.log"
+#    scripts:
+#      - "test.sh"
+

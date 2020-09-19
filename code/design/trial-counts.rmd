@@ -1,0 +1,414 @@
+---
+title: "trial counts"
+author: "mike freund"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    number_sections: true
+    theme: spacelab
+    highlight: zenburn
+---
+
+Examining trial numbers per subject*run and per various stratifications of (potential) conditions of interest.
+Within each task.
+
+
+```{r setup, include = FALSE}
+
+library(here)
+library(knitr)
+library(data.table)
+library(dplyr)
+library(mikeutils)
+library(ggplot2)
+
+source(here("code", "read-behav.R"))
+
+
+symmat4ggplot <- function(R, var.names = c("v1", "v2"), val.name = "value") {
+  
+  ## make factors for row and column labels
+  dn <- dimnames(R)
+  if (is.null(dn)) {
+    dn <- setNames(list(paste0("cell_", 1:nrow(R)), paste0("cell_", 1:ncol(R))), var.names)
+  } else {
+    names(dn) <- var.names  
+  }
+  
+  labels <- expand.grid(dn, KEEP.OUT.ATTRS = FALSE, stringsAsFactors = TRUE)
+  labels[[2]] <- factor(labels[[2]], levels = rev(levels(labels[[2]])))
+  
+  r <- c(R)
+  
+  cbind(labels, setNames(as.data.frame(c(R)), val.name))
+  
+}
+
+
+```
+
+# AXCPT
+
+
+## potential task variables
+
+* cue type ('context'): A, B
+* probe type ('context'): X, Y, nogo (number)
+* cue ID (letter): `r sort(unique(axcpt$cue))`
+* probe ID (alnum): `r sort(unique(axcpt$probe))`
+* response: left (AX) - right (AY, BX, BY)
+* hi/lo: AX/BY
+* go/nogo:  (AX, AY, BX, BY) - (Ang, Bng)
+
+
+## counts
+
+Counts per subject\*run.
+
+```{r axpct-counts}
+
+colMeans(with(axcpt, table(interaction(subj, run), trial.type))) %>%
+  kable(col.names = "count", caption = "cue \\* probe type")
+
+axcpt.cue <- as.matrix(with(axcpt, table(interaction(subj, run), cue)))
+
+data.frame(
+  mean_count = colMeans(axcpt.cue),
+  min = apply(axcpt.cue, 2, min),
+  max = apply(axcpt.cue, 2, max)
+  ) %>%
+  kable(caption = "cue ID")
+
+
+axcpt.probe <- as.matrix(with(axcpt, table(interaction(subj, run), probe)))
+
+data.frame(
+  mean_count = colMeans(axcpt.probe),
+  min = apply(axcpt.probe, 2, min),
+  max = apply(axcpt.probe, 2, max)
+  ) %>%
+  kable(caption = "probe ID")
+
+axcpt$cuetype <- ifelse(axcpt$cue == "A", "A", "B")
+axcpt.cueprobe <- with(axcpt, table(interaction(subj, run), interaction(cuetype, probe)))
+
+data.frame(
+  mean_count = colMeans(axcpt.cueprobe),
+  min = apply(axcpt.cueprobe, 2, min),
+  max = apply(axcpt.cueprobe, 2, max)
+  ) %>%
+  kable(caption = "cuetype \\* probeID")
+
+```
+
+* Good number of each cue and probe letter (except for \#s, which are sparse)
+  * context (cue type), hi/lo, motor, gonogo
+* not when moving to cue\*probe ID combos
+
+
+# CUEDTS
+
+## potential task variables
+* task cue ('rule'): letter, number
+* sequence: switch, stay (i.e., repeat)
+* response: left, right
+* hi/lo (congruency): incon (EC, OV), congr (EV, OC)
+* probe (stimulus) type: (letter type)(number type) = (V, C)(E, O)
+* probe (stimulus) ID: (letter ID)(number ID)
+  * (`r sort(unique(gsub("[0-9]", "", cuedts$stimuli)))`)\*(`r sort(unique(gsub("[A-Z]", "", cuedts$stimuli)))`)
+  * can indicate order (i.e., spatial location), or not (i.e., simply combo/presence of letter, indep. of location)
+
+    
+## counts
+
+relatively abstract factors:
+
+```{r cuedts}
+
+colMeans(with(cuedts, table(interaction(subj, run), trial.type))) %>%
+  kable(col.names = "count", caption = "trialtype (hi/lo)")
+
+cuedts.ts <- with(cuedts[cuedts$switch != "", ], table(interaction(subj, run), interaction(cue, switch)))
+data.frame(
+  mean_count = colMeans(cuedts.ts),
+  min = apply(cuedts.ts, 2, min),
+  max = apply(cuedts.ts, 2, max)
+  ) %>%
+  kable(caption = "cue \\* switch")
+
+
+cuedts.tlns <- with(cuedts[cuedts$switch != "", ], table(interaction(subj, run), interaction(cue, letter, number, switch)))
+data.frame(
+  mean_count = colMeans(cuedts.tlns),
+  min = apply(cuedts.tlns, 2, min),
+  max = apply(cuedts.tlns, 2, max)
+  ) %>%
+  kable(caption = "cue \\* probetype \\* switch")
+
+```
+
+* wel-balanced: congruency, switch, task\*probe, task\*congruency\*switch
+* switch AND cue\*probe makes things complicated / unbalanced
+
+stimulus (probe) ID factors:
+
+```{r cuedts-probe}
+
+## probe ID ingoring spatial position
+
+cuedts$stimuli.sort <- paste0(gsub("[A-Z]", "", cuedts$stimuli), gsub("[0-9]", "", cuedts$stimuli))
+
+
+cuedts.probeidcue <- with(cuedts, table(interaction(subj, run), interaction(stimuli.sort, cue)))
+
+data.frame(
+  mean_count = colMeans(cuedts.probeidcue),
+  min = apply(cuedts.probeidcue, 2, min),
+  max = apply(cuedts.probeidcue, 2, max)
+  ) %>%
+  kable(caption = "probe ID (position-invariant)\\*task cue")
+
+## probe ID by feature, ignoring spatial position
+
+cuedts$stimuli.letter <- gsub("[0-9]", "", cuedts$stimuli)
+cuedts.ltypecue <- with(cuedts, table(interaction(subj, run), interaction(stimuli.letter, cue)))
+
+data.frame(
+  mean_count = colMeans(cuedts.ltypecue),
+  min = apply(cuedts.ltypecue, 2, min),
+  max = apply(cuedts.ltypecue, 2, max)
+  ) %>%
+  kable(caption = "probe-letter type(position-invariant) \\* task cue")
+
+cuedts$stimuli.number <- gsub("[A-Z]", "", cuedts$stimuli)
+cuedts.ntypecue <- with(cuedts, table(interaction(subj, run), interaction(stimuli.number, cue)))
+
+data.frame(
+  mean_count = colMeans(cuedts.ntypecue),
+  min = apply(cuedts.ntypecue, 2, min),
+  max = apply(cuedts.ntypecue, 2, max)
+  ) %>%
+  kable(caption = "probe-number type(position-invariant) \\* task cue")
+
+```
+
+* probe features (stimuli ID) occurr in all subj\*runs
+* but not in all tasks
+* problem can be fixed by ignoring order (spatial locations) of probe features
+* stimulus feature model could also be fit (cross-task decoding of stimulus ID, spatially invariant)
+  * would need to check if other factors are correlated with stim ID, though! (split each cell by I/C, S/R)
+
+
+## correlations
+
+How are cuedts factors interrelated?
+
+```{r cuedts-corr, fig.height = 8, fig.width = 8}
+
+cols.strings <- c("cue", "cresp", "switch", "trial.type", "letter", "number", "stimuli.letter", "stimuli.number")
+cols.facts <- c(
+  "task_letter", "task_number", "resp_L", "resp_R", "seq_switch", "seq_stay", "tt_congr", "tt_incon",
+  "letter_conso", "letter_vowel", "number_even", "number_odd",
+  "A", "B", "D", "E", "H", "I", "1", "2", "3", "4", "5", "6"
+  # "stim_1A", "stim_1B", "stim_2A", "stim_2B", "stim_3E", "stim_4D", "stim_5H", "stim_6I"
+  # "stim_A1", "stim_A2", "stim_B1", "stim_B2", "stim_D4", "stim_E3", "stim_H5", "stim_I6"
+  )
+names.facts <- c("task", "resp", "seq", "tt", "V/C", "E/O")
+names.R <- c(names.facts, cols.facts[-(1:(length(names.facts)*2))])
+
+subjs <- unique(cuedts$subj)
+# nrows <- length(cols.facts) - length(names.facts) + 1
+R_cuedts <- 
+  array(
+    NA, 
+    dim = c(length(names.R), length(names.R), length(subjs), 2),
+    dimnames = list(names.R, names.R, subjs, c("run1", "run2"))
+    )
+
+for (subj.i in seq_along(subjs)) {
+  for (run.i in 1:2) {
+    
+    ## get model matrix
+    
+    cuedts.facts <- cuedts[cuedts$subj == subjs[subj.i] & cuedts$run == run.i, cols.strings]
+    cuedts.facts <- mutate_all(cuedts.facts, as.factor)
+    cuedts.facts <- lapply(cuedts.facts, function(x) model.matrix(~ x - 1)) %>% do.call(cbind, .)
+    cuedts.facts <- cuedts.facts[, colnames(cuedts.facts) != "x"]
+    
+    ## get correlations of factors
+    
+    contrs <- matrix(nrow = nrow(cuedts.facts), ncol = length(names.facts))
+    colnames(contrs) <- names.facts
+    
+    for (ii in seq_along(names.facts)) {
+      # ii = 1
+    
+      cols <- (ii + ii - 1)
+      cols <- c(cols, cols + 1)
+      contrs[, names.facts[ii]] <- cuedts.facts[, cols] %*% rbind(-1, 1)
+      
+    }
+    
+    cuedts.facts <- cbind(contrs, cuedts.facts[, -(1:(length(names.facts)*2))])
+    
+    
+    ## save correlation matrix
+    
+    R_cuedts[, , subj.i, run.i] <- cor(cuedts.facts)
+    
+  }
+  
+}
+
+Rbar_cuedts <- tanh(apply(atanh(R_cuedts), c(1:2, 4), mean))
+# Rbar_cuedts <- apply(R_cuedts, 1:2, mean)
+
+abs(tanh(atanh(Rbar_cuedts[, , 1]) - atanh(Rbar_cuedts[, , 2]))) > 0.1
+
+Rbar_cuedts[, , 1] %>%
+  symmat4ggplot %>%
+  ggplot(aes(v1, v2, fill = value)) +
+  geom_raster() +
+  geom_text(aes(label = round(value, 1)), color = "grey50") +
+  scale_fill_viridis_c(option = "inferno") +
+  theme(
+    axis.title = element_blank(), axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0),
+    panel.background = element_blank(), legend.position = "none"
+    ) +
+  labs(title = "run 1")
+
+Rbar_cuedts[, , 2] %>%
+  symmat4ggplot %>%
+  ggplot(aes(v1, v2, fill = value)) +
+  geom_raster() +
+  geom_text(aes(label = round(value, 1)), color = "grey50") +
+  scale_fill_viridis_c(option = "inferno") +
+  theme(
+    axis.title = element_blank(), axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0),
+    panel.background = element_blank(), legend.position = "none"
+    ) +
+  labs(title = "run 2")
+
+```
+
+Matrices display correlations of factors, averaged across subjects for each run.
+Letters (A, B, D, E, H, I) indicate the presence of a letter within the probe; likewise for numbers 1--6.
+Factors in upper left corner (task, resp, seq, tt, V/C, E/O) represent contrasts between levels.
+
+Some key notes:
+
+* task (letter, number) and response (left, right) are *weakly* correlated (-0.1). Right-responses are more frequent than left-responses in letter task.
+  * although likely not an issue, a task-decoding analysis could account for this within the fMRI GLM, i.e., by including task\*V/C*E/O, or task\*resp.
+* V/C and E/O are moderatley correlated to response (because this was a mostly-congruent list); but not entierly so--- suggesting response can be decoupled from stimulus types.
+* some probe numbers and letters occurr most frequently as congruent condition (D, E, 3, 4).
+* sequence condition (switch, repeat) not correlated with anything.
+* TODO: test task\*probetype and task\*tt\*switch interactions for correlations with other factors.
+
+
+# Stroop
+
+## potential task variables
+
+* target ID: `r sort(unique(stroop$color))`
+* distractor ID: `r sort(unique(stroop$word))`
+* pc: PC50, MC
+* congruency: incon, congr
+
+## counts
+
+Counts per subject\*run.
+
+```{r stroop-counts}
+
+colMeans(with(stroop, table(interaction(subj, run), interaction(trial.type, pc)))) %>%
+  kable(col.names = "count", caption = "cue \\* probe type")
+
+stroop.stim1 <- as.matrix(with(stroop[stroop$run == 1, ], table(subj, item)))
+stroop.stim2 <- as.matrix(with(stroop[stroop$run == 2, ], table(subj, item)))
+
+data.frame(
+  mean_count = colMeans(stroop.stim1),
+  min = apply(stroop.stim1, 2, min),
+  max = apply(stroop.stim1, 2, max)
+  ) %>%
+  kable(caption = "stimulus ID, RUN 1")
+
+data.frame(
+  mean_count = colMeans(stroop.stim2),
+  min = apply(stroop.stim2, 2, min),
+  max = apply(stroop.stim2, 2, max)
+  ) %>%
+  kable(caption = "stimulus ID, RUN 2")
+
+```
+
+* Good number of each cue and probe letter (except for \#s, which are sparse)
+  * context (cue type), hi/lo, motor, gonogo
+* not when moving to cue\*probe ID combos
+
+
+How are cuedts factors interrelated?
+
+## correlations
+
+```{r stroop-corr, fig.height = 8, fig.width = 8}
+
+stroop.items <- sort(unique(stroop$item))
+R_stroop <- 
+  array(
+    NA, 
+    dim = c(length(stroop.items), length(stroop.items), length(subjs), 2), 
+    dimnames = list(stroop.items, stroop.items, subjs, c("run1", "run2"))
+    )
+
+for (subj.i in seq_along(subjs)) {
+  for (run.i in 1:2) {
+      
+    ## get model matrix
+    
+    item.factor <- model.matrix(~ as.factor(stroop[stroop$subj == subjs[subj.i] & stroop$run == run.i, "item"]) - 1)
+    colnames(item.factor) <- stroop.items
+    
+    ## get correlations of factors
+    
+    contrs <- matrix(nrow = nrow(cuedts.facts), ncol = length(names.facts))
+    colnames(contrs) <- names.facts
+    
+    for (ii in seq_along(names.facts)) {
+      # ii = 1
+    
+      cols <- (ii + ii - 1)
+      cols <- c(cols, cols + 1)
+      contrs[, names.facts[ii]] <- cuedts.facts[, cols] %*% rbind(-1, 1)
+      
+    }
+    
+    cuedts.facts <- cbind(contrs, cuedts.facts[, -(1:(length(names.facts)*2))])
+    
+    
+    ## save correlation matrix
+    
+    R_cuedts[, , subj.i] <- cor(cuedts.facts)
+  
+  }
+}
+
+Rbar_cuedts <- tanh(apply(atanh(R_cuedts), 1:2, mean))
+# Rbar_cuedts <- apply(R_cuedts, 1:2, mean)
+
+Rbar_cuedts %>%
+  cor %>%
+  symmat4ggplot %>%
+  ggplot(aes(v1, v2, fill = value)) +
+  geom_raster() +
+  geom_text(aes(label = round(value, 1)), color = "grey50") +
+  scale_fill_viridis_c(option = "inferno") +
+  theme(
+    axis.title = element_blank(), axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0),
+    panel.background = element_blank(), legend.position = "none"
+    )
+
+
+```
