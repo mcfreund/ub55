@@ -2,7 +2,7 @@
 
 
 task="Cuedts"
-glmname="CongruencyIncentive"
+glmname="CongruencySwitch"
 
 
 source /scripts/3dREMLfit.sh
