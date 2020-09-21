@@ -277,7 +277,7 @@ write.blocks <- function(
 split.movregs <- function(
   to.split,
   dir.to,
-  dir.from  = "/data/nil-bluearc/ccp-hcp/DMCC_ALL_BACKUPS/HCP_SUBJECTS_BACKUPS/AFNI_ANALYSIS"
+  dir.from  = "/data/nil-bluearc/ccp-hcp/DMCC_ALL_BACKUPS/HCP_SUBJECTS_BACKUPS/fMRIPrep_AFNI_ANALYSIS/"
 ) {
   
   ## reads movregs files from nil-bluearc, splits by run
