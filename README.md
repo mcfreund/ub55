@@ -1,9 +1,17 @@
 # ub55
 unrelated baseline N = 55
 
+* __.\in__
+    * behavioral and event (trial-leve) data for all scripts in __.\code__
+    * no script in __.\code__ writes to this directory
+
+* __.\out__
+    * output of scripts in __.\code__
+
+
 ## subdirs
 
-* of .\in, .\out, .\code
+* of __.\in__, __.\out__, __.\code__
 
 ### .\glms
 
