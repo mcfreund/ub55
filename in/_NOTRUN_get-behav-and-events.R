@@ -1,5 +1,6 @@
 dont source me!
 
+library(dplyr)
 library(data.table)
 library(here)
 
@@ -26,8 +27,43 @@ setdiff(ub55, unique(axcpt$subj))
 setdiff(ub55, unique(cuedts$subj))
 setdiff(ub55, unique(stern$subj))
 
+## this section adapts columns within behav-and-event sheets to match the format of DMCC naming conventions.
+
+axcpt$task  <- "Axcpt"
+cuedts$task <- "Cuedts"
+stern$task  <- "Stern"
+stroop$task <- "Stroop"
+
+axcpt$session  %<>% vapply(switch, character(1), "bas" = "baseline", "pro" = "proactive", "rea" = "reactive")
+cuedts$session %<>% vapply(switch, character(1), "bas" = "baseline", "pro" = "proactive", "rea" = "reactive")
+stern$session  %<>% vapply(switch, character(1), "bas" = "baseline", "pro" = "proactive", "rea" = "reactive")
+stroop$session %<>% vapply(switch, character(1), "bas" = "baseline", "pro" = "proactive", "rea" = "reactive")
+
+cuedts$trial.type %<>% vapply(switch, character(1), "c" = "Con", "i" = "InCon")
+cuedts$incentive  %<>% vapply(switch, character(1), "nonincentive" = "NoInc", "incentive" = "Inc")
+cuedts$incentive[cuedts$session == "baseline" & cuedts$target.color.orig == "green"] <- "Inc"
+cuedts$switch[cuedts$switch == "stay"]   <- "Repeat"
+cuedts$switch[cuedts$switch == "switch"] <- "Switch"
+cuedts$switch[cuedts$switch == ""] <- NA
+cuedts$trial.type.switch <- 
+  ifelse(cuedts$trial.num %in% c(1, 19, 37), "trial1", paste0(cuedts$trial.type, cuedts$switch))
+
+stern$load01 <- ifelse(stern$load == 5, "LL5", "not5")
+stern$load01.trial.type <- paste0(stern$load01, stern$trial.type)
+
+
+stroop$trial.type %<>% vapply(switch, character(1), "c" = "Con", "i" = "InCon")
+is.pc50 <- stroop$pc == "pc50"
+is.bias <- stroop$pc == "mi" | (stroop$pc == "mc" & stroop$session == "baseline")
+is.buff <- stroop$pc == "mc" & stroop$session == "reactive"
+stroop$pc[is.pc50]   <- "PC50"
+stroop$pc[is.bias]   <- "bias"
+stroop$pc[is.buff]   <- "buff"
+stroop$pc.trial.type <- paste0(stroop$pc, stroop$trial.type)
+
+
 fwrite(stroop, here("in", "ub55_stroop_behav-events.csv"))
 fwrite(axcpt, here("in", "ub55_axcpt__behav-events.csv"))
 fwrite(cuedts, here("in", "ub55_cuedts_behav-events.csv"))
 fwrite(stern, here("in", "ub55_stern_behav-events.csv"))
-
+fwrite(as.data.frame(ub55), here("in", "ub55_subjects.txt"), quote = FALSE, col.names = FALSE)
