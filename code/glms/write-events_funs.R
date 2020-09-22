@@ -244,11 +244,14 @@ write.blocks <- function(
     ) %>%
     rename(time.onset = on, time.offset = off)
   
+  block.events.long$time.onset.shifted <- block.events.long$time.onset - block.events.long$time.onset %% 1.2
+  block.events.long$time.offset.shifted <- block.events.long$time.offset - block.events.long$time.offset %% 1.2
+  
   ## build regressors
   sustained1 <- block.events.long %>% filter(run == "1") %>% arrange(time.onset) %>% select(time.onset, dm)
   sustained2 <- block.events.long %>% filter(run == "2") %>% arrange(time.onset) %>% select(time.onset, dm)
-  transient1 <- block.events.long %>% filter(run == "1") %>% select(time.onset, time.offset) %>% unlist %>% sort
-  transient2 <- block.events.long %>% filter(run == "2") %>% select(time.onset, time.offset) %>% unlist %>% sort
+  transient1 <- block.events.long %>% filter(run == "1") %>% select(time.onset.shifted, time.offset.shifted) %>% unlist %>% sort
+  transient2 <- block.events.long %>% filter(run == "2") %>% select(time.onset.shifted, time.offset.shifted) %>% unlist %>% sort
   
   fname <- file.path(dir.input, paste0(subj, "_", task, "_", sess))
   
@@ -258,15 +261,15 @@ write.blocks <- function(
     
     sustained1 %>% onsets4afni.dm %>% onsets2file(.fname = paste0(fname, "_block_run1"))
     sustained2 %>% onsets4afni.dm %>% onsets2file(.fname = paste0(fname, "_block_run2"))
-    transient1 %>% onsets2file(.fname = paste0(fname, "_blockONandOFF_run1"))
-    transient2 %>% onsets2file(.fname = paste0(fname, "_blockONandOFF_run2"))
+    transient1 %>% onsets2file(.fname = paste0(fname, "_blockONandOFF_shifted_run1"))
+    transient2 %>% onsets2file(.fname = paste0(fname, "_blockONandOFF_shifted_run2"))
     
   } else {
     
     sustained <- paste0(onsets4afni.dm(sustained1), onsets4afni.dm(sustained2), collapse = "")
     transient <- paste0(onsets4afni(transient1 %>% sort), onsets4afni(transient2 %>% sort), collapse = "")
     sustained %>% onsets2file(.fname = paste0(fname, "_block"))
-    transient %>% onsets2file(.fname = paste0(fname, "_blockONandOFF"))
+    transient %>% onsets2file(.fname = paste0(fname, "_blockONandOFF_shifted"))
     
   }
   
