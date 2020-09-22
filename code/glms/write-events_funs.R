@@ -328,7 +328,7 @@ split.movregs <- function(
       "Movement_Regressors_", 
       to.split$task, 
       toupper(substr(to.split$session, 1, 1)), substr(to.split$session, 2, 3),
-      "1_AP.txt"
+      "1_AP.1D"
     )
   )
   file2.new <- file.path(
@@ -337,7 +337,7 @@ split.movregs <- function(
       "Movement_Regressors_", 
       to.split$task, 
       toupper(substr(to.split$session, 1, 1)), substr(to.split$session, 2, 3),
-      "2_PA.txt"
+      "2_PA.1D"
     )
   )
   
