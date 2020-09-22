@@ -11,10 +11,10 @@ for subj in ${subjs[@]}; do
 	
 	
 	singularity run \
-	-B /data/nil-bluearc/ccp-hcp/DMCC_ALL_BACKUPS/HCP_SUBJECTS_BACKUPS/fMRIPrep_AFNI_ANALYSIS/:/img:ro \
-	-B /data/nil-external/ccp/freund/ub55/glms/:/stimts:ro \
+	-B /data/nil-bluearc/ccp-hcp/DMCC_ALL_BACKUPS/HCP_SUBJECTS_BACKUPS/fMRIPrep_AFNI_ANALYSIS/:/img \
+	-B /data/nil-external/ccp/freund/ub55/out/glms/:/stimts:ro \
 	-B /data/nil-bluearc/ccp-hcp/DMCC_ALL_BACKUPS/HCP_SUBJECTS_BACKUPS/fMRIPrep_PREPROCESSED/${subj}/:/data:ro \
-	-B /data/nil-external/ccp/freund/ub55/glms/:/out \
+	-B /data/nil-external/ccp/freund/ub55/out/glms/:/out \
 	-B /data/nil-external/ccp/freund/ub55/code/glms/:/scripts \
 	/data/nil-bluearc/ccp-hcp/afni_analysis_aux.simg \
 	--wave wave1 \
