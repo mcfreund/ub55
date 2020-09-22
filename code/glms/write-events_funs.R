@@ -277,9 +277,10 @@ write.blocks <- function(
 
 
 
+
 split.movregs <- function(
   to.split,
-  dir.to,
+  dir.to   = dir.analysis,
   dir.from  = "/data/nil-bluearc/ccp-hcp/DMCC_ALL_BACKUPS/HCP_SUBJECTS_BACKUPS/fMRIPrep_AFNI_ANALYSIS/"
 ) {
   
@@ -300,9 +301,45 @@ split.movregs <- function(
   
   dir.from   <- file.path(dir.from, to.split$subj, "INPUT_DATA", to.split$task, to.split$session)
   dir.to     <- file.path(dir.to, to.split$subj, "INPUT_DATA", to.split$task, to.split$session)
-  filenames  <- paste0("motion_demean_", to.split$session, ".1D")
-  files.from <- file.path(dir.from, filenames)
-  files.to   <- file.path(dir.to, filenames)
+  # filenames  <- paste0("Movement_Regressors_", to.split$session, ".1D")
+  # files.from <- file.path(dir.from, filenames)
+  # files.to   <- file.path(dir.to, filenames)
+  file1 <- file.path(
+    dir.from, 
+    paste0(
+      "Movement_Regressors_", 
+      to.split$task, 
+      toupper(substr(to.split$session, 1, 1)), substr(to.split$session, 2, 3),
+      "1_AP.txt"
+    )
+  )
+  file2 <- file.path(
+    dir.from, 
+    paste0(
+      "Movement_Regressors_", 
+      to.split$task, 
+      toupper(substr(to.split$session, 1, 1)), substr(to.split$session, 2, 3),
+      "2_PA.txt"
+    )
+  )
+  file1.new <- file.path(
+    dir.to, 
+    paste0(
+      "Movement_Regressors_", 
+      to.split$task, 
+      toupper(substr(to.split$session, 1, 1)), substr(to.split$session, 2, 3),
+      "1_AP.txt"
+    )
+  )
+  file2.new <- file.path(
+    dir.to, 
+    paste0(
+      "Movement_Regressors_", 
+      to.split$task, 
+      toupper(substr(to.split$session, 1, 1)), substr(to.split$session, 2, 3),
+      "2_PA.txt"
+    )
+  )
   
   ## create dirs if they do not exist
   for (file.i in seq_along(dir.to)) if (!dir.exists(dir.to[file.i])) dir.create(dir.to[file.i], recursive = TRUE)
@@ -318,52 +355,54 @@ split.movregs <- function(
   
   ## read files
   has.unexpected.nrow <- vector("logical", nrow(to.split))
-  for (file.i in seq_along(filenames)) {
+  for (file.i in seq_len(nrow(to.split))) {
+    # file.i = 62
     if (is.missing.dir[file.i]) next
     
-    session.i <- gsub(".*(baseline).*|.*(proactive).*|.*(reactive).*", "\\1\\2\\3", files.from[file.i])
-    task.i    <- gsub(".*(Axcpt).*|.*(Cuedts).*|.*(Stern).*|.*(Stroop).*", "\\1\\2\\3\\4", files.from[file.i])
+    session.i <- to.split$session[file.i] # gsub(".*(baseline).*|.*(proactive).*|.*(reactive).*", "\\1\\2\\3", to.split$session[file.i])
+    task.i    <- to.split$task[file.i] # gsub(".*(Axcpt).*|.*(Cuedts).*|.*(Stern).*|.*(Stroop).*", "\\1\\2\\3\\4", files.from[file.i])
     num.trs.i <- trs$num[trs$task == task.i & trs$session == session.i]
-    
-    movregs.i <- data.table::fread(
-      files.from[file.i], 
-      sep = " ", header = FALSE, colClasses = rep("numeric", 6), data.table = FALSE
+
+    movregs.i.run1 <- data.table::fread(
+      file1[file.i], 
+      sep = "\t", header = FALSE, colClasses = rep("numeric", 6), data.table = FALSE
     )
+    movregs.i.run2 <- data.table::fread(
+      file2[file.i], 
+      sep = "\t", header = FALSE, colClasses = rep("numeric", 6), data.table = FALSE
+    )
+    
     mask.i <- data.table::fread(
-      file.path(dir.from, "movregs_FD_mask.txt")[file.i],
-      sep = " ", header = FALSE, colClasses = "integer", data.table = FALSE
+      file.path(dir.from, "movregs_FD.txt")[file.i],
+      header = FALSE, data.table = FALSE
     )[[1]]  ## all FD_mask files have same name
     
-    ## remove NA values (if present) and check rownums
-    movregs.i <- movregs.i[complete.cases(movregs.i), ]
-    mask.i    <- mask.i[!is.na(mask.i)]
-    is.unexpected.nrow <- nrow(movregs.i) != num.trs.i | length(mask.i) != num.trs.i
+    if (any(is.na(mask.i)) | any(!complete.cases(movregs.i.run1)) | any(!complete.cases(movregs.i.run2))) stop("NAs")
+    
+    is.unexpected.nrow <- (nrow(movregs.i.run1) + nrow(movregs.i.run2)) != num.trs.i | length(mask.i) != num.trs.i
     if (is.unexpected.nrow) {
       has.unexpected.nrow[file.i] <- TRUE
       next
     }
     
-    ## split and write
-    movregs.i.run1 <- movregs.i[seq(1, num.trs.i / 2), ]
-    movregs.i.run2 <- movregs.i[seq(num.trs.i / 2 + 1, num.trs.i), ]
+    ## write
     
-    new.filename.i <- gsub("\\.1D", "", files.to[file.i])
-    movregs.i.run1 %>% data.table::fwrite(paste0(new.filename.i, "_run1.1D"), sep = " ", col.names = FALSE)
-    movregs.i.run2 %>% data.table::fwrite(paste0(new.filename.i, "_run2.1D"), sep = " ", col.names = FALSE)
+    movregs.i.run1 %>% data.table::fwrite(file1.new[file.i], sep = " ", col.names = FALSE)
+    movregs.i.run2 %>% data.table::fwrite(file2.new[file.i], sep = " ", col.names = FALSE)
     
+    mask.i <- as.numeric(mask.i < 0.9)  ## FD threshold
     mask.i.run1 <- mask.i[seq(1, num.trs.i / 2)]
     mask.i.run2 <- mask.i[seq(num.trs.i / 2 + 1, num.trs.i)]
     
     mask.i.run1 %>% 
       data.frame %>% 
-      data.table::fwrite(file.path(dir.to, "movregs_FD_mask_run1.txt")[file.i], sep = " ", col.names = FALSE)
+      data.table::fwrite(file.path(dir.to[file.i], "movregs_FD_mask_run1.txt"), sep = " ", col.names = FALSE)
     mask.i.run2 %>% 
       data.frame %>% 
-      data.table::fwrite(file.path(dir.to, "movregs_FD_mask_run2.txt")[file.i], sep = " ", col.names = FALSE)
+      data.table::fwrite(file.path(dir.to[file.i], "movregs_FD_mask_run2.txt"), sep = " ", col.names = FALSE)
     
   }
   
   data.frame(to.split, is.missing.dir, has.unexpected.nrow)
   
 }
-

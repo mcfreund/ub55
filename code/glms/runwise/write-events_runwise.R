@@ -82,7 +82,8 @@ blocks.stroop <- stroop.l %>% lapply(write.blocks, dir.analysis = dir.analysis, 
 to.split <- expand.grid(
   subj = subjs,
   task = c("Axcpt", "Cuedts", "Stern", "Stroop"),
-  session = "baseline"
+  session = "baseline",
+  stringsAsFactors = FALSE
   )
 
 movregs <- split.movregs(to.split, dir.to = dir.analysis)
