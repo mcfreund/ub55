@@ -1,0 +1,59 @@
+*+ WARNING: '-stim_times 4' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_blackGREEN_run1.txt'
+*+ WARNING: '-stim_times 8' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_bluePURPLE_run1.txt'
+*+ WARNING: '-stim_times 9' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_blueRED_run1.txt'
+*+ WARNING: '-stim_times 13' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_greenPINK_run1.txt'
+*+ WARNING: '-stim_times 14' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_greenYELLOW_run1.txt'
+*+ WARNING: '-stim_times 15' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_pinkBLACK_run1.txt'
+*+ WARNING: '-stim_times 21' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_purpleRED_run1.txt'
+*+ WARNING: '-stim_times 22' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_purpleWHITE_run1.txt'
+*+ WARNING: '-stim_times 26' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_redWHITE_run1.txt'
+*+ WARNING: '-stim_times 27' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_whiteBLUE_run1.txt'
+*+ WARNING: '-stim_times 31' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_yellowBLACK_run1.txt'
+*+ WARNING: '-stim_times 33' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_yellowPINK_run1.txt'
+*+ WARNING: -stim_times 4 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 4' file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_blackGREEN_run1.txt' has no good stimulus time values
+*+ WARNING: -stim_times 8 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 8' file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_bluePURPLE_run1.txt' has no good stimulus time values
+*+ WARNING: -stim_times 9 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 9' file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_blueRED_run1.txt' has no good stimulus time values
+*+ WARNING: -stim_times 13 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 13' file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_greenPINK_run1.txt' has no good stimulus time values
+*+ WARNING: -stim_times 14 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 14' file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_greenYELLOW_run1.txt' has no good stimulus time values
+*+ WARNING: -stim_times 15 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 15' file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_pinkBLACK_run1.txt' has no good stimulus time values
+*+ WARNING: -stim_times 21 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 21' file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_purpleRED_run1.txt' has no good stimulus time values
+*+ WARNING: -stim_times 22 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 22' file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_purpleWHITE_run1.txt' has no good stimulus time values
+*+ WARNING: -stim_times 26 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 26' file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_redWHITE_run1.txt' has no good stimulus time values
+*+ WARNING: -stim_times 27 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 27' file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_whiteBLUE_run1.txt' has no good stimulus time values
+*+ WARNING: -stim_times 31 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 31' file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_yellowBLACK_run1.txt' has no good stimulus time values
+*+ WARNING: -stim_times 33 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 33' file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC9441378/INPUT_DATA/Stroop/baseline/DMCC9441378_Stroop_baseline_yellowPINK_run1.txt' has no good stimulus time values
+*+ WARNING: -------------------------------------------------
+*+ WARNING: Problems with the X matrix columns, listed below:
+*+ WARNING: !! * Column 21 [blackGREEN#0] is all zeros
+*+ WARNING: !! * Column 25 [bluePURPLE#0] is all zeros
+*+ WARNING: !! * Column 26 [blueRED#0] is all zeros
+*+ WARNING: !! * Column 30 [greenPINK#0] is all zeros
+*+ WARNING: !! * Column 31 [greenYELLOW#0] is all zeros
+*+ WARNING: !! * Column 32 [pinkBLACK#0] is all zeros
+*+ WARNING: !! * Column 38 [purpleRED#0] is all zeros
+*+ WARNING: !! * Column 39 [purpleWHITE#0] is all zeros
+*+ WARNING: !! * Column 43 [redWHITE#0] is all zeros
+*+ WARNING: !! * Column 44 [whiteBLUE#0] is all zeros
+*+ WARNING: !! * Column 48 [yellowBLACK#0] is all zeros
+*+ WARNING: !! * Column 50 [yellowPINK#0] is all zeros
+*+ WARNING: -------------------------------------------------
+*+ WARNING: !! in Signal+Baseline matrix:
+ * Largest singular value=2.21566
+ * 12 singular values are less than cutoff=2.21566e-07
+ * Implies strong collinearity in the matrix columns! 
+*+ WARNING: !! in Signal-only matrix:
+ * Largest singular value=1.60539
+ * 12 singular values are less than cutoff=1.60539e-07
+ * Implies strong collinearity in the matrix columns! 

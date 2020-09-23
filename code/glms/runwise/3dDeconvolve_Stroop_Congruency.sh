@@ -25,7 +25,6 @@ for session_i in ${!sessions[@]}; do
             /usr/local/pkg/afni_18/3dDeconvolve \
 			-local_times \
 			-x1D_stop \
-			-GOFORIT 5 \
 			-input ${name_img} \
 			-polort A \
 			-float \
@@ -49,7 +48,6 @@ for session_i in ${!sessions[@]}; do
             /usr/local/pkg/afni_18/3dDeconvolve \
 			-local_times \
 			-x1D_stop \
-			-GOFORIT 5 \
 			-input ${name_img} \
 			-polort A \
 			-float \

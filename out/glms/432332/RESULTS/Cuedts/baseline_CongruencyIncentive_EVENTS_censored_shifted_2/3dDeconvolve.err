@@ -1,1 +1,1 @@
-** FATAL ERROR: Can't open dataset '/data/nil-bluearc/ccp-hcp/DMCC_ALL_BACKUPS/HCP_SUBJECTS_BACKUPS/fMRIPrep_AFNI_ANALYSIS/432332/INPUT_DATA/Cuedts/baseline/lpi_scale_blur4_tfMRI_CuedtsBas2_PA.nii.gz'
+** FATAL ERROR: 3dDeconvolve: -ortvec can't read file '/data/nil-external/ccp/freund/ub55/out/glms/432332/INPUT_DATA/Cuedts/baseline/Movement_Regressors_CuedtsBas2_PA.1D'
