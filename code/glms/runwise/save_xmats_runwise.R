@@ -1,4 +1,6 @@
 ## about ----
+##
+## saves xmats as arrays within RDS files.
 
 
 
@@ -18,7 +20,7 @@ library(progress)
 
 source(here("code", "glms", "write-events_funs.R"))
 source(here("code", "read-behav.R"))
-source(here("code", "_strings.R"))
+source(here("code", "_vars.R"))
 
 
 ## build data.frame for looping
@@ -41,9 +43,10 @@ dirs$run2 <- file.path(dir.analysis, dirs$subj, "RESULTS", dirs$task, paste0(dir
 dirs <- pivot_longer(dirs, cols = c("run1", "run2"), names_to = "run", values_to = "fname.xmat")
 dirs$exists.xmat <- file.exists(dirs$fname.xmat)
 
-dirs <- filter(dirs, exists.xmat)  ## for now, remove those that don't exist
+dirs <- filter(dirs, !subj %in% "432332")  ## for now, remove those that don't exist
 
 dirs <- as.data.table(dirs)  ## for fast extracting
+
 
 
 ## loop ----
@@ -94,6 +97,8 @@ for (task.i in seq_along(tasks)) {
       
       name.subj.i <- subjs[subj.i]
       
+      if (name.subj.i == "432332") next
+      
       fname.i <- dirs[subj == name.subj.i & task == name.task.i]$fname.xmat
       
       xmat.subj.i1 <- read_xmat(fname.i[1])
@@ -120,7 +125,7 @@ for (task.i in seq_along(tasks)) {
       
       rm(xmat.subj.i1, xmat.subj.i2)  ## no accidents
       
-      pb$tick()  ## progress bar
+      # pb$tick()  ## progress bar
       
     }
     
