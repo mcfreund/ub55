@@ -4,7 +4,7 @@
 
 ## get vars
 
-glm_names=(Axcpt_Cues Cuedts_CongruencySwitch Stern_ListLength Stroop_Congruency)
+glm_names=(Axcpt_Cues Cuedts_CongruencySwitch Stern_ListLength Stroop_Congruency Stroop_fix-item)
 sessions=baseline
 filename="/data/nil-external/ccp/freund/ub55/in/ub55_subjects.txt"
 mapfile -t subjects < $filename
