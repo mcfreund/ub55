@@ -30,7 +30,8 @@ glminfo <- data.frame(
   task = c("Axcpt", "Cuedts", "Stern", "Stroop", "Stroop"),
   name.glm = c(
     "Cues_EVENTS_censored_shifted", 
-    "CongruencyIncentive_EVENTS_censored_shifted", 
+    # "CongruencyIncentive_EVENTS_censored_shifted",
+    "CongruencySwitch_EVENTS_censored_shifted",
     "ListLength_EVENTS_censored_shifted",
     "Congruency_EVENTS_censored_shifted",
     "fix-item_EVENTS_censored"
@@ -84,7 +85,7 @@ for (task.i in seq_along(tasks)) {
     xmat.i <- array(
       NA,
       dim = c(
-        tr = n.trs[[name.task.i]], 
+        tr = n.trs[[name.task.i]] / 2, 
         regressor = length(xlabels), 
         subj = length(subjs),
         run = 2
@@ -99,25 +100,25 @@ for (task.i in seq_along(tasks)) {
       
       if (name.subj.i == "432332") next
       
-      fname.i <- dirs[subj == name.subj.i & task == name.task.i]$fname.xmat
+      fname.i <- dirs[subj == name.subj.i & task == name.task.i & name.glm == name.glm.i]$fname.xmat
       
       xmat.subj.i1 <- read_xmat(fname.i[1])
       xmat.subj.i2 <- read_xmat(fname.i[2])
       
       ## check for match
       
-      if (identical(dimnames(xmat.subj.i1), dimnames(xmat.subj.i2)) && identical(dim(xmat.subj.i1), dim(xmat.subj.i2))) {
+      are.matching.xmats <- 
+        identical(dimnames(xmat.subj.i1), dimnames(xmat.subj.i2)) && 
+        identical(dim(xmat.subj.i1), dim(xmat.subj.i2))
+      
+      if (are.matching.xmats) {
     
         are.matched.xlabels <- identical(colnames(xmat.i), colnames(xmat.subj.i1))
-        are.matched.dims <- all(dim(xmat.i)[c("tr", "regressor")] == dim(xmat.subj.i1) * c(2, 1))
-        if (!(are.matched.xlabels && are.matched.dims)) {
-        #   xmat.subj.i1 <- as.numeric(NA)
-        #   xmat.subj.i2 <- as.numeric(NA)
-        #   print(noquote(paste0("skipping subj ", name.subj.i)))
-          stop("mismatched")
-        }
+        are.matched.dims <- all(dim(xmat.i)[c("tr", "regressor")] == dim(xmat.subj.i1))
         
-      } else stop("mismatched")
+        if (!(are.matched.xlabels && are.matched.dims)) stop("unexpected xlabels or dims")
+        
+      } else stop("mismatched xlabels or dims across runs")
       
       
       xmat.i[, , name.subj.i, 1] <- xmat.subj.i1
