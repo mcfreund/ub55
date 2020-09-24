@@ -33,7 +33,7 @@ glminfo <- data.frame(
     "CongruencyIncentive_EVENTS_censored_shifted", 
     "ListLength_EVENTS_censored_shifted",
     "Congruency_EVENTS_censored_shifted",
-    "fix-item_EVENTS_censored_shifted"
+    "fix-item_EVENTS_censored"
     )
 )
 dirs <- full_join(dirs, glminfo, by = "task")
