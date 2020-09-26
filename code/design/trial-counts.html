@@ -11,7 +11,7 @@
 
 <meta name="author" content="mike freund" />
 
-<meta name="date" content="2020-09-19" />
+<meta name="date" content="2020-09-26" />
 
 <title>trial counts</title>
 
@@ -447,7 +447,7 @@ summary {
 
 <h1 class="title toc-ignore">trial counts</h1>
 <h4 class="author">mike freund</h4>
-<h4 class="date">2020-09-19</h4>
+<h4 class="date">2020-09-26</h4>
 
 </div>
 
@@ -466,6 +466,10 @@ summary {
 <li><a href="#potential-task-variables-2"><span class="toc-section-number">3.1</span> potential task variables</a></li>
 <li><a href="#counts-2"><span class="toc-section-number">3.2</span> counts</a></li>
 <li><a href="#correlations-1"><span class="toc-section-number">3.3</span> correlations</a></li>
+</ul></li>
+<li><a href="#sterm"><span class="toc-section-number">4</span> Sterm</a><ul>
+<li><a href="#potential-task-variables-3"><span class="toc-section-number">4.1</span> potential task variables</a></li>
+<li><a href="#counts-3"><span class="toc-section-number">4.2</span> counts</a></li>
 </ul></li>
 </ul>
 </div>
@@ -1020,8 +1024,10 @@ summary {
 <div id="counts-1" class="section level2">
 <h2><span class="header-section-number">2.2</span> counts</h2>
 <p>relatively abstract factors:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a><span class="kw">colMeans</span>(<span class="kw">with</span>(cuedts, <span class="kw">table</span>(<span class="kw">interaction</span>(subj, run), trial.type))) <span class="op">%&gt;%</span></span>
-<span id="cb5-2"><a href="#cb5-2"></a><span class="st">  </span><span class="kw">kable</span>(<span class="dt">col.names =</span> <span class="st">&quot;count&quot;</span>, <span class="dt">caption =</span> <span class="st">&quot;trialtype (hi/lo)&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>cuedts &lt;-<span class="st"> </span><span class="kw">as.data.frame</span>(cuedts)</span>
+<span id="cb5-2"><a href="#cb5-2"></a></span>
+<span id="cb5-3"><a href="#cb5-3"></a><span class="kw">colMeans</span>(<span class="kw">with</span>(cuedts, <span class="kw">table</span>(<span class="kw">interaction</span>(subj, run), trial.type))) <span class="op">%&gt;%</span></span>
+<span id="cb5-4"><a href="#cb5-4"></a><span class="st">  </span><span class="kw">kable</span>(<span class="dt">col.names =</span> <span class="st">&quot;count&quot;</span>, <span class="dt">caption =</span> <span class="st">&quot;trialtype (hi/lo)&quot;</span>)</span></code></pre></div>
 <table>
 <caption>trialtype (hi/lo)</caption>
 <thead>
@@ -1032,11 +1038,11 @@ summary {
 </thead>
 <tbody>
 <tr class="odd">
-<td>c</td>
+<td>Con</td>
 <td align="right">35</td>
 </tr>
 <tr class="even">
-<td>i</td>
+<td>InCon</td>
 <td align="right">19</td>
 </tr>
 </tbody>
@@ -1060,25 +1066,25 @@ summary {
 </thead>
 <tbody>
 <tr class="odd">
-<td>l.stay</td>
+<td>l.Repeat</td>
 <td align="right">12.10</td>
 <td align="right">7</td>
 <td align="right">16</td>
 </tr>
 <tr class="even">
-<td>n.stay</td>
+<td>n.Repeat</td>
 <td align="right">12.02</td>
 <td align="right">8</td>
 <td align="right">17</td>
 </tr>
 <tr class="odd">
-<td>l.switch</td>
+<td>l.Switch</td>
 <td align="right">13.38</td>
 <td align="right">9</td>
 <td align="right">17</td>
 </tr>
 <tr class="even">
-<td>n.switch</td>
+<td>n.Switch</td>
 <td align="right">13.50</td>
 <td align="right">9</td>
 <td align="right">19</td>
@@ -1104,97 +1110,97 @@ summary {
 </thead>
 <tbody>
 <tr class="odd">
-<td>l.c.e.stay</td>
+<td>l.c.e.Repeat</td>
 <td align="right">2.245</td>
 <td align="right">0</td>
 <td align="right">5</td>
 </tr>
 <tr class="even">
-<td>n.c.e.stay</td>
+<td>n.c.e.Repeat</td>
 <td align="right">2.082</td>
 <td align="right">0</td>
 <td align="right">5</td>
 </tr>
 <tr class="odd">
-<td>l.v.e.stay</td>
+<td>l.v.e.Repeat</td>
 <td align="right">3.146</td>
 <td align="right">1</td>
 <td align="right">6</td>
 </tr>
 <tr class="even">
-<td>n.v.e.stay</td>
+<td>n.v.e.Repeat</td>
 <td align="right">4.400</td>
 <td align="right">1</td>
 <td align="right">8</td>
 </tr>
 <tr class="odd">
-<td>l.c.o.stay</td>
+<td>l.c.o.Repeat</td>
 <td align="right">4.609</td>
 <td align="right">0</td>
 <td align="right">10</td>
 </tr>
 <tr class="even">
-<td>n.c.o.stay</td>
+<td>n.c.o.Repeat</td>
 <td align="right">3.264</td>
 <td align="right">0</td>
 <td align="right">7</td>
 </tr>
 <tr class="odd">
-<td>l.v.o.stay</td>
+<td>l.v.o.Repeat</td>
 <td align="right">2.100</td>
 <td align="right">0</td>
 <td align="right">5</td>
 </tr>
 <tr class="even">
-<td>n.v.o.stay</td>
+<td>n.v.o.Repeat</td>
 <td align="right">2.273</td>
 <td align="right">0</td>
 <td align="right">5</td>
 </tr>
 <tr class="odd">
-<td>l.c.e.switch</td>
+<td>l.c.e.Switch</td>
 <td align="right">2.554</td>
 <td align="right">0</td>
 <td align="right">6</td>
 </tr>
 <tr class="even">
-<td>n.c.e.switch</td>
+<td>n.c.e.Switch</td>
 <td align="right">2.245</td>
 <td align="right">0</td>
 <td align="right">5</td>
 </tr>
 <tr class="odd">
-<td>l.v.e.switch</td>
+<td>l.v.e.Switch</td>
 <td align="right">3.864</td>
 <td align="right">1</td>
 <td align="right">7</td>
 </tr>
 <tr class="even">
-<td>n.v.e.switch</td>
+<td>n.v.e.Switch</td>
 <td align="right">4.991</td>
 <td align="right">2</td>
 <td align="right">8</td>
 </tr>
 <tr class="odd">
-<td>l.c.o.switch</td>
+<td>l.c.o.Switch</td>
 <td align="right">4.818</td>
 <td align="right">0</td>
 <td align="right">9</td>
 </tr>
 <tr class="even">
-<td>n.c.o.switch</td>
+<td>n.c.o.Switch</td>
 <td align="right">3.827</td>
 <td align="right">1</td>
 <td align="right">8</td>
 </tr>
 <tr class="odd">
-<td>l.v.o.switch</td>
+<td>l.v.o.Switch</td>
 <td align="right">2.146</td>
 <td align="right">0</td>
 <td align="right">5</td>
 </tr>
 <tr class="even">
-<td>n.v.o.switch</td>
+<td>n.v.o.Switch</td>
 <td align="right">2.436</td>
 <td align="right">0</td>
 <td align="right">5</td>
@@ -1589,64 +1595,45 @@ summary {
 <span id="cb11-56"><a href="#cb11-56"></a>Rbar_cuedts &lt;-<span class="st"> </span><span class="kw">tanh</span>(<span class="kw">apply</span>(<span class="kw">atanh</span>(R_cuedts), <span class="kw">c</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">2</span>, <span class="dv">4</span>), mean))</span>
 <span id="cb11-57"><a href="#cb11-57"></a><span class="co"># Rbar_cuedts &lt;- apply(R_cuedts, 1:2, mean)</span></span>
 <span id="cb11-58"><a href="#cb11-58"></a></span>
-<span id="cb11-59"><a href="#cb11-59"></a><span class="kw">tanh</span>(<span class="kw">atanh</span>(Rbar_cuedts[, , <span class="dv">1</span>]) <span class="op">-</span><span class="st"> </span><span class="kw">atanh</span>(Rbar_cuedts[, , <span class="dv">2</span>]))</span></code></pre></div>
-<pre><code>##           task     resp        seq       tt       V/C      E/O         A
-## task       NaN  0.11183 -0.0028339  0.07744  0.000000  0.00000  0.041352
-## resp  0.111827      NaN  0.0306341  0.02729  0.060142  0.06095  0.095077
-## seq  -0.002834  0.03063        NaN  0.00894 -0.036757  0.01111 -0.035023
-## tt    0.077440  0.02729  0.0089400      NaN  0.123383  0.17681  0.065665
-## V/C   0.000000  0.06014 -0.0367570  0.12338       NaN  0.00000 -0.085736
-## E/O   0.000000  0.06095  0.0111120  0.17681  0.000000      NaN  0.010393
-## A     0.041352  0.09508 -0.0350228  0.06566 -0.085736  0.01039       NaN
-## B     0.041352 -0.01178 -0.0343639 -0.06566 -0.085736  0.01039  0.000000
-## D     0.000000  0.01546  0.0366229 -0.11828  0.007522  0.04101  0.026986
-## E     0.000000  0.01310  0.0001444  0.11828  0.007522  0.04101 -0.050095
-## H    -0.063130 -0.02111  0.0629332  0.02576 -0.026019 -0.06925  0.008533
-## I    -0.063130 -0.02216 -0.0102084 -0.02576 -0.026019 -0.06925 -0.030624
-## 1     0.043315  0.06656 -0.0325054  0.06566 -0.039079 -0.02138  0.054108
-## 2     0.043315 -0.04019 -0.0347964 -0.06566 -0.039079 -0.02138  0.000000
-## 3     0.000000  0.01310  0.0001444  0.11828  0.007522  0.04101 -0.050095
-## 4     0.000000  0.01546  0.0366229 -0.11828  0.007522  0.04101  0.026986
-## 5    -0.063130 -0.02111  0.0629332  0.02576 -0.026019 -0.06925  0.008533
-## 6    -0.063130 -0.02216 -0.0102084 -0.02576 -0.026019 -0.06925 -0.030624
-##              B         D          E         H         I         1         2
-## task  0.041352  0.000000  0.0000000 -0.063130 -0.063130  0.043315  0.043315
-## resp -0.011775  0.015456  0.0131036 -0.021106 -0.022161  0.066561 -0.040186
-## seq  -0.034364  0.036623  0.0001444  0.062933 -0.010208 -0.032505 -0.034796
-## tt   -0.065665 -0.118276  0.1182756  0.025757 -0.025757  0.065665 -0.065665
-## V/C  -0.085736  0.007522  0.0075219 -0.026019 -0.026019 -0.039079 -0.039079
-## E/O   0.010393  0.041005  0.0410052 -0.069246 -0.069246 -0.021385 -0.021385
-## A     0.000000  0.026986 -0.0500948  0.008533 -0.030624  0.054108  0.000000
-## B          NaN  0.050095 -0.0269863  0.030624 -0.008533  0.000000 -0.054108
-## D     0.050095       NaN  0.0000000  0.036679  0.011224  0.026986  0.050095
-## E    -0.026986  0.000000        NaN -0.011224 -0.036679 -0.050095 -0.026986
-## H     0.030624  0.036679 -0.0112235       NaN  0.000000  0.008533  0.030624
-## I    -0.008533  0.011224 -0.0366787  0.000000       NaN -0.030624 -0.008533
-## 1     0.000000  0.026986 -0.0500948  0.008533 -0.030624       NaN  0.000000
-## 2    -0.054108  0.050095 -0.0269863  0.030624 -0.008533  0.000000       NaN
-## 3    -0.026986  0.000000        NaN -0.011224 -0.036679 -0.050095 -0.026986
-## 4     0.050095       NaN  0.0000000  0.036679  0.011224  0.026986  0.050095
-## 5     0.030624  0.036679 -0.0112235  1.000000  0.000000  0.008533  0.030624
-## 6    -0.008533  0.011224 -0.0366787  0.000000 -1.000000 -0.030624 -0.008533
-##               3         4         5         6
-## task  0.0000000  0.000000 -0.063130 -0.063130
-## resp  0.0131036  0.015456 -0.021106 -0.022161
-## seq   0.0001444  0.036623  0.062933 -0.010208
-## tt    0.1182756 -0.118276  0.025757 -0.025757
-## V/C   0.0075219  0.007522 -0.026019 -0.026019
-## E/O   0.0410052  0.041005 -0.069246 -0.069246
-## A    -0.0500948  0.026986  0.008533 -0.030624
-## B    -0.0269863  0.050095  0.030624 -0.008533
-## D     0.0000000       NaN  0.036679  0.011224
-## E           NaN  0.000000 -0.011224 -0.036679
-## H    -0.0112235  0.036679  1.000000  0.000000
-## I    -0.0366787  0.011224  0.000000 -1.000000
-## 1    -0.0500948  0.026986  0.008533 -0.030624
-## 2    -0.0269863  0.050095  0.030624 -0.008533
-## 3           NaN  0.000000 -0.011224 -0.036679
-## 4     0.0000000       NaN  0.036679  0.011224
-## 5    -0.0112235  0.036679       NaN  0.000000
-## 6    -0.0366787  0.011224  0.000000       NaN</code></pre>
+<span id="cb11-59"><a href="#cb11-59"></a><span class="kw">abs</span>(<span class="kw">tanh</span>(<span class="kw">atanh</span>(Rbar_cuedts[, , <span class="dv">1</span>]) <span class="op">-</span><span class="st"> </span><span class="kw">atanh</span>(Rbar_cuedts[, , <span class="dv">2</span>]))) <span class="op">&gt;</span><span class="st"> </span><span class="fl">0.1</span></span></code></pre></div>
+<pre><code>##       task  resp   seq    tt   V/C   E/O     A     B     D     E     H     I
+## task    NA  TRUE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+## resp  TRUE    NA FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+## seq  FALSE FALSE    NA FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+## tt   FALSE FALSE FALSE    NA  TRUE  TRUE FALSE FALSE  TRUE  TRUE FALSE FALSE
+## V/C  FALSE FALSE FALSE  TRUE    NA FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+## E/O  FALSE FALSE FALSE  TRUE FALSE    NA FALSE FALSE FALSE FALSE FALSE FALSE
+## A    FALSE FALSE FALSE FALSE FALSE FALSE    NA FALSE FALSE FALSE FALSE FALSE
+## B    FALSE FALSE FALSE FALSE FALSE FALSE FALSE    NA FALSE FALSE FALSE FALSE
+## D    FALSE FALSE FALSE  TRUE FALSE FALSE FALSE FALSE    NA FALSE FALSE FALSE
+## E    FALSE FALSE FALSE  TRUE FALSE FALSE FALSE FALSE FALSE    NA FALSE FALSE
+## H    FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE    NA FALSE
+## I    FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE    NA
+## 1    FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+## 2    FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE
+## 3    FALSE FALSE FALSE  TRUE FALSE FALSE FALSE FALSE FALSE    NA FALSE FALSE
+## 4    FALSE FALSE FALSE  TRUE FALSE FALSE FALSE FALSE    NA FALSE FALSE FALSE
+## 5    FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE  TRUE FALSE
+## 6    FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE FALSE  TRUE
+##          1     2     3     4     5     6
+## task FALSE FALSE FALSE FALSE FALSE FALSE
+## resp FALSE FALSE FALSE FALSE FALSE FALSE
+## seq  FALSE FALSE FALSE FALSE FALSE FALSE
+## tt   FALSE FALSE  TRUE  TRUE FALSE FALSE
+## V/C  FALSE FALSE FALSE FALSE FALSE FALSE
+## E/O  FALSE FALSE FALSE FALSE FALSE FALSE
+## A    FALSE FALSE FALSE FALSE FALSE FALSE
+## B    FALSE FALSE FALSE FALSE FALSE FALSE
+## D    FALSE FALSE FALSE    NA FALSE FALSE
+## E    FALSE FALSE    NA FALSE FALSE FALSE
+## H    FALSE FALSE FALSE FALSE  TRUE FALSE
+## I    FALSE FALSE FALSE FALSE FALSE  TRUE
+## 1       NA FALSE FALSE FALSE FALSE FALSE
+## 2    FALSE    NA FALSE FALSE FALSE FALSE
+## 3    FALSE FALSE    NA FALSE FALSE FALSE
+## 4    FALSE FALSE FALSE    NA FALSE FALSE
+## 5    FALSE FALSE FALSE FALSE    NA FALSE
+## 6    FALSE FALSE FALSE FALSE FALSE    NA</code></pre>
 <div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1"></a>Rbar_cuedts[, , <span class="dv">1</span>] <span class="op">%&gt;%</span></span>
 <span id="cb13-2"><a href="#cb13-2"></a><span class="st">  </span>symmat4ggplot <span class="op">%&gt;%</span></span>
 <span id="cb13-3"><a href="#cb13-3"></a><span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(v1, v2, <span class="dt">fill =</span> value)) <span class="op">+</span></span>
@@ -1674,13 +1661,14 @@ summary {
 <p>Matrices display correlations of factors, averaged across subjects for each run. Letters (A, B, D, E, H, I) indicate the presence of a letter within the probe; likewise for numbers 1–6. Factors in upper left corner (task, resp, seq, tt, V/C, E/O) represent contrasts between levels.</p>
 <p>Some key notes:</p>
 <ul>
-<li>task (letter, number) and response (left, right) are weakly correlated (0.3). Left-responses are more frequent than right-responses in letter task.
+<li>task (letter, number) and response (left, right) are <em>weakly</em> correlated (-0.1). Right-responses are more frequent than left-responses in letter task.
 <ul>
-<li>any task-decoding analysis should have this accounted for within the fMRI GLM, i.e., by including task*V/C*E/O, or task*resp.</li>
+<li>although likely not an issue, a task-decoding analysis could account for this within the fMRI GLM, i.e., by including task*V/C*E/O, or task*resp.</li>
 </ul></li>
-<li>V/C and E/O are strongly correlated to response (because this was a mostly-congruent list).</li>
+<li>V/C and E/O are moderatley correlated to response (because this was a mostly-congruent list); but not entierly so— suggesting response can be decoupled from stimulus types.</li>
 <li>some probe numbers and letters occurr most frequently as congruent condition (D, E, 3, 4).</li>
-<li>sequence condition (switch, repeat) not really correlated with anything.</li>
+<li>sequence condition (switch, repeat) not correlated with anything.</li>
+<li>TODO: test task*probetype and task*tt*switch interactions for correlations with other factors.</li>
 </ul>
 </div>
 </div>
@@ -1710,19 +1698,19 @@ summary {
 </thead>
 <tbody>
 <tr class="odd">
-<td>c.mc</td>
+<td>Con.bias</td>
 <td align="right">54</td>
 </tr>
 <tr class="even">
-<td>i.mc</td>
+<td>InCon.bias</td>
 <td align="right">18</td>
 </tr>
 <tr class="odd">
-<td>c.pc50</td>
+<td>Con.PC50</td>
 <td align="right">18</td>
 </tr>
 <tr class="even">
-<td>i.pc50</td>
+<td>InCon.PC50</td>
 <td align="right">18</td>
 </tr>
 </tbody>
@@ -2033,7 +2021,7 @@ summary {
 <span id="cb18-12"><a href="#cb18-12"></a><span class="co">#       </span></span>
 <span id="cb18-13"><a href="#cb18-13"></a><span class="co">#     ## get model matrix</span></span>
 <span id="cb18-14"><a href="#cb18-14"></a><span class="co">#     </span></span>
-<span id="cb18-15"><a href="#cb18-15"></a><span class="co">#     item.factor &lt;- model.matrix(~ as.factor(stroop[stroop$subj == subjs[subj.i] &amp; stroop$run == run.i, &quot;item&quot;]) - 1)</span></span>
+<span id="cb18-15"><a href="#cb18-15"></a><span class="co">#     item.factor &lt;- model.matrix(~ as.factor(unlist(stroop[stroop$subj == subjs[subj.i] &amp; stroop$run == run.i, &quot;item&quot;])) - 1)</span></span>
 <span id="cb18-16"><a href="#cb18-16"></a><span class="co">#     colnames(item.factor) &lt;- stroop.items</span></span>
 <span id="cb18-17"><a href="#cb18-17"></a><span class="co">#     </span></span>
 <span id="cb18-18"><a href="#cb18-18"></a><span class="co">#     ## get correlations of factors</span></span>
@@ -2074,6 +2062,72 @@ summary {
 <span id="cb18-53"><a href="#cb18-53"></a><span class="co">#     axis.title = element_blank(), axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0),</span></span>
 <span id="cb18-54"><a href="#cb18-54"></a><span class="co">#     panel.background = element_blank(), legend.position = &quot;none&quot;</span></span>
 <span id="cb18-55"><a href="#cb18-55"></a><span class="co">#     )</span></span></code></pre></div>
+</div>
+</div>
+<div id="sterm" class="section level1">
+<h1><span class="header-section-number">4</span> Sterm</h1>
+<div id="potential-task-variables-3" class="section level2">
+<h2><span class="header-section-number">4.1</span> potential task variables</h2>
+</div>
+<div id="counts-3" class="section level2">
+<h2><span class="header-section-number">4.2</span> counts</h2>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1"></a>stern.load01.trial.type &lt;-<span class="st"> </span><span class="kw">as.matrix</span>(<span class="kw">with</span>(stern, <span class="kw">table</span>(<span class="kw">interaction</span>(subj, run), load01.trial.type)))</span>
+<span id="cb19-2"><a href="#cb19-2"></a></span>
+<span id="cb19-3"><a href="#cb19-3"></a><span class="kw">data.frame</span>(</span>
+<span id="cb19-4"><a href="#cb19-4"></a>  <span class="dt">mean_count =</span> <span class="kw">colMeans</span>(stern.load01.trial.type),</span>
+<span id="cb19-5"><a href="#cb19-5"></a>  <span class="dt">min =</span> <span class="kw">apply</span>(stern.load01.trial.type, <span class="dv">2</span>, min),</span>
+<span id="cb19-6"><a href="#cb19-6"></a>  <span class="dt">max =</span> <span class="kw">apply</span>(stern.load01.trial.type, <span class="dv">2</span>, max)</span>
+<span id="cb19-7"><a href="#cb19-7"></a>  ) <span class="op">%&gt;%</span></span>
+<span id="cb19-8"><a href="#cb19-8"></a><span class="st">  </span><span class="kw">kable</span>(<span class="dt">caption =</span> <span class="st">&quot;load01 trialtype&quot;</span>)</span></code></pre></div>
+<table>
+<caption>load01 trialtype</caption>
+<thead>
+<tr class="header">
+<th></th>
+<th align="right">mean_count</th>
+<th align="right">min</th>
+<th align="right">max</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>LL5NN</td>
+<td align="right">6.0</td>
+<td align="right">6</td>
+<td align="right">6</td>
+</tr>
+<tr class="even">
+<td>LL5NP</td>
+<td align="right">9.0</td>
+<td align="right">9</td>
+<td align="right">9</td>
+</tr>
+<tr class="odd">
+<td>LL5RN</td>
+<td align="right">3.0</td>
+<td align="right">3</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td>not5NN</td>
+<td align="right">12.0</td>
+<td align="right">12</td>
+<td align="right">12</td>
+</tr>
+<tr class="odd">
+<td>not5NP</td>
+<td align="right">13.5</td>
+<td align="right">13</td>
+<td align="right">14</td>
+</tr>
+<tr class="even">
+<td>not5RN</td>
+<td align="right">1.5</td>
+<td align="right">1</td>
+<td align="right">2</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 

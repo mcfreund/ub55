@@ -44,6 +44,9 @@ dirs$run2 <- file.path(dir.analysis, dirs$subj, "RESULTS", dirs$task, paste0(dir
 dirs <- pivot_longer(dirs, cols = c("run1", "run2"), names_to = "run", values_to = "fname.xmat")
 dirs$exists.xmat <- file.exists(dirs$fname.xmat)
 
+dirs$fname.censor <- dirs$fname.xmat %>% gsub("RESULTS", "INPUT_DATA", .) %>% gsub("/baseline_.*", "/baseline/movregs_FD_mask_", .)
+dirs$fname.censor <- paste0(dirs$fname.censor, dirs$run, ".txt")
+
 dirs <- filter(dirs, !subj %in% "432332")  ## for now, remove those that don't exist
 
 dirs <- as.data.table(dirs)  ## for fast extracting
@@ -59,7 +62,7 @@ dirs <- as.data.table(dirs)  ## for fast extracting
 
 pb <- progress_bar$new(
   format = " running [:bar] :percent eta: :eta (elapsed: :elapsed)",
-  total = nrow(dirs), clear = FALSE, width = 120
+  total = nrow(glminfo)*length(unique(dirs$subj)), clear = FALSE, width = 120
 )
 
 for (task.i in seq_along(tasks)) {
@@ -86,11 +89,11 @@ for (task.i in seq_along(tasks)) {
       NA,
       dim = c(
         tr = n.trs[[name.task.i]] / 2, 
-        regressor = length(xlabels), 
+        regressor = length(xlabels) + 1, 
         subj = length(subjs),
         run = 2
       ),
-      dimnames = list(tr = NULL, regressor = xlabels, subj = subjs, run = c("run1", "run2"))
+      dimnames = list(tr = NULL, regressor = c(xlabels, "is.included"), subj = subjs, run = c("run1", "run2"))
     )
     
     for (subj.i in seq_along(subjs)) {
@@ -105,6 +108,13 @@ for (task.i in seq_along(tasks)) {
       xmat.subj.i1 <- read_xmat(fname.i[1])
       xmat.subj.i2 <- read_xmat(fname.i[2])
       
+      fname.censor.i <- dirs[subj == name.subj.i & task == name.task.i & name.glm == name.glm.i]$fname.censor
+      
+      xmat.subj.i1 <- cbind(xmat.subj.i1, as.matrix(fread(fname.censor.i[1])))
+      xmat.subj.i2 <- cbind(xmat.subj.i2, as.matrix(fread(fname.censor.i[2])))
+      colnames(xmat.subj.i1)[ncol(xmat.subj.i1)] <- "is.included"
+      colnames(xmat.subj.i2)[ncol(xmat.subj.i2)] <- "is.included"
+
       ## check for match
       
       are.matching.xmats <- 
@@ -126,7 +136,7 @@ for (task.i in seq_along(tasks)) {
       
       rm(xmat.subj.i1, xmat.subj.i2)  ## no accidents
       
-      # pb$tick()  ## progress bar
+      pb$tick()  ## progress bar
       
     }
     

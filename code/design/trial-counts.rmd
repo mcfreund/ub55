@@ -126,6 +126,7 @@ data.frame(
 relatively abstract factors:
 
 ```{r cuedts}
+cuedts <- as.data.frame(cuedts)
 
 colMeans(with(cuedts, table(interaction(subj, run), trial.type))) %>%
   kable(col.names = "count", caption = "trialtype (hi/lo)")
@@ -354,61 +355,95 @@ How are cuedts factors interrelated?
 ## correlations
 
 ```{r stroop-corr, fig.height = 8, fig.width = 8}
-
-stroop.items <- sort(unique(stroop$item))
-R_stroop <- 
-  array(
-    NA, 
-    dim = c(length(stroop.items), length(stroop.items), length(subjs), 2), 
-    dimnames = list(stroop.items, stroop.items, subjs, c("run1", "run2"))
-    )
-
-for (subj.i in seq_along(subjs)) {
-  for (run.i in 1:2) {
-      
-    ## get model matrix
-    
-    item.factor <- model.matrix(~ as.factor(stroop[stroop$subj == subjs[subj.i] & stroop$run == run.i, "item"]) - 1)
-    colnames(item.factor) <- stroop.items
-    
-    ## get correlations of factors
-    
-    contrs <- matrix(nrow = nrow(cuedts.facts), ncol = length(names.facts))
-    colnames(contrs) <- names.facts
-    
-    for (ii in seq_along(names.facts)) {
-      # ii = 1
-    
-      cols <- (ii + ii - 1)
-      cols <- c(cols, cols + 1)
-      contrs[, names.facts[ii]] <- cuedts.facts[, cols] %*% rbind(-1, 1)
-      
-    }
-    
-    cuedts.facts <- cbind(contrs, cuedts.facts[, -(1:(length(names.facts)*2))])
-    
-    
-    ## save correlation matrix
-    
-    R_cuedts[, , subj.i] <- cor(cuedts.facts)
-  
-  }
-}
-
-Rbar_cuedts <- tanh(apply(atanh(R_cuedts), 1:2, mean))
-# Rbar_cuedts <- apply(R_cuedts, 1:2, mean)
-
-Rbar_cuedts %>%
-  cor %>%
-  symmat4ggplot %>%
-  ggplot(aes(v1, v2, fill = value)) +
-  geom_raster() +
-  geom_text(aes(label = round(value, 1)), color = "grey50") +
-  scale_fill_viridis_c(option = "inferno") +
-  theme(
-    axis.title = element_blank(), axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0),
-    panel.background = element_blank(), legend.position = "none"
-    )
+# 
+# stroop.items <- sort(unique(stroop$item))
+# R_stroop <- 
+#   array(
+#     NA, 
+#     dim = c(length(stroop.items), length(stroop.items), length(subjs), 2), 
+#     dimnames = list(stroop.items, stroop.items, subjs, c("run1", "run2"))
+#     )
+# 
+# for (subj.i in seq_along(subjs)) {
+#   for (run.i in 1:2) {
+#       
+#     ## get model matrix
+#     
+#     item.factor <- model.matrix(~ as.factor(unlist(stroop[stroop$subj == subjs[subj.i] & stroop$run == run.i, "item"])) - 1)
+#     colnames(item.factor) <- stroop.items
+#     
+#     ## get correlations of factors
+#     
+#     contrs <- matrix(nrow = nrow(cuedts.facts), ncol = length(names.facts))
+#     colnames(contrs) <- names.facts
+#     
+#     for (ii in seq_along(names.facts)) {
+#       # ii = 1
+#     
+#       cols <- (ii + ii - 1)
+#       cols <- c(cols, cols + 1)
+#       contrs[, names.facts[ii]] <- cuedts.facts[, cols] %*% rbind(-1, 1)
+#       
+#     }
+#     
+#     cuedts.facts <- cbind(contrs, cuedts.facts[, -(1:(length(names.facts)*2))])
+#     
+#     
+#     ## save correlation matrix
+#     
+#     R_cuedts[, , subj.i] <- cor(cuedts.facts)
+#   
+#   }
+# }
+# 
+# Rbar_cuedts <- tanh(apply(atanh(R_cuedts), 1:2, mean))
+# # Rbar_cuedts <- apply(R_cuedts, 1:2, mean)
+# 
+# Rbar_cuedts %>%
+#   cor %>%
+#   symmat4ggplot %>%
+#   ggplot(aes(v1, v2, fill = value)) +
+#   geom_raster() +
+#   geom_text(aes(label = round(value, 1)), color = "grey50") +
+#   scale_fill_viridis_c(option = "inferno") +
+#   theme(
+#     axis.title = element_blank(), axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0),
+#     panel.background = element_blank(), legend.position = "none"
+#     )
 
 
 ```
+
+
+# Sterm
+
+
+## potential task variables
+
+
+## counts
+
+
+```{r stern-counts}
+
+stern.load01.trial.type <- as.matrix(with(stern, table(interaction(subj, run), load01.trial.type)))
+
+data.frame(
+  mean_count = colMeans(stern.load01.trial.type),
+  min = apply(stern.load01.trial.type, 2, min),
+  max = apply(stern.load01.trial.type, 2, max)
+  ) %>%
+  kable(caption = "load01 trialtype")
+
+stern.load.trial.type <- as.matrix(with(stern, table(interaction(subj, run), interaction(load, trial.type))))
+
+data.frame(
+  mean_count = colMeans(stern.load.trial.type),
+  min = apply(stern.load.trial.type, 2, min),
+  max = apply(stern.load.trial.type, 2, max)
+  ) %>%
+  kable(caption = "load01 trialtype")
+
+
+```
+
