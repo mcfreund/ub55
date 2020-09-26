@@ -195,7 +195,7 @@ write.events <- function(.d, .args) {
 
 
 
-write.blocks <- function(
+write.blocks.shifted <- function(
   d,
   dir.analysis,
   by.run,
@@ -270,6 +270,83 @@ write.blocks <- function(
     transient <- paste0(onsets4afni(transient1 %>% sort), onsets4afni(transient2 %>% sort), collapse = "")
     sustained %>% onsets2file(.fname = paste0(fname, "_block"))
     transient %>% onsets2file(.fname = paste0(fname, "_blockONandOFF_shifted"))
+    
+  }
+  
+}
+
+write.blocks <- function(
+  d,
+  dir.analysis,
+  by.run,
+  subdir.input.data = "INPUT_DATA"
+) {
+  
+  ## input validation
+  
+  d <- as.data.frame(d)
+  
+  names.expected <- c("subj", "session", "task", "run")
+  names.ok <- all(names.expected %in% names(d))
+  if (!names.ok) stop("d missing cols: subj | session | task")
+  
+  subj <- unique(d$subj)
+  sess <- unique(d$session)
+  task <- unique(d$task)
+  
+  if (length(c(subj, sess, task)) != 3) stop(">1 subj | session | task")
+  if (!sess %in% c("baseline", "proactive", "reactive")) stop("session name error")
+  if (!task %in% c("Axcpt", "Cuedts", "Stern", "Stroop")) stop("task name error")
+  
+  ## create directory
+  
+  dir.input <- file.path(dir.analysis, subj, subdir.input.data, task, sess)
+  if (!dir.exists(dir.input)) dir.create(dir.input, recursive = TRUE)
+  
+  ## get block events
+  
+  block.events <- d %>% select(run, contains("time.block")) %>% filter(!duplicated(.))
+  if (any(is.na(block.events))) stop("missing sustained or transient time")
+  if (nrow(block.events) != 2) stop("nrow(block.events) != 2")
+  
+  ## bring to long:
+  block.events.long <- block.events %>%
+    reshape2::melt(id = "run") %>%
+    mutate(
+      block    = gsub(".*([1-3]).*", "\\1", variable),  ## pull out block
+      variable = gsub("time.block[1-3].", "", variable)  ## pull out on / off
+    ) %>% 
+    tidyr::spread(variable, value) %>%
+    mutate(
+      dm = off - on
+      ## for blocks with no off value (e.g. truncated run), replace duration with mean:
+      # dm = ifelse(is.na(off) & !is.na(on), mean(dm, na.rm = TRUE), dm)
+    ) %>%
+    rename(time.onset = on, time.offset = off)
+  
+  ## build regressors
+  sustained1 <- block.events.long %>% filter(run == "1") %>% arrange(time.onset) %>% select(time.onset, dm)
+  sustained2 <- block.events.long %>% filter(run == "2") %>% arrange(time.onset) %>% select(time.onset, dm)
+  transient1 <- block.events.long %>% filter(run == "1") %>% select(time.onset, time.offset) %>% unlist %>% sort
+  transient2 <- block.events.long %>% filter(run == "2") %>% select(time.onset, time.offset) %>% unlist %>% sort
+  
+  fname <- file.path(dir.input, paste0(subj, "_", task, "_", sess))
+  
+  ## write
+  
+  if (by.run) {
+    
+    sustained1 %>% onsets4afni.dm %>% onsets2file(.fname = paste0(fname, "_block_run1"))
+    sustained2 %>% onsets4afni.dm %>% onsets2file(.fname = paste0(fname, "_block_run2"))
+    transient1 %>% onsets2file(.fname = paste0(fname, "_blockONandOFF_run1"))
+    transient2 %>% onsets2file(.fname = paste0(fname, "_blockONandOFF_run2"))
+    
+  } else {
+    
+    sustained <- paste0(onsets4afni.dm(sustained1), onsets4afni.dm(sustained2), collapse = "")
+    transient <- paste0(onsets4afni(transient1 %>% sort), onsets4afni(transient2 %>% sort), collapse = "")
+    sustained %>% onsets2file(.fname = paste0(fname, "_block"))
+    transient %>% onsets2file(.fname = paste0(fname, "_blockONandOFF"))
     
   }
   

@@ -75,6 +75,10 @@ blocks.stern  <- stern.l %>%  lapply(write.blocks, dir.analysis = dir.analysis, 
 blocks.stroop <- stroop.l %>% lapply(write.blocks, dir.analysis = dir.analysis, by.run = TRUE)
 
 
+blocks.shifted.axcpt  <- axcpt.l %>%  lapply(write.blocks.shifted, dir.analysis = dir.analysis, by.run = TRUE)
+blocks.shifted.axcpt  <- cuedts.l %>% lapply(write.blocks.shifted, dir.analysis = dir.analysis, by.run = TRUE)
+blocks.shifted.stern  <- stern.l %>%  lapply(write.blocks.shifted, dir.analysis = dir.analysis, by.run = TRUE)
+blocks.shifted.stroop <- stroop.l %>% lapply(write.blocks.shifted, dir.analysis = dir.analysis, by.run = TRUE)
 
 
 ## MOVREGS ----
@@ -108,6 +112,11 @@ args.axcpt.events <- expand.grid(
   stringsAsFactors = FALSE
 )
 
+args.axcpt.events <- bind_rows(
+  args.axcpt.events,
+  args.axcpt.events %>% mutate(name.onset = gsub(".shifted", "", name.onset), fname.suffix = "")
+)
+
 args.axcpt.events
 
 results.axcpt.events <- lapply(axcpt.l, write.events, .args = args.axcpt.events)
@@ -128,6 +137,11 @@ args.cuedts.events <- expand.grid(
   stringsAsFactors = FALSE
 )
 
+args.cuedts.events <- bind_rows(
+  args.cuedts.events,
+  args.cuedts.events %>% mutate(name.onset = gsub(".shifted", "", name.onset), fname.suffix = "")
+)
+
 args.cuedts.events
 
 results.cuedts.events <- lapply(cuedts.l, write.events, .args = args.cuedts.events)
@@ -146,6 +160,11 @@ args.stern.events <- expand.grid(
   by.run       = TRUE,
   fname.suffix = "_shifted",
   stringsAsFactors = FALSE
+)
+
+args.stern.events <- bind_rows(
+  args.stern.events,
+  args.stern.events %>% mutate(name.onset = gsub(".shifted", "", name.onset), fname.suffix = "")
 )
 
 args.stern.events
@@ -169,7 +188,10 @@ args.stroop.events <- expand.grid(
   stringsAsFactors = FALSE
 )
 
-args.stroop.events
+args.stroop.events <- bind_rows(
+  args.stroop.events,
+  args.stroop.events %>% mutate(name.onset = gsub(".shifted", "", name.onset), fname.suffix = "")
+)
 
 results.stroop.events <- lapply(stroop.l, write.events, .args = args.stroop.events)
 results.stroop.events <- bind_rows(results.stroop.events, .id = "subj.session")
@@ -185,5 +207,5 @@ n <- ls(pattern = "results")
 l <- setNames(lapply(n, get), n)
 l <- do.call(rbind, l)
 
-fwrite(l, here("out", "glms", paste0("summary_write-events.csv")))
+fwrite(l, here("out", "glms", paste0("summary_write-events_runwise.csv")))
 
