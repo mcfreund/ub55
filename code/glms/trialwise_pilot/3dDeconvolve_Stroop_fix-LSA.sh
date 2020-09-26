@@ -28,7 +28,7 @@ for session_i in ${!sessions[@]}; do
 		-censor ${dir_stimts}/movregs_FD_mask_run${runs[$run_i]}.txt \
 		-num_stimts 6 \
 		-stim_times_AM1 1 ${dir_stimts}/${subject}_Stroop_${sessions[$session_i]}_block_run${runs[$run_i]}.txt 'dmBLOCK(1)' -stim_label 1 block \
-		-stim_times_IM 2 ${dir_stimts}/${subject}_Stroop_${sessions[$session_i]}_blockONandOFF_run${runs[$run_i]}.txt 'BLOCK(1,1)' -stim_label 2 blockONandOFF \
+		-stim_times 2 ${dir_stimts}/${subject}_Stroop_${sessions[$session_i]}_blockONandOFF_run${runs[$run_i]}.txt 'BLOCK(1,1)' -stim_label 2 blockONandOFF \
 		-stim_times_IM 3 ${dir_stimts}/${subject}_Stroop_${sessions[$session_i]}_PC50Con_run${runs[$run_i]}.txt 'BLOCK(1,1)' -stim_label 3 PC50Con \
 		-stim_times_IM 4 ${dir_stimts}/${subject}_Stroop_${sessions[$session_i]}_PC50InCon_run${runs[$run_i]}.txt 'BLOCK(1,1)' -stim_label 4 PC50InCon \
 		-stim_times_IM 5 ${dir_stimts}/${subject}_Stroop_${sessions[$session_i]}_biasCon_run${runs[$run_i]}.txt 'BLOCK(1,1)' -stim_label 5 biasCon \
