@@ -1,1 +1,1 @@
-** FATAL ERROR: '-stim_times_IM 2' can't read file '/data/nil-external/ccp/freund/ub55/out/glms/432332/INPUT_DATA/Stroop/baseline/432332_Stroop_baseline_blockONandOFF_run2.txt' [nopt=21]
+** FATAL ERROR: 3dDeconvolve: -ortvec can't read file '/data/nil-external/ccp/freund/ub55/out/glms/432332/INPUT_DATA/Stroop/baseline/Movement_Regressors_StroopBas2_PA.1D'
