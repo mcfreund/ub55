@@ -10,7 +10,7 @@ for session_i in ${!sessions[@]}; do
         sess=${sessions[$session_i]:0:3}  ## get short name
         sess=${sess^}  ## Namecase
         dir_stimts=${stimts}${subject}/INPUT_DATA/Cuedts/${sessions[$session_i]}
-        dir_out=${out}${subject}/RESULTS/Cuedts/${sessions[$session_i]}_CongruencyIncentive_EVENTS_censored_shifted_${runs[$run_i]}
+        dir_out=${out}${subject}/RESULTS/Cuedts/${sessions[$session_i]}_CongruencySwitch_EVENTS_censored_shifted_${runs[$run_i]}
         name_img=${img}${subject}/INPUT_DATA/Cuedts/${sessions[$session_i]}/lpi_scale_blur4_tfMRI_Cuedts${sess}${runs[$run_i]}_${encoding_dir[$run_i]}.nii.gz
 
         ## make result dir
