@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
-
+### TODO:
+# remove hemisphere loop---same glm, so unneccessary.
+# make 3dDeconvolve parallel--- embed in function, call with forking.
 
 ## get vars
 
@@ -10,7 +12,7 @@ filename="/data/nil-external/ccp/freund/ub55/in/ub55_subjects.txt"
 mapfile -t subjects < $filename
 runs=(1 2)
 encoding_dir=(AP PA)
-
+hemis=(L R)
 
 ## directories
 

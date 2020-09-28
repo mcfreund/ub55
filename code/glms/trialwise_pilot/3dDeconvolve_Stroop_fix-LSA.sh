@@ -11,17 +11,18 @@ for session_i in ${!sessions[@]}; do
 		sess=${sess^}  ## Namecase
 		dir_stimts=${stimts}${subject}/INPUT_DATA/Stroop/${sessions[$session_i]}
 		dir_out=${out}${subject}/RESULTS/Stroop/${sessions[$session_i]}_fix-LSA_EVENTS_censored_${runs[$run_i]}
-		name_img=${img}${subject}/INPUT_DATA/Stroop/${sessions[$session_i]}/lpi_scale_blur4_tfMRI_Stroop${sess}${runs[$run_i]}_${encoding_dir[$run_i]}.nii.gz
+		name_img=${img}${subject}/INPUT_DATA/Stroop/${sessions[$session_i]}/lpi_scale_tfMRI_Stroop${sess}${runs[$run_i]}_${encoding_dir[$run_i]}_L.func.gii
 
 		## make result dir
 		mkdir -p ${dir_out}
   		cd ${dir_out}
 
 
-			## build xmat
+		## build xmat
             	/usr/local/pkg/afni_18/3dDeconvolve \
 		-local_times \
 		-x1D_stop \
+		-force_TR 1.2 \
 		-input ${name_img} \
 		-polort A \
 		-float \
