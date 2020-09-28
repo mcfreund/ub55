@@ -7,9 +7,9 @@ glms=(Cues CongruencySwitch ListLength Congruency fix-item)
 tasks=(Axcpt Cuedts Stern Stroop Stroop)
 suffices=(_shifted _shifted _shifted _shifted "")
 sessions=baseline
-#subjects=132017
-filename="/data/nil-external/ccp/freund/ub55/in/ub55_subjects.txt"
-mapfile -t subjects < $filename
+subjects=132017
+#filename="/data/nil-external/ccp/freund/ub55/in/ub55_subjects.txt"
+#mapfile -t subjects < $filename
 runs=(1 2)
 encoding_dir=(AP PA)
 
