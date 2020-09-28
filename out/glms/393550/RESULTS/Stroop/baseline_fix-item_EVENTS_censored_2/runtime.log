@@ -1,0 +1,78 @@
+++ 3dREMLfit: AFNI version=AFNI_18.3.16 (Dec 11 2018) [64-bit]
+++ Authored by: RWCox
+++ GOFORIT ==> Matrix de-singularization is engaged!
+++ Number of OpenMP threads = 15
+++ No mask ==> computing for all 10242 voxels
+[7m** ERROR:[0m matrix column #22 is all zero!?
+[7m** ERROR:[0m matrix column #23 is all zero!?
+[7m** ERROR:[0m matrix column #27 is all zero!?
+[7m** ERROR:[0m matrix column #28 is all zero!?
+[7m** ERROR:[0m matrix column #33 is all zero!?
+[7m** ERROR:[0m matrix column #35 is all zero!?
+[7m** ERROR:[0m matrix column #36 is all zero!?
+[7m** ERROR:[0m matrix column #40 is all zero!?
+[7m** ERROR:[0m matrix column #41 is all zero!?
+[7m** ERROR:[0m matrix column #45 is all zero!?
+[7m** ERROR:[0m matrix column #46 is all zero!?
+[7m** ERROR:[0m matrix column #49 is all zero!?
+[7m*+ WARNING:[0m You said to GOFORIT, so here we GO!
+ +          Note that a bunch of further WARNINGs will be generated below.
+++ Denominator DOF increased from 482 to 494 to allow for all zero columns
+++ -----  matrix condition (540x58):  4.44666  ++ VERY GOOD ++
+[7m*+ WARNING:[0m !! in  matrix:
+ * Largest singular value=2.14825
+ * 12 singular values are less than cutoff=2.14825e-07
+ * Implies strong collinearity in the matrix columns! 
+++  matrix singular values:
+             0             0             0             0             0
+    3.9724e-09   9.62566e-09   1.04774e-08   1.39662e-08    1.7504e-08
+   1.85504e-08   2.05558e-08      0.108647      0.123972      0.188892
+      0.222407      0.244354        0.3056      0.521234      0.706752
+      0.791298      0.799934      0.821245      0.837907      0.857454
+      0.890128      0.891559       0.91527      0.935041      0.947212
+      0.961405      0.974951      0.980128      0.988034      0.996082
+      0.998754      0.999997             1       1.00003       1.00019
+       1.00092       1.00309       1.00653       1.00979       1.01834
+       1.02459       1.03804       1.04153       1.05942       1.09369
+       1.10442       1.13227       1.14705       1.20481       1.28614
+       1.38777       1.87478       2.14825
+[7m*+ WARNING:[0m -GOFORIT ==> Charging ahead into battle!
+ +                   ==> Check results carefully!
+++ Editing GLT matrices for all zero X matrix columns
+ + Removed 12 all zero rows from GLT matrix 'Full'; numerator DOF changes from 46 to 34
+ + GLT matrix 'blackPINK' is all zero!
+ + GLT matrix 'blackYELLOW' is all zero!
+ + GLT matrix 'blueWHITE' is all zero!
+ + GLT matrix 'greenBLACK' is all zero!
+ + GLT matrix 'pinkGREEN' is all zero!
+ + GLT matrix 'pinkYELLOW' is all zero!
+ + GLT matrix 'purpleBLUE' is all zero!
+ + GLT matrix 'redBLUE' is all zero!
+ + GLT matrix 'redPURPLE' is all zero!
+ + GLT matrix 'whitePURPLE' is all zero!
+ + GLT matrix 'whiteRED' is all zero!
+ + GLT matrix 'yellowGREEN' is all zero!
+++ Loading input dataset into memory
+ + masked off 881 voxels for being all zero; 9361 left in mask
+++ starting REML setup calculations; total CPU=0.00 Elapsed=0.76
+ + X matrix: 26.922% of elements are nonzero
+[7m*+ WARNING:[0m -----
+[7m*+ WARNING:[0m QR decomposition of [R]^(-1/2) [X] had 12 collinearity problems
+[7m*+ WARNING:[0m -----
+ + starting 15 OpenMP threads for REML setup
+ + REML setup finished: matrix rows=540 cols=58; 109*1 cases; total CPU=0.00 Elapsed=3.05
+ +  average case bandwidth = 13.12
+++ REML voxel loop: [15 threads]0123456789.0123456789.0123456789.0123456789.01234567
+ + ARMA voxel parameters estimated: total CPU=0.00 Elapsed=23.88
+++ GLSQ loop:[7m*+ WARNING:[0m GLT setup 58x1 matrix is all zero?
+0123456789.0123456789.0123456789.0123456789.0123456789.
+ + GLSQ regression done: total CPU=0.00 Elapsed=50.16
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/393550/RESULTS/Stroop/baseline_fix-item_EVENTS_censored_2/stats_var_393550_2_L_REML.nii.gz
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/393550/RESULTS/Stroop/baseline_fix-item_EVENTS_censored_2/errts_393550_2_L_REML.nii.gz
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/393550/RESULTS/Stroop/baseline_fix-item_EVENTS_censored_2/wherr_393550_2_L_REML.nii.gz
+[7m*+ WARNING:[0m Zero-ed 112248 float errors in dataset /data/nil-external/ccp/freund/ub55/out/glms/393550/RESULTS/Stroop/baseline_fix-item_EVENTS_censored_2/STATS_393550_2_L_REML.nii.gz
+ +    Float errors include NaN and Infinity values
+ +    ==> Check matrix setup! Check inputs! Check results!
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/393550/RESULTS/Stroop/baseline_fix-item_EVENTS_censored_2/STATS_393550_2_L_REML.nii.gz
+ + unloading input dataset and REML matrices
+++ 3dREMLfit is all done! total CPU=0.00 Elapsed=66.66

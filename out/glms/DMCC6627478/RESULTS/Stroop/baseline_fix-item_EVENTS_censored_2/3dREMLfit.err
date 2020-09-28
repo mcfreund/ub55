@@ -1,0 +1,23 @@
+** ERROR: matrix column #22 is all zero!?
+** ERROR: matrix column #23 is all zero!?
+** ERROR: matrix column #27 is all zero!?
+** ERROR: matrix column #28 is all zero!?
+** ERROR: matrix column #33 is all zero!?
+** ERROR: matrix column #35 is all zero!?
+** ERROR: matrix column #36 is all zero!?
+** ERROR: matrix column #40 is all zero!?
+** ERROR: matrix column #41 is all zero!?
+** ERROR: matrix column #45 is all zero!?
+** ERROR: matrix column #46 is all zero!?
+** ERROR: matrix column #49 is all zero!?
+*+ WARNING: You said to GOFORIT, so here we GO!
+*+ WARNING: !! in  matrix:
+ * Largest singular value=2.27902
+ * 12 singular values are less than cutoff=2.27902e-07
+ * Implies strong collinearity in the matrix columns! 
+*+ WARNING: -GOFORIT ==> Charging ahead into battle!
+*+ WARNING: -----
+*+ WARNING: QR decomposition of [R]^(-1/2) [X] had 12 collinearity problems
+*+ WARNING: -----
+*+ WARNING: GLT setup 58x1 matrix is all zero?
+*+ WARNING: Zero-ed 112332 float errors in dataset /data/nil-external/ccp/freund/ub55/out/glms/DMCC6627478/RESULTS/Stroop/baseline_fix-item_EVENTS_censored_2/STATS_DMCC6627478_2_R_REML.nii.gz
