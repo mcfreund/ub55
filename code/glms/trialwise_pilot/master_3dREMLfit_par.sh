@@ -37,6 +37,8 @@ for subject in ${subjects[@]}; do
 			task=${tasks[$glm_i]}
 			suffix=${suffices[$glm_i]}
 			
+			echo ${task}_${glm}${suffix}
+
 			source ${scripts}glms/runwise/3dREMLfit_par.sh
 		
 		done

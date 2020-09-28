@@ -45,6 +45,9 @@ for session_i in ${!sessions[@]}; do
 		for hemi in ${hemis[@]}; do
 		
 			logpath=${out}${subject}/RESULTS/${task}/${sessions[$session_i]}_${glm}_EVENTS_censored${suffix}_${runs[$run_i]}
+
+			#echo ${logpath}
+
 			remlfit ${session_i} ${run_i} ${hemi} < /dev/null > ${logpath}/runtime.log 2>&1 &
 
 		done

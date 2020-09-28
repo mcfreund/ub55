@@ -7,12 +7,12 @@ glms=(Cues CongruencySwitch ListLength Congruency fix-item)
 tasks=(Axcpt Cuedts Stern Stroop Stroop)
 suffices=(_shifted _shifted _shifted _shifted "")
 sessions=baseline
-subjects=132017
-#filename="/data/nil-external/ccp/freund/ub55/in/ub55_subjects.txt"
-#mapfile -t subjects < $filename
+#subjects=132017
+filename="/data/nil-external/ccp/freund/ub55/in/ub55_subjects.txt"
+mapfile -t subjects < $filename
 runs=(1 2)
 encoding_dir=(AP PA)
-
+hemis=(L R)
 
 ## directories
 
@@ -34,6 +34,8 @@ for subject in ${subjects[@]}; do
 		task=${tasks[$glm_i]}
 		suffix=${suffices[$glm_i]}
 		
+		echo ${task}_${glm}${suffix}
+
 		source 3dREMLfit_par.sh
 
 	done

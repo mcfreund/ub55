@@ -1,0 +1,24 @@
+++ 3dREMLfit: AFNI version=AFNI_18.3.16 (Dec 11 2018) [64-bit]
+++ Authored by: RWCox
+++ GOFORIT ==> Matrix de-singularization is engaged!
+++ Number of OpenMP threads = 15
+++ No mask ==> computing for all 10242 voxels
+++ -----  matrix condition (539x122):  9.96056  ++ VERY GOOD ++
+++ Loading input dataset into memory
+ + masked off 881 voxels for being all zero; 9361 left in mask
+++ starting REML setup calculations; total CPU=0.00 Elapsed=0.76
+ + X matrix: 12.815% of elements are nonzero
+ + starting 15 OpenMP threads for REML setup
+ + REML setup finished: matrix rows=539 cols=122; 109*1 cases; total CPU=0.00 Elapsed=12.30
+ +  average case bandwidth = 13.12
+++ REML voxel loop: [15 threads]0123456789.0123456789.0123456789.0123456789.0123456
+
+ + ARMA voxel parameters estimated: total CPU=0.00 Elapsed=50.58
+++ GLSQ loop00123456789.0123456789.0123456789.0123456789.0123456789.
+ + GLSQ regression done: total CPU=0.00 Elapsed=68.06
+[7m** ERROR:[0m output dataset name 'stats_var_107321_2_R_REML.func.gii' conflicts with existing file
+[7m** ERROR:[0m dataset NOT written to disk!
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/107321/RESULTS/Stroop/baseline_fix-LSA_EVENTS_censored_2/errts_107321_2_R_REML.func.gii
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/107321/RESULTS/Stroop/baseline_fix-LSA_EVENTS_censored_2/wherr_107321_2_R_REML.func.gii
+++ ++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/107321/RESULTS/Stroop/baseline_fix-LSA_EVENTS_censored_2/STATS_107321_2_R_REML.func.g +  + unloading input dataset and REML matric++ 3dREMLfit is all done! total CPU=0.00 Elapsed=79.80
+80
