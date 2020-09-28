@@ -1,5 +1,6 @@
 ## afni / glm things
-out/glm/stimts
+*nii.gz
+*func.gii
 
 
 ## r things
