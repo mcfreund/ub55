@@ -1,5 +1,5 @@
 ---
-title: "Design matrix QC, UB55"
+title: "Design matrix QC, UB55, trial-wise"
 author: "mike freund"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
@@ -52,11 +52,7 @@ source(here("code", "_vars.R"))
 theme_set(theme_bw(base_size = 12))
 
 ## xmats
- 
-xmat_axcpt <- readRDS(here("out", "glms", "xmats_Axcpt_baseline_Cues_EVENTS_censored_shifted.RDS"))[, , !subjs %in% "432332", ]
-xmat_cuedts <- readRDS(here("out", "glms", "xmats_Cuedts_baseline_CongruencySwitch_EVENTS_censored_shifted.RDS"))[, , !subjs %in% "432332", ]
-xmat_stern <- readRDS(here("out", "glms", "xmats_Stern_baseline_ListLength_EVENTS_censored_shifted.RDS"))[, , !subjs %in% "432332", ]
-xmat_stroop <- readRDS(here("out", "glms", "xmats_Stroop_baseline_Congruency_EVENTS_censored_shifted.RDS"))[, , !subjs %in% "432332", ]
+xmat_stroop <- readRDS(here("out", "glms", "xmats_Stroop_baseline_fix-LSA_EVENTS_censored.RDS"))[, , !subjs %in% "432332", ]
 
 ```
 
@@ -69,8 +65,8 @@ xmat_stroop <- readRDS(here("out", "glms", "xmats_Stroop_baseline_Congruency_EVE
 
 ```{r vifs, warning = FALSE}
 
-
 vifs <- function(X) {
+  
   
   vifs.i <- apply(
     X, 
@@ -101,94 +97,78 @@ vifs <- function(X) {
 
   vifs.i
  
- 
 }
 
 
-s <- setdiff(subjs, c("300618", "432332", "DMCC7297690", "DMCC9850294", "204319", "DMCC9953810"))
-
-
-vifs_axcpt <- vifs(xmat_axcpt)
-vifs_cuedts <- vifs(xmat_cuedts)
-vifs_stern <- vifs(xmat_stern[, , s, ])
 vifs_stroop <- vifs(xmat_stroop)
 
 
-# X <- xmat_stern[, , c("300618", "DMCC7297690", "DMCC9850294", "204319", "DMCC9953810"), ]
-# dimnames(X)
-# duplicated(X, MARGIN = 2:4)
-# 
-# 
-# cor(X[, grep("not5RN", dimnames(X)$regressor), "DMCC9953810", 2]) %>% qcor
-# 
-# plot(X[, "not5RN#8", "300618", 1])
-# plot(X[, "not5RN#7", "300618", 1])
-# 
-# 
-# apply(cor(X[, , "300618", 1]), 2, )
-# View(cor(X[, , "300618", 1]) > 0.99)
-
-
-# for (subj.i in dimnames(xmat_stern)$subj) {
-# for (subj.i in s) {
-# 
-#   if (subj.i %in% c("300618", "432332", "DMCC7297690", "DMCC9850294", "204319", "DMCC9953810")) next
-# 
-#   X <- as.data.frame(xmat_stern[, , subj.i, 2])
-#   car::vif(lm(1:nrow(X) ~ . - 1, X))
-# 
-# }
-
 ```
+
 
 # distribution of VIFs for "regressors of interest" across subjects
 
 
 ```{r vifs_plot, fig.width = 10, fig.height = 15}
 
-vifs_axcpt %>%
-  
-  filter(regressor.type %in% "event") %>%
-  
-  ggplot(aes(vif, regressor)) +
-  geom_boxplot()
-  
-
-vifs_cuedts %>%
-  
-  filter(regressor.type %in% "event") %>%
-  
-  ggplot(aes(vif, regressor)) +
-  geom_boxplot()
-
-
-vifs_stern %>%
-  
-  filter(regressor.type %in% "event") %>%
-  
-  ggplot(aes(vif, regressor)) +
-  geom_boxplot()
-
-
 vifs_stroop %>%
   
   filter(regressor.type %in% "event") %>%
   
   ggplot(aes(vif, regressor)) +
-  geom_boxplot()
-
+  geom_boxplot() +
+  facet_grid(cols = vars(run))
 
 ```
 
-# unique values of regressors
-
-should be 1 or 0 for TENTs ("stick" models)
 
 ```{r}
 
-# unique_axcpt <- apply(xmat_axcpt, "regressor", function(x) unique(c(x)))
-# unique_axcpt[-grep("block|Run|movregs", names(unique_axcpt))]
+R <- array(
+  NA, 
+  dim = c(
+    length(dimnames(xmat_stroop)$regressor) - 2,
+    length(dimnames(xmat_stroop)$regressor) - 2,
+    length(dimnames(xmat_stroop)$subj)
+  ),
+  dimnames = list(
+    .row = setdiff(dimnames(xmat_stroop)$regressor, c("is.included", "Run#1Pol#0")),
+    .col = setdiff(dimnames(xmat_stroop)$regressor, c("is.included", "Run#1Pol#0")),
+    subj = dimnames(xmat_stroop)$subj
+  )
+  )
 
+for (subj.i in dimnames(xmat_stroop)$subj) {
+  
+  for (run.i in 1:2) {
+    
+    d <- xmat_stroop[, , 1, 1]
+    d <- as.data.frame(d)
+    
+    ## censor:
+    is.included <- as.logical(d$is.included)
+    d[c("is.included", "Run#1Pol#0")] <- NULL
+    d <- d[is.included, ]
+    
+    R[, , subj.i] <- cor(d)  
+    
+    
+  }
+  
+}
+
+Rbar <- tanh(apply(atanh(R), 1:2, mean))
+qcor(Rbar)
+
+
+qcor(Rbar[grep("block|movregs", colnames(Rbar)), ])
+
+qcor(Rbar[grep("PC50", colnames(Rbar)), ])
+
+Rbar_events <- Rbar[-grep("block|movregs", colnames(Rbar)), -grep("block|movregs", colnames(Rbar))]
+max(abs(Rbar_events[lower.tri(Rbar_events)]))
+qcor(Rbar_events)
+plot(Rbar_events[lower.tri(Rbar_events)])
 
 
 ```
