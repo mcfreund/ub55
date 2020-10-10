@@ -1,3 +1,4 @@
+library(knitr)
 library(here)
 library(magrittr)
 library(dplyr)

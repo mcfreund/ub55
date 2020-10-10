@@ -21,9 +21,8 @@ if (nodename == "ccplinux1") {
 
 
 tasks <- c("Axcpt", "Cuedts", "Stern", "Stroop")
-sessi <- c("baseline", "proactive", "reactive")
-sessi.short <- c("Bas", "Pro", "Rea")
 dir.analysis <- here("out", "glms")
+
 n.trs <- c(
   Axcpt   = 1220,
   # Axcpt_proactive  = 1220,
@@ -42,4 +41,11 @@ n.trs <- c(
 dmcc34 <- c(
   22, 77, 78, 86, 87, 91, 93, 99, 101, 103, 105, 107, 110, 127, 130, 139, 140,
   144, 148, 172, 175, 185, 189, 219, 301, 303, 306, 314, 340, 346, 347, 349, 350, 353
+)
+
+target.trs <- list(
+  axcpt = 7:12,
+  cuedts = 7:11,
+  stern = 11:16,
+  stroop = 5:9
 )

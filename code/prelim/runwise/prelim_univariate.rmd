@@ -8,27 +8,20 @@ output:
     highlight: zenburn
 ---
 
-# intro
 
+# intro
 
 
 ```{r setup, include = FALSE}
 
-knitr::opts_chunk$set(
-  cache = TRUE, echo = FALSE, warning = FALSE, message = FALSE,
-  fig.align = 'center',
-  fig.width = 11.5, fig.fullwidth = TRUE
-)
-
-set.seed(0)
-
-source(here("code", "_packages"))
+source(here::here("code", "_packages.R"))
 source(here("code", "read-behav.R"))
 source(here("code", "_vars.R"))
+source(here("code", "_atlases.R"))
+source(here("code", "_settings.R"))
 
-## settings ----
+## data ----
 
-theme_set(theme_light(base_size = 10))
 glminfo <- data.frame(
   task = c("Axcpt", "Cuedts", "Stern", "Stroop"),
   name.glm = c(
@@ -40,13 +33,11 @@ glminfo <- data.frame(
 )
 glminfo <- as.data.table(glminfo)
 
-
-## data ----
-
 d <- setNames(vector("list", nrow(glminfo)), glminfo$task)
 for (glm.i in seq_len(nrow(glminfo))) {
   
   a <- readRDS(here("out", "glms", paste0("roistats_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm, ".RDS")))
+  a <- a[, , subjs[!subjs %in% "432332"], , ]
   a <- as.data.table(reshape2::melt(a))
   
   a <- separate(a, term, c("term", "stat"), "_")
@@ -55,597 +46,221 @@ for (glm.i in seq_len(nrow(glminfo))) {
   
   a$network <- a$parcel %>% gsub("^Mean_7Networks_LH_", "", .) %>% gsub("_.*", "", .)
   
-  a <- dcast(a, term + tr + parcel + subj + run + hemi ~ stat, value.var = "value")
+  a <- dcast(a, term + tr + parcel + subj + run + hemi + network ~ stat, value.var = "value")
   names(a) <- tolower(names(a))
   
+  a$parcel <- ifelse(
+    a$hemi == "L",
+    as.character(a$parcel),
+    gsub("7Networks_LH", "7Networks_RH", as.character(a$parcel))
+  )
+
   d[[glm.i]] <- a
   
 }
 rm(glm.i, a)
 
 
-
 ```
 
 
-# Estimated marginal HRFs
+# Group
 
-## By network
+## AXCPT
 
-* Curves plot mean betas at each knot.
-* Betas averaged across conditions (biasCon, ..., PC50InCon) by parcel, then by network, within subject.
-* Bands represent 95% CIs across subjects.
-* betas from two GLMs presented: **green** is 1tr1knot, **orange** is 2tr1knot
+### curves
 
+#### Network-level
 
-```{r hrfs_by_network, fig.height = 7, fig.width = 11}
+##### marginal
 
-means.d %>%
+```{r group_axcpt_curves_network_marginal, fig.height = 7, fig.width = 14}
+
+d$Axcpt[, .(m = mean(coef)), by = .(run, network, tr, subj)] %>%
   
-  group_by(run, session, glm, network, tr, subj) %>%
-  summarize(m = mean(m))  %>% ## average across conditions and parcels
+  mutate(tr = as.numeric(tr)) %>%
   
-  ggplot(aes(tr, m, fill = glm)) +
+  ggplot(aes(tr, m, fill = run)) +
   geom_hline(yintercept = 0) +
-  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 0.75) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
   
-  facet_grid(vars(network), vars(session, run)) +
+  facet_grid(vars(network)) +
   scale_fill_brewer(type = "qual", palette = 2) +
-  theme(legend.position = "none")
+  scale_x_continuous(breaks = seq(0, 16, 1)) +
+  
+  labs(y = "Mean beta", x = "TR post stimtime", title = "AXCPT marginal curves")
+
+```
+
+##### conditional
+
+```{r group_axcpt_curves_network_conditional, fig.height = 7, fig.width = 11}
+
+d$Axcpt[, .(m = mean(coef)), by = .(run, network, tr, term, subj)] %>%
+  
+  mutate(tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, m, fill = run)) +
+  geom_hline(yintercept = 0) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
+  
+  facet_grid(vars(network), vars(term)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 16, 1)) +
+  theme(legend.position = "none") +
+  
+  labs(y = "Mean beta", x = "TR post stimtime", title = "AXCPT conditional curves")
 
 ```
 
 
-## By parcel
+##### contrasts
 
-* Betas averaged across conditions (biasCon, ..., PC50InCon) and subjects, within parcel.
+```{r group_axcpt_curves_network_contrast, fig.height = 7, fig.width = 11}
 
 
-```{r hrfs_by_parcel, fig.height = 7, fig.width = 11}
-
-grid.arrange(
+d$Axcpt[term %in% c("BX", "BY"), .(m = mean(coef)), by = .(run, network, tr, term, subj)] %>%
   
-  means.d %>%
-    
-    filter(glm == "2tr1knot") %>%
-    
-    group_by(run, session, network, tr, parcel, glm) %>%
-    summarize(m = mean(m))  %>% ## average across subjects
-    
-    ggplot(aes(tr, m, group = parcel, color = glm)) +
-    geom_hline(yintercept = 0) +
-    stat_summary(fun.y = "mean", geom = "line", size = 1, alpha = 0.5) +
-    
-    facet_grid(vars(network), vars(session, run)) +
-    scale_color_manual(values = colors.glm) +
-    scale_y_continuous(limits = c(-0.75, 3)) +
-    scale_x_continuous(limits = c(0, 12), breaks = seq(0, 12, 4)) +
-    theme(legend.position = "none") +
-    labs(title = "2tr1knot", y = "mean beta"),
+  dcast(run + network + tr + subj ~ term, value_var = "m") %>%
   
-  means.d %>%
-    
-    filter(glm == "1tr1knot") %>%
-    
-    group_by(run, session, network, tr, parcel, glm) %>%
-    summarize(m = mean(m))  %>% ## average across subjects
-    
-    ggplot(aes(tr, m, group = parcel, color = glm)) +
-    geom_hline(yintercept = 0) +
-    stat_summary(fun.y = "mean", geom = "line", size = 1, alpha = 0.5) +
-    
-    facet_grid(vars(network), vars(session, run)) +
-    scale_color_manual(values = colors.glm) +
-    scale_y_continuous(limits = c(-0.75, 3)) +
-    scale_x_continuous(limits = c(0, 12), breaks = seq(0, 12, 4)) +
-    theme(legend.position = "none") +
-    labs(title = "1tr1knot", y = "mean beta"),
+  mutate(hilo = BX - BY, tr = as.numeric(tr)) %>%
   
-  ncol = 2
-  
-)
-
-```
-
-## DMCC 30
-
-# Contrasts
-
-```{r contrasts_stats}
-
-## main effects models ----
-
-stats.trial.type <- means.d %>%
-  
-  group_by(tr, parcel, session, network, glm, subj, trial.type) %>%  ## average across runs, PC
-  summarize(m = mean(m)) %>% 
-  
-  group_by(tr, parcel, session, network, glm) %>%  ## get t values
-  tidyr::pivot_wider(names_from = trial.type, values_from = m) %>%
-  summarize(
-    statistic = t.test(InCon, Con, paired = TRUE)$statistic,
-    p.value   = t.test(InCon, Con, paired = TRUE)$p.value
-  ) %>%
-  
-  group_by(tr, session, glm) %>%  ## adjust
-  mutate(p.fdr = p.adjust(p.value, "fdr"))
-
-stats.pc <- means.d %>%
-  
-  group_by(tr, parcel, session, network, glm, subj, pc) %>%  ## average across runs, trial.type
-  summarize(m = mean(m)) %>% 
-  
-  group_by(tr, parcel, session, network, glm) %>%  ## get t values
-  tidyr::pivot_wider(names_from = pc, values_from = m) %>%
-  summarize(
-    statistic = t.test(bias, PC50, paired = TRUE)$statistic,
-    p.value   = t.test(bias, PC50, paired = TRUE)$p.value
-  ) %>%
-  
-  group_by(tr, session, glm) %>%  ## adjust
-  mutate(p.fdr = p.adjust(p.value, "fdr"))
-
-stats.run <- means.d %>%
-  
-  group_by(tr, parcel, session, network, glm, subj, run) %>%  ## average across trial.type, PC
-  summarize(m = mean(m)) %>% 
-  
-  group_by(tr, parcel, session, network, glm) %>%  ## get t values
-  tidyr::pivot_wider(names_from = run, values_from = m) %>%
-  summarize(
-    statistic = t.test(run1, run2, paired = TRUE)$statistic,
-    p.value   = t.test(run1, run2, paired = TRUE)$p.value
-  ) %>%
-  
-  group_by(tr, session, glm) %>%  ## adjust
-  mutate(p.fdr = p.adjust(p.value, "fdr"))
-
-```
-
-## Main effects: run, pc, trialtype
-
-* A linear model was fit on each parcel\*session\*knot, with dummy-coded regresssors for **run**, **proportion congruence**, (pc50, bias) and **trial type** (congruent, incongruent).
-
-* random intercept by subject.
-
-* Points plot parcel-wise t statistic for each parcel. Those filled in are significant after whole-brain FDR correction.
-
-```{r contrasts_by_parcel, fig.height = 7, fig.width = 11}
-
-## run
-
-stats.run %>%
-  
-  filter(glm == "2tr1knot") %>%
-
-  ggplot(aes(tr, statistic)) +
-  geom_beeswarm(
-    aes(fill = network, alpha = p.fdr < 0.05, color = ifelse(p.fdr < 0.05, "black", "white")),
-    size = 1.5, shape = 21
-  ) +
-  
-  scale_color_identity() +
-  scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.2)) +
-  facet_grid(vars(network), vars(session)) +
+  ggplot(aes(tr, hilo, fill = run)) +
   geom_hline(yintercept = 0) +
-  scale_fill_brewer(type = "qual", palette = 1) +
-  scale_x_continuous(limits = c(0, 13), breaks = seq(0, 12)) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
   
+  facet_grid(vars(network)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 16, 1)) +
   theme(legend.position = "none") +
-  labs(title = "run (run1 - run2): 2tr1knot", x = "TR (post stimulus onset)", y = "t statistic")
   
-stats.run %>%
-  
-  filter(glm == "1tr1knot") %>%
+  labs(y = "Mean beta", x = "TR post stimtime", title = "AXCPT hilo curves (BX-BY)")
 
-  ggplot(aes(tr, statistic)) +
-  geom_beeswarm(
-    aes(fill = network, alpha = p.fdr < 0.05, color = ifelse(p.fdr < 0.05, "black", "white")),
-    size = 1.5, shape = 21
-  ) +
+
+d$Axcpt[, .(m = mean(coef)), by = .(run, network, tr, term, subj)] %>%
   
-  scale_color_identity() +
-  scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.2)) +
-  facet_grid(vars(network), vars(session)) +
+  dcast(run + network + tr + subj ~ term, value.var = "m") %>%
+  
+  mutate(nogogo = (Ang + Bng)/2 - (AX + AY + BX + BY)/4, tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, nogogo, fill = run)) +
   geom_hline(yintercept = 0) +
-  scale_fill_brewer(type = "qual", palette = 1) +
-  scale_x_continuous(limits = c(0, 13), breaks = seq(0, 12)) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
   
+  facet_grid(vars(network)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 16, 1)) +
   theme(legend.position = "none") +
-  labs(title = "run (run1 - run2): 1tr1knot", x = "TR (post stimulus onset)", y = "t statistic")
-
-
-
-## pc
-
-stats.pc %>%
   
-  filter(glm == "2tr1knot") %>%
-
-  ggplot(aes(tr, statistic)) +
-  geom_beeswarm(
-    aes(fill = network, alpha = p.fdr < 0.05, color = ifelse(p.fdr < 0.05, "black", "white")),
-    size = 1.5, shape = 21
-  ) +
-  
-  scale_color_identity() +
-  scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.2)) +
-  facet_grid(vars(network), vars(session)) +
-  geom_hline(yintercept = 0) +
-  scale_fill_brewer(type = "qual", palette = 1) +
-  scale_x_continuous(limits = c(0, 13), breaks = seq(0, 12)) +
-  
-  theme(legend.position = "none") +
-  labs(title = "pc (bias - PC50): 2tr1knot", x = "TR (post stimulus onset)", y = "t statistic")
-  
-stats.pc %>%
-  
-  filter(glm == "1tr1knot") %>%
-
-  ggplot(aes(tr, statistic)) +
-  geom_beeswarm(
-    aes(fill = network, alpha = p.fdr < 0.05, color = ifelse(p.fdr < 0.05, "black", "white")),
-    size = 1.5, shape = 21
-  ) +
-  
-  scale_color_identity() +
-  scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.2)) +
-  facet_grid(vars(network), vars(session)) +
-  geom_hline(yintercept = 0) +
-  scale_fill_brewer(type = "qual", palette = 1) +
-  scale_x_continuous(limits = c(0, 13), breaks = seq(0, 12)) +
-  
-  theme(legend.position = "none") +
-  labs(title = "pc (bias - PC50): 1tr1knot", x = "TR (post stimulus onset)", y = "t statistic")
-
-
-## stroop
-
-stats.trial.type %>%
-  
-  filter(glm == "2tr1knot") %>%
-
-  ggplot(aes(tr, statistic)) +
-  geom_beeswarm(
-    aes(fill = network, alpha = p.fdr < 0.05, color = ifelse(p.fdr < 0.05, "black", "white")),
-    size = 1.5, shape = 21
-  ) +
-  
-  scale_color_identity() +
-  scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.2)) +
-  facet_grid(vars(network), vars(session)) +
-  geom_hline(yintercept = 0) +
-  scale_fill_brewer(type = "qual", palette = 1) +
-  scale_x_continuous(limits = c(0, 13), breaks = seq(0, 12)) +
-  
-  theme(legend.position = "none") +
-  labs(title = "stroop: 2tr1knot", x = "TR (post stimulus onset)", y = "t statistic")
-  
-stats.trial.type %>%
-  
-  filter(glm == "1tr1knot") %>%
-
-  ggplot(aes(tr, statistic)) +
-  geom_beeswarm(
-    aes(fill = network, alpha = p.fdr < 0.05, color = ifelse(p.fdr < 0.05, "black", "white")),
-    size = 1.5, shape = 21
-  ) +
-  
-  scale_color_identity() +
-  scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.2)) +
-  facet_grid(vars(network), vars(session)) +
-  geom_hline(yintercept = 0) +
-  scale_fill_brewer(type = "qual", palette = 1) +
-  scale_x_continuous(limits = c(0, 13), breaks = seq(0, 12)) +
-  
-  theme(legend.position = "none") +
-  labs(title = "stroop: 1tr1knot", x = "TR (post stimulus onset)", y = "t statistic")
-
-```
-
-## Interaction: PC\*stroop
-
-* Is the stroop effect larger for bias items than PC50 in baseline?
-
-* Opposite true in proactive?
-
-* No parcels were significant after FDR correction. "Filled in" points have p < 0.05, uncorrected.
-
-```{r interaction_pc_stroop, fig.height = 7, fig.width = 11}
-
-## fit
-
-means.l.x <- means.d %>% split(paste(.$tr, .$parcel, .$session, .$network, .$glm, sep = "."))
-means.l.x <- lapply(means.l.x, function(x) lmer(m ~ run + pc * trial.type + (1 | subj), x))
-
-## extract
-
-tidy_lmer <- function(x) {
-  coefs <- as.data.frame(coef(summary(x)))
-  coefs$term <- rownames(coefs)
-  dplyr::rename(coefs, estimate = "Estimate", se = "Std. Error", "statistic" = "t value", p.value = "Pr(>|t|)")
-}
-
-coef.means.x <- lapply(means.l.x, tidy_lmer)
-
-## format
-
-coef.means.x %<>%
-  bind_rows(.id = "model.id") %>%
-  cbind(reshape2::colsplit(.$model.id, "\\.", c("tr", "parcel", "session", "network", "glm")))
-
-## adjust
-
-coef.means.x %<>%  
-  group_by(tr, session, glm) %>%
-  mutate(p.fdr = p.adjust(p.value, "fdr"))
-
-## plot
-
-coef.means.x %>%
-  
-  filter(glm == "2tr1knot", term == "pcbias:trial.typeInCon") %>%
-
-  ggplot(aes(tr, statistic)) +
-  geom_beeswarm(
-    aes(fill = network, alpha = p.value < 0.05, color = ifelse(p.value < 0.05, "black", "white")),
-    size = 1.5, shape = 21
-  ) +
-  
-  scale_color_identity() +
-  scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.2)) +
-  facet_grid(vars(network), vars(session)) +
-  geom_hline(yintercept = 0) +
-  scale_fill_brewer(type = "qual", palette = 1) +
-  scale_x_continuous(limits = c(0, 13), breaks = seq(0, 12)) +
-  
-  theme(legend.position = "none") +
-  labs(title = "stroop*trial.type: 2tr1knot", x = "TR (post stimulus onset)", y = "t statistic")
-
-
-coef.means.x %>%
-  
-  filter(glm == "1tr1knot", term == "pcbias:trial.typeInCon") %>%
-
-  ggplot(aes(tr, statistic)) +
-  geom_beeswarm(
-    aes(fill = network, alpha = p.value < 0.05, color = ifelse(p.value < 0.05, "black", "white")),
-    size = 1.5, shape = 21
-  ) +
-  
-  scale_color_identity() +
-  scale_alpha_manual(values = c("TRUE" = 1, "FALSE" = 0.2)) +
-  facet_grid(vars(network), vars(session)) +
-  geom_hline(yintercept = 0) +
-  scale_fill_brewer(type = "qual", palette = 1) +
-  scale_x_continuous(limits = c(0, 13), breaks = seq(0, 12)) +
-  
-  theme(legend.position = "none") +
-  labs(title = "stroop*trial.type: 1tr1knot", x = "TR (post stimulus onset)", y = "t statistic")
+  labs(y = "Mean beta", x = "TR post stimtime", title = "AXCPT nogo-go curves [(Ang + Bng)/2 - (AX + AY + BX + BY)/4]")
 
 
 ```
 
 
-## Defining ROIs
+#### DMCC 34 HiLo
 
-* looks like the action is in TRs 2--6.
+```{r group_axcpt_curves_dmcc34, fig.height = 7, fig.width = 11}
 
-* Here a single model is fit to all data across this epoch.
+d$Axcpt$parcel <- gsub("Mean_7Networks_", "", d$Axcpt$parcel)
 
-* t statistics from 2tr1knot and 1tr1knot models are plotted against each other.
-
-```{r, fig.height = 15, fig.width = 8}
-
-## fit
-
-means.l.roi <- means.d %>% filter(tr > 1, tr < 7) %>% split(paste(.$parcel, .$session, .$network, .$glm, sep = "."))
-means.l.roi <- lapply(means.l.roi, function(x) lmer(m ~ run + pc + trial.type + (1 | subj), x))
-
-## extract
-
-coef.means.roi <- lapply(means.l.roi, tidy_lmer)
-
-## format
-
-coef.means.roi %<>%
-  bind_rows(.id = "model.id") %>%
-  cbind(reshape2::colsplit(.$model.id, "\\.", c("parcel", "session", "network", "glm")))
-
-## adjust
-
-coef.means.roi %<>%  
-  group_by(session, glm) %>%
-  mutate(p.fdr = p.adjust(p.value, "fdr"))
-
-## plot
-
-coef.means.roi %>%
+d$Axcpt[
+  term %in% c("BX", "BY") & parcel %in% parcellation$key[dmcc34], 
+  .(m = mean(coef)), by = .(run, parcel, network, tr, term, subj)
+  ] %>%
   
-  filter(term == "trial.typeInCon") %>%
-  select(-p.value, -p.fdr, -estimate, -se, -df, -model.id) %>%
-  tidyr::pivot_wider(names_from = "glm", values_from = statistic, names_prefix = "glm.") %>%
+  dcast(run + parcel + network + tr + subj ~ term, value_var = "m") %>%
   
-  ggplot(aes(glm.1tr1knot, glm.2tr1knot)) +
-  geom_point(
-    aes(),
-    size = 1.5, shape = 21, fill = "black", color = "grey"
-  ) +
+  mutate(hilo = BX - BY, tr = as.numeric(tr)) %>%
   
-  facet_grid(vars(network), vars(session)) +
+  ggplot(aes(tr, hilo, fill = run)) +
   geom_hline(yintercept = 0) +
-  geom_vline(xintercept = 0) +
-  geom_abline() +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
   
-  labs(title = "stroop t statistics, estimated over TRs 2-6")
+  facet_wrap(vars(parcel)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 16, 1)) +
+  theme(legend.position = "none") +
+  
+  labs(y = "Mean beta", x = "TR post stimtime", title = "AXCPT hilo curves DMCC34 (BX-BY)")
 
 ```
+
+
+### stats
 
 
 ```{r}
 
-roi.univ.bas.1tr1knot <- coef.means.roi %>%
-  filter(
-    p.fdr < 0.05, session == "baseline", statistic > 0, term == "trial.typeInCon",
-    glm == "1tr1knot"
-    ) %>%
-  pull(parcel) %>%
-  unique
+axcpt.hilo <- d$Axcpt[tr %in% target.trs$axcpt & term %in% c("BX", "BY")]
+axcpt.hilo$term <- relevel(as.factor(axcpt.hilo$term), "BY")
+axcpt.hilo <- split(axcpt.hilo, axcpt.hilo$parcel)
 
-roi.univ.bas.2tr1knot <- coef.means.roi %>%
-  filter(
-    p.fdr < 0.05, session == "baseline", statistic > 0, term == "trial.typeInCon",
-    glm == "2tr1knot"
-    ) %>%
-  pull(parcel) %>%
-  unique
+m.axcpt.hilo <- lapply(axcpt.hilo, function(x) lmer(coef ~ term + (1 | subj), x))
+s.axcpt.hilo <- bind_rows(lapply(m.axcpt.hilo, tidy_lmer), .id = "parcel")
+s.axcpt.hilo %<>% filter(term == "termBX") %>% mutate(p.holm = p.adjust(p.value, "holm"))
 
-roi.univ.pro.1tr1knot <- coef.means.roi %>%
-  filter(
-    p.fdr < 0.05, session == "proactive", statistic > 0, term == "trial.typeInCon",
-    glm == "1tr1knot"
-    ) %>%
-  pull(parcel) %>%
-  unique
-
-roi.univ.pro.2tr1knot <- coef.means.roi %>%
-  filter(
-    p.fdr < 0.05, session == "proactive", statistic > 0, term == "trial.typeInCon",
-    glm == "2tr1knot"
-    ) %>%
-  pull(parcel) %>%
-  unique
-
-
-
-## add cols for plotting
-
-coef.means.roi %<>%
+s.axcpt.hilo %<>%
   mutate(
     hemi = substr(parcel, 1, 1),
     num.roi = match(parcel, parcellation$key)
-    )
+  )
+match(s.axcpt.hilo$parcel, parcellation$key)
 
-```
-At FDR-adjusted $\alpha$ = 0.05
+parcellation$key[is.na(match(s.axcpt.hilo$parcel, parcellation$key))]
+setdiff(s.axcpt.hilo$parcel, parcellation$key)
 
-* `r length(roi.univ.bas.2tr1knot)` parcels for 2tr1knot, baseline.
-
-`r roi.univ.bas.2tr1knot`
-
-* `r length(roi.univ.bas.1tr1knot)` parcels for 1tr1knot, baseline.
-
-`r roi.univ.bas.1tr1knot`
-
-* `r length(roi.univ.pro.2tr1knot)` parcels for 2tr1knot, proactive.
-
-`r roi.univ.pro.2tr1knot`
-
-* `r length(roi.univ.pro.1tr1knot)` parcels for 1tr1knot, proactive.
-
-`r roi.univ.pro.1tr1knot`
+setdiff(parcellation$key, s.axcpt.hilo$parcel)
 
 
+s.axcpt.hilo$parcel == "LH_Cont_PFCl_9"
+parcellation$key == "LH_Cont_PFCl_9"
 
-# Brains
+parcellation$key <- gsub("Ins_", "_", parcellation$key)
 
-* the t statistics from above are plotted on brains here.
 
-## unthresholded
+s.axcpt.hilo$parcel[111]
+s.axcpt.hilo %>% filter(p.holm < 0.05 & estimate > 0) %>% arrange(p.holm) %>% kable
 
-### baseline 1tr1knot
 
-```{r, fig.height = 7, fig.width = 11}
+setdiff(
+  gsub("Mean_7Networks_", "", dimnames(a)$parcel),
+  parcellation$key
+)
 
-coef.means.roi %>%
-  filter(term == "trial.typeInCon", session == "baseline", glm == "1tr1knot") %>%
-  build_overlay("statistic", template = schaefer) %>%
-  plot_surface(underlay = hcp)
 
-```
+setdiff(
+  parcellation$key,
+  gsub("Mean_7Networks_", "", dimnames(a)$parcel)
+)
 
-### baseline 2tr1knot
+intersect(
+  parcellation$key,
+  gsub("Mean_7Networks_", "", dimnames(a)$parcel)
+)
 
-```{r, fig.height = 7, fig.width = 11}
 
-coef.means.roi %>%
-  filter(term == "trial.typeInCon", session == "baseline", glm == "2tr1knot") %>%
-  build_overlay("statistic", template = schaefer) %>%
-  plot_surface(underlay = hcp)
+
+unique(gsub("Mean_7Networks_.H_", "", dimnames(a)$parcel))
+unique(gsub(".H_", "", parcellation$key))
 
 ```
 
-### proactive 1tr1knot
 
-```{r, fig.height = 7, fig.width = 11}
+### maps
 
-coef.means.roi %>%
-  filter(term == "trial.typeInCon", session == "proactive", glm == "1tr1knot") %>%
-  build_overlay("statistic", template = schaefer) %>%
-  plot_surface(underlay = hcp)
 
-```
+```{r}
 
-### proactive 2tr1knot
-
-```{r, fig.height = 7, fig.width = 11}
-
-coef.means.roi %>%
-  filter(term == "trial.typeInCon", session == "proactive", glm == "2tr1knot") %>%
+s.axcpt.hilo %>%
   build_overlay("statistic", template = schaefer) %>%
   plot_surface(underlay = hcp)
 
 ```
 
 
-## thresholded
 
 
-### baseline 1tr1knot
 
-```{r, fig.height = 7, fig.width = 11}
 
-coef.means.roi %>%
-  filter(term == "trial.typeInCon", session == "baseline", glm == "1tr1knot") %>%
-  mutate(statistic = ifelse(p.fdr < 0.05 & statistic > 0, statistic, 0)) %>%
-  build_overlay("statistic", template = schaefer) %>%
-  plot_surface(underlay = hcp)
-
-```
-
-### baseline 2tr1knot
-
-```{r, fig.height = 7, fig.width = 11}
-
-coef.means.roi %>%
-  filter(term == "trial.typeInCon", session == "baseline", glm == "2tr1knot") %>%
-  mutate(statistic = ifelse(p.fdr < 0.05 & statistic > 0, statistic, 0)) %>%
-  build_overlay("statistic", template = schaefer) %>%
-  plot_surface(underlay = hcp)
-
-```
-
-### proactive 1tr1knot
-
-```{r, fig.height = 7, fig.width = 11}
-
-coef.means.roi %>%
-  filter(term == "trial.typeInCon", session == "proactive", glm == "1tr1knot") %>%
-  mutate(statistic = ifelse(p.fdr < 0.05 & statistic > 0, statistic, 0)) %>%
-  build_overlay("statistic", template = schaefer) %>%
-  plot_surface(underlay = hcp)
-
-```
-
-### proactive 2tr1knot
-
-```{r, fig.height = 7, fig.width = 11}
-
-coef.means.roi %>%
-  filter(term == "trial.typeInCon", session == "proactive", glm == "2tr1knot") %>%
-  mutate(statistic = ifelse(p.fdr < 0.05 & statistic > 0, statistic, 0)) %>%
-  build_overlay("statistic", template = schaefer) %>%
-  plot_surface(underlay = hcp)
-
-```
 
