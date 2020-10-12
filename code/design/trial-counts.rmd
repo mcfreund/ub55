@@ -148,6 +148,16 @@ data.frame(
   ) %>%
   kable(caption = "cue \\* probetype \\* switch")
 
+
+cuedts.tir <- with(cuedts[cuedts$switch != "", ], table(interaction(subj, run), interaction(cue, trial.type, cresp)))
+data.frame(
+  mean_count = colMeans(cuedts.tir),
+  min = apply(cuedts.tir, 2, min),
+  max = apply(cuedts.tir, 2, max)
+  ) %>%
+  kable(caption = "cue \\* trial.type \\* cresp")
+
+
 ```
 
 * wel-balanced: congruency, switch, task\*probe, task\*congruency\*switch
