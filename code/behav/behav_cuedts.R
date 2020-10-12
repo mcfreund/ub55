@@ -156,8 +156,8 @@ cuedts.rt %>%
 
 ## cresp2*trial.typei??
 
-table(cuedts.rt[trial.type == "i", c("cue", "stimuli", "cresp")])
-table(cuedts.rt[trial.type == "c", c("cue", "stimuli", "cresp")])
+table(cuedts.rt[trial.type == "InCon", c("cue", "stimuli", "cresp")])
+table(cuedts.rt[trial.type == "Con", c("cue", "stimuli", "cresp")])
 
 ## index finger more potent competitor?
 
@@ -167,12 +167,12 @@ cuedts.rt %>%
   summarize(rt = mean(rt)) %>%
   tidyr::pivot_wider(names_from = c("trial.type", "cresp"), values_from = rt) %>%
   mutate(
-    tt1 = i_1 - c_1,
-    tt2 = i_2 - c_2,
+    tt1 = InCon_1 - Con_1,
+    tt2 = InCon_2 - Con_2,
     int = tt2 - tt1,
     me  = (tt2 + tt1)/2
     ) %>%
-  select(-c(c_1, i_1, c_2, i_2)) %>%
+  select(-c(Con_1, InCon_1, Con_2, InCon_2)) %>%
   tidyr::pivot_longer(cols = c("tt1", "tt2", "int", "me"), values_to = "rt") %>%
   
   ggplot() +
@@ -180,10 +180,18 @@ cuedts.rt %>%
   scale_color_viridis_d() +
   theme(legend.position = c(0.75, 0.75))
 
-
 cuedts.rt %>%
   
   group_by(cresp, trial.type, subj) %>%
+  summarize(rt = mean(rt)) %>%
+  
+  ggplot(aes(interaction(cresp, trial.type), rt)) +
+  stat_summary(fun.data = mean_cl_boot)
+
+
+cuedts.rt %>%
+  
+  group_by(cresp, trial.type, subj, cue) %>%
   summarize(rt = mean(rt)) %>%
 
   ggplot(aes(interaction(cresp, cue, trial.type), rt)) +

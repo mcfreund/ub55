@@ -1,0 +1,830 @@
+---
+title: 'UB55 univariate analysis: hi-lo contrast, group-level'
+author: "michael freund"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    highlight: zenburn
+    number_sections: true
+---
+
+
+# intro
+
+Purpose: 
+
+1. Validate runwise ub55 GLMs in terms of hi/lo contrast.
+2. Calculate HiLo conjunction effect and compare to DMCC34.
+    
+
+
+```{r setup, include = FALSE}
+
+
+source(here::here("code", "_packages.R"))
+source(here("code", "read-behav.R"))
+source(here("code", "_vars.R"))
+source(here("code", "_atlases.R"))
+source(here("code", "_settings.R"))
+source(here("code", "_funs.R"))
+
+## data ----
+
+glminfo <- data.frame(
+  task = c("Axcpt", "Cuedts", "Stern", "Stroop"),
+  name.glm = c(
+    "baseline_Cues_EVENTS_censored_shifted", 
+    "baseline_CongruencySwitch_EVENTS_censored_shifted",
+    "baseline_ListLength_EVENTS_censored_shifted",
+    "baseline_Congruency_EVENTS_censored_shifted"
+  )
+)
+glminfo <- as.data.table(glminfo)
+
+d <- setNames(vector("list", nrow(glminfo)), glminfo$task)
+for (glm.i in seq_len(nrow(glminfo))) {
+  # glm.i = 1
+  
+  a <- readRDS(here("out", "glms", paste0("roistats_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm, ".RDS")))
+  a <- a[, , subjs[!subjs %in% "432332"], ]
+  a <- as.data.table(reshape2::melt(a))
+  
+  a <- separate(a, term, c("term", "stat"), "_")
+  a <- a[!grepl("Full|block", term) & stat != "Fstat"]
+  a <- separate(a, term, c("term", "tr"), "#")
+  
+  a$network <- a$parcel %>% gsub("LH_|RH_", "", .) %>% gsub("_.*", "", .)
+  a$hemi <- substr(a$parcel, 1, 1)
+  
+  a <- dcast(a, term + tr + parcel + subj + run + hemi + network ~ stat, value.var = "value")
+  names(a) <- tolower(names(a))
+  
+  d[[glm.i]] <- a
+  
+}
+rm(glm.i, a)
+
+## fix cuedts labels: incorrect! (mislabeled in afni code)
+d$Cuedts$term <- gsub("NoInc$", "Repeat", d$Cuedts$term)
+d$Cuedts$term <- gsub("Inc$", "Switch", d$Cuedts$term)
+
+
+```
+
+
+
+
+Notes on analyses:
+
+* within 'curves' sections, ribbons indicate 95% CI of bootstrapped mean beta across subjects (one ribbon per run).
+* 'target' trs were defined for each task: 
+    * Axcpt, Cuedts, and Stern begins at roughly ~4 TRs post-cue onset, and ending at ~8 TRs post-cue onset
+    * Axcpt: `r target.trs["Axcpt"]`
+    * Cuedts: `r target.trs["Cuedts"]`
+    * Stern: `r target.trs["Stern"]`
+    * Stroop: `r target.trs["Stroop"]`
+* for "stats and maps" sections, HLM was used to estimate t-statistics on the hi-lo contrast per ROI:
+    * random-intercept models
+    * level-I: (TR within target window)\*(run)
+    * level-2: subject
+    * $\beta_{trs} = b_0 + x_{trs}b_1 + d_s$
+      * $t, r, s$ are indices for TR, run, and subject
+      * $x$ is dummy-coded predictor for hi condition; $b_1$ reflects hi-lo contrast (fixed effect)
+      * $d$ is is subject-specific intercept
+    * p-values on contrast were Holm corrected across all 400 parcels.
+  
+
+# AXCPT
+
+
+## curves
+
+### Network-level
+
+* Averaged across all parcels within network.
+
+#### marginal
+
+* Averaged across all conditions (trial types).
+* Ribbon shows bootstrapped 95% CI of mean beta across subjects.
+
+```{r axcpt_curves_network_marginal, fig.height = 7, fig.width = 8}
+
+d$Axcpt[, .(m = mean(coef)), by = .(run, network, tr, subj)] %>%
+  
+  mutate(tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, m, fill = run)) +
+  geom_hline(yintercept = 0) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
+  
+  facet_grid(vars(network)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 16, 1)) +
+  
+  labs(y = "Mean beta", x = "TR post stimtime", title = "AXCPT marginal curves")
+
+```
+
+#### conditional
+
+* Ribbon shows bootstrapped 95% CI of mean beta across subjects.
+
+```{r axcpt_curves_network_conditional, fig.height = 7, fig.width = 11}
+
+d$Axcpt[, .(m = mean(coef)), by = .(run, network, tr, term, subj)] %>%
+  
+  mutate(tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, m, fill = run)) +
+  geom_hline(yintercept = 0) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
+  
+  facet_grid(vars(network), vars(term)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 16, 2)) +
+  theme(legend.position = "none") +
+  
+  labs(y = "Mean beta", x = "TR post stimtime", title = "AXCPT conditional curves")
+
+```
+
+
+#### HiLo contrast
+
+* Ribbon shows bootstrapped 95% CI of mean HiLo contrast of betas across subjects.
+
+```{r axcpt_curves_network_contrast, fig.height = 7, fig.width = 8}
+
+d$Axcpt[term %in% c("BX", "BY"), .(m = mean(coef)), by = .(run, network, tr, term, subj)] %>%
+  
+  dcast(run + network + tr + subj ~ term, value_var = "m") %>%
+  
+  mutate(hilo = BX - BY, tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, hilo, fill = run)) +
+  geom_hline(yintercept = 0) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
+  
+  facet_grid(vars(network)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 16, 2)) +
+  theme(legend.position = "none") +
+  
+  labs(y = "Mean beta", x = "TR post stimtime", title = "AXCPT hilo curves (BX-BY)")
+
+```
+
+
+### DMCC 34
+#### HiLo contrast
+
+```{r axcpt_curves_dmcc34, fig.height = 7, fig.width = 11}
+
+d$Axcpt[
+  term %in% c("BX", "BY") & parcel %in% parcellation$key[dmcc34], 
+  .(m = mean(coef)), by = .(run, parcel, network, tr, term, subj)
+  ] %>%
+  
+  dcast(run + parcel + network + tr + subj ~ term, value_var = "m") %>%
+  
+  mutate(hilo = BX - BY, tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, hilo, fill = run)) +
+  geom_hline(yintercept = 0) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
+  
+  facet_wrap(vars(parcel)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 16, 2)) +
+  theme(legend.position = "none") +
+  
+  labs(y = "Mean beta", x = "TR post stimtime", title = "AXCPT hilo curves DMCC34 (BX-BY)")
+
+```
+
+
+## stats and maps
+
+
+```{r axcpt_stats, fig.height = 7, fig.width = 11}
+
+Axcpt <- d$Axcpt[tr %in% target.trs$Axcpt & term %in% c("BX", "BY")]
+Axcpt$hilo <- relevel(as.factor(Axcpt$term), "BY")
+Axcpt <- split(Axcpt, Axcpt$parcel)
+
+m.Axcpt <- lapply(Axcpt, function(x) lmer(coef ~ hilo + (1 | subj), x))
+s.Axcpt <- bind_rows(lapply(m.Axcpt, tidy_lmer), .id = "parcel")
+s.Axcpt %<>% filter(term != "(Intercept)") %>% mutate(p.holm = p.adjust(p.value, "holm"))
+
+s.Axcpt %<>%
+  mutate(
+    hemi = substr(parcel, 1, 1),
+    num.roi = row_number(),
+  )
+
+s.Axcpt %>% filter(p.holm < 0.05 & estimate > 0) %>% arrange(p.holm) %>% kable
+s.Axcpt %>% filter(p.holm < 0.05 & estimate > 0) %>% nrow
+
+```
+
+
+Unthresholded and thresholded t-statistics.
+Threshold at holm-corrected p-value (across all parcels) of 0.05.
+
+```{r Axcpt_maps_hilo, fig.height = 7, fig.width = 11}
+
+s.Axcpt %>%
+  build_overlay("statistic", template = schaefer) %>%
+  plot_surface(underlay = hcp, hues = viridis::inferno(500))
+
+s.Axcpt %>%
+  mutate(statistic = ifelse(p.holm < 0.05, statistic, 0)) %>%
+  build_overlay("statistic", template = schaefer) %>%
+  plot_surface(underlay = hcp, hues = viridis::inferno(500))
+
+```
+
+
+
+
+
+
+# Cuedts
+
+
+## curves
+
+### Network-level
+
+#### marginal
+
+```{r Cuedts_curves_network_marginal, fig.height = 7, fig.width = 8}
+
+d$Cuedts[, .(m = mean(coef)), by = .(run, network, tr, subj)] %>%
+  
+  mutate(tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, m, fill = run)) +
+  geom_hline(yintercept = 0) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
+  
+  facet_grid(vars(network)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 16, 1)) +
+  
+  labs(y = "Mean beta", x = "TR post stimtime", title = "Cuedts marginal curves")
+
+```
+
+#### conditional
+
+```{r Cuedts_curves_network_conditional, fig.height = 7, fig.width = 11}
+
+d$Cuedts[, .(m = mean(coef)), by = .(run, network, tr, term, subj)] %>%
+  
+  mutate(tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, m, fill = run)) +
+  geom_hline(yintercept = 0) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
+  
+  facet_grid(vars(network), vars(term)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 16, 2)) +
+  theme(legend.position = "none") +
+  
+  labs(y = "Mean beta", x = "TR post stimtime", title = "Cuedts conditional curves")
+
+```
+
+
+#### HiLo contrast
+
+```{r Cuedts_curves_network_contrast, fig.height = 7, fig.width = 8}
+
+d$Cuedts[, .(m = mean(coef)), by = .(run, network, tr, term, subj)] %>%
+  
+  dcast(run + network + tr + subj ~ term, value_var = "m") %>%
+  
+  mutate(hilo = (InConSwitch + InConRepeat - ConSwitch - ConRepeat)/2, tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, hilo, fill = run)) +
+  geom_hline(yintercept = 0) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
+  
+  facet_grid(vars(network)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 16, 2)) +
+  theme(legend.position = "none") +
+  
+  labs(
+    y = "Mean beta", 
+    x = "TR post stimtime", 
+    title = "Cuedts hilo curves (InConSwitch + InConRepeat - ConSwitch + ConRepeat)/4"
+  )
+
+```
+
+
+### DMCC 34
+#### HiLo contrast
+
+```{r Cuedts_curves_dmcc34, fig.height = 7, fig.width = 11}
+
+d$Cuedts[
+  parcel %in% parcellation$key[dmcc34], 
+  .(m = mean(coef)), by = .(run, parcel, network, tr, term, subj)
+  ] %>%
+  
+  dcast(run + parcel + network + tr + subj ~ term, value_var = "m") %>%
+  
+  mutate(hilo = (InConSwitch + InConRepeat - ConSwitch - ConRepeat)/2, tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, hilo, fill = run)) +
+  geom_hline(yintercept = 0) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
+  
+  facet_wrap(vars(parcel)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 16, 2)) +
+  theme(legend.position = "none") +
+  
+  labs(y = "Mean beta", x = "TR post stimtime", title = "Cuedts hilo curves DMCC34 (BX-BY)")
+
+```
+
+
+## stats and maps
+
+```{r Cuedts_stats, fig.height = 7, fig.width = 11}
+
+Cuedts <- d$Cuedts[tr %in% target.trs$Cuedts]
+Cuedts$hilo <- gsub("Switch|Repeat", "", Cuedts$term)
+
+Cuedts <- split(Cuedts, Cuedts$parcel)
+
+m.Cuedts <- lapply(Cuedts, function(x) lmer(coef ~ hilo + (1 | subj), x))
+s.Cuedts <- bind_rows(lapply(m.Cuedts, tidy_lmer), .id = "parcel")
+s.Cuedts %<>% filter(term != "(Intercept)") %>% mutate(p.holm = p.adjust(p.value, "holm"))
+
+s.Cuedts %<>%
+  mutate(
+    hemi = substr(parcel, 1, 1),
+    num.roi = row_number()
+  )
+
+s.Cuedts %>% filter(p.holm < 0.05 & estimate > 0) %>% arrange(term, p.holm) %>% kable
+s.Cuedts %>% filter(p.holm < 0.05 & estimate > 0) %>% nrow
+
+```
+
+Unthresholded and thresholded t-statistics.
+Threshold at holm-corrected p-value (across all parcels) of 0.05.
+
+```{r Cuedts_maps_hilo, fig.height = 7, fig.width = 11}
+
+s.Cuedts %>%
+  filter(term == "hiloInCon") %>%
+  build_overlay("statistic", template = schaefer) %>%
+  plot_surface(underlay = hcp, hues = viridis::inferno(500))
+
+s.Cuedts %>%
+  filter(term == "hiloInCon") %>%
+  mutate(statistic = ifelse(p.holm < 0.05, statistic, 0)) %>%
+  build_overlay("statistic", template = schaefer) %>%
+  plot_surface(underlay = hcp, hues = viridis::inferno(500))
+
+```
+
+
+
+
+
+
+# Stern
+
+## curves
+
+### Network-level
+
+#### marginal
+
+```{r Stern_curves_network_marginal, fig.height = 7, fig.width = 8}
+
+d$Stern[, .(m = mean(coef)), by = .(run, network, tr, subj)] %>%
+  
+  mutate(tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, m, fill = run)) +
+  geom_hline(yintercept = 0) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
+  
+  facet_grid(vars(network)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 16, 1)) +
+  
+  labs(y = "Mean beta", x = "TR post stimtime", title = "Stern marginal curves")
+
+```
+
+#### conditional
+
+```{r Stern_curves_network_conditional, fig.height = 7, fig.width = 11}
+
+d$Stern[, .(m = mean(coef)), by = .(run, network, tr, term, subj)] %>%
+  
+  mutate(tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, m, fill = run)) +
+  geom_hline(yintercept = 0) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
+  
+  facet_grid(vars(network), vars(term)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 20, 2)) +
+  theme(legend.position = "none") +
+  
+  labs(y = "Mean beta", x = "TR post stimtime", title = "Stern conditional curves")
+
+```
+
+
+#### HiLo contrast
+
+```{r Stern_curves_network_contrast, fig.height = 7, fig.width = 8}
+
+d$Stern[
+  term %in% c("LL5RN", "LL5NN", "not5RN", "not5NN"), 
+  .(m = mean(coef)), by = .(run, network, tr, term, subj)
+  ] %>%
+  
+  dcast(run + network + tr + subj ~ term, value_var = "m") %>%
+  
+  mutate(hilo = (LL5RN + not5RN - LL5NN - not5NN)/2, tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, hilo, fill = run)) +
+  geom_hline(yintercept = 0) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
+  
+  facet_grid(vars(network)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 20, 2)) +
+  theme(legend.position = "none") +
+  
+  labs(
+    y = "Mean beta", 
+    x = "TR post stimtime", 
+    title = "Stern hilo curves (LL5RN + not5RN - LL5NN - not5NN)/2"
+  )
+
+
+```
+
+
+### DMCC 34
+#### HiLo contrast
+
+```{r Stern_curves_dmcc34, fig.height = 7, fig.width = 11}
+
+d$Stern[
+  term %in% c("LL5RN", "LL5NN", "not5RN", "not5NN") & parcel %in% parcellation$key[dmcc34], 
+  .(m = mean(coef)), by = .(run, parcel, network, tr, term, subj)
+  ] %>%
+  
+  dcast(run + parcel + network + tr + subj ~ term, value_var = "m") %>%
+  
+  mutate(hilo = LL5RN - LL5NN, tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, hilo, fill = run)) +
+  geom_hline(yintercept = 0) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
+  
+  facet_wrap(vars(parcel)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 20, 2)) +
+  theme(legend.position = "none") +
+  
+  labs(
+    y = "Mean beta", 
+    x = "TR post stimtime", 
+    title = "Stern hilo curves (LL5RN + not5RN - LL5NN - not5NN)/2"
+  )
+
+```
+
+
+## stats and maps
+
+```{r Stern_stats, fig.height = 7, fig.width = 11}
+
+Stern <- d$Stern[tr %in% target.trs$Stern & term %in% c("LL5RN", "LL5NN", "not5NN", "not5RN")]
+Stern$hilo <- gsub("LL5|not5", "", Stern$term)
+
+Stern <- split(Stern, Stern$parcel)
+
+m.Stern <- lapply(Stern, function(x) lmer(coef ~ hilo + (1 | subj), x))
+s.Stern <- bind_rows(lapply(m.Stern, tidy_lmer), .id = "parcel")
+s.Stern %<>% filter(term != "(Intercept)") %>% mutate(p.holm = p.adjust(p.value, "holm"))
+
+s.Stern %<>%
+  mutate(
+    hemi = substr(parcel, 1, 1),
+    num.roi = row_number()
+  )
+
+s.Stern %>% filter(p.holm < 0.05 & estimate > 0) %>% arrange(term, p.holm) %>% kable
+s.Stern %>% filter(p.holm < 0.05 & estimate > 0) %>% nrow
+
+```
+
+Unthresholded and thresholded t-statistics.
+Threshold at holm-corrected p-value (across all parcels) of 0.05.
+
+```{r Stern_maps_hilo, fig.height = 7, fig.width = 11}
+
+s.Stern %>%
+  filter(term == "hiloRN") %>%
+  build_overlay("statistic", template = schaefer) %>%
+  plot_surface(underlay = hcp, hues = viridis::inferno(500))
+
+s.Stern %>%
+  filter(term == "hiloRN") %>%
+  mutate(statistic = ifelse(p.holm < 0.05, statistic, 0)) %>%
+  build_overlay("statistic", template = schaefer) %>%
+  plot_surface(underlay = hcp, hues = viridis::inferno(500))
+
+```
+
+
+
+
+
+# Stroop
+
+## curves
+
+### Network-level
+
+#### marginal
+
+```{r Stroop_curves_network_marginal, fig.height = 7, fig.width = 8}
+
+d$Stroop[, .(m = mean(coef)), by = .(run, network, tr, subj)] %>%
+  
+  mutate(tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, m, fill = run)) +
+  geom_hline(yintercept = 0) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
+  
+  facet_grid(vars(network)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 16, 1)) +
+  
+  labs(y = "Mean beta", x = "TR post stimtime", title = "Stroop marginal curves")
+
+```
+
+#### conditional
+
+```{r Stroop_curves_network_conditional, fig.height = 7, fig.width = 11}
+
+d$Stroop[, .(m = mean(coef)), by = .(run, network, tr, term, subj)] %>%
+  
+  mutate(tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, m, fill = run)) +
+  geom_hline(yintercept = 0) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
+  
+  facet_grid(vars(network), vars(term)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 20, 2)) +
+  theme(legend.position = "none") +
+  
+  labs(y = "Mean beta", x = "TR post stimtime", title = "Stroop conditional curves")
+
+```
+
+
+#### HiLo contrast
+
+```{r Stroop_curves_network_contrast, fig.height = 7, fig.width = 8}
+
+d$Stroop[, .(m = mean(coef)), by = .(run, network, tr, term, subj)] %>%
+  
+  dcast(run + network + tr + subj ~ term, value_var = "m") %>%
+  
+  mutate(hilo = (biasInCon + PC50InCon - biasCon - PC50Con)/2, tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, hilo, fill = run)) +
+  geom_hline(yintercept = 0) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
+  
+  facet_grid(vars(network)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 20, 2)) +
+  theme(legend.position = "none") +
+  
+  labs(
+    y = "Mean beta", 
+    x = "TR post stimtime", 
+    title = "Stroop hilo curves (biasInCon + PC50InCon - biasCon - PC50Con)/2"
+  )
+
+
+```
+
+
+### DMCC 34
+#### HiLo contrast
+
+```{r Stroop_curves_dmcc34, fig.height = 7, fig.width = 11}
+
+d$Stroop[
+  parcel %in% parcellation$key[dmcc34], 
+  .(m = mean(coef)), by = .(run, parcel, network, tr, term, subj)
+  ] %>%
+  
+  dcast(run + parcel + network + tr + subj ~ term, value_var = "m") %>%
+  
+  mutate(hilo = (biasInCon + PC50InCon - biasCon - PC50Con)/2, tr = as.numeric(tr)) %>%
+  
+  ggplot(aes(tr, hilo, fill = run)) +
+  geom_hline(yintercept = 0) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/3) +
+  
+  facet_wrap(vars(parcel)) +
+  scale_fill_brewer(type = "qual", palette = 2) +
+  scale_x_continuous(breaks = seq(0, 20, 2)) +
+  theme(legend.position = "none") +
+  
+  labs(
+    y = "Mean beta", 
+    x = "TR post stimtime", 
+    title = "Stroop hilo curves (biasInCon + PC50InCon - biasCon - PC50Con)/2"
+  )
+
+```
+
+
+## stats and maps
+
+```{r Stroop_stats, fig.height = 7, fig.width = 11}
+
+Stroop <- d$Stroop[tr %in% target.trs$Stroop]
+Stroop$hilo <- gsub("PC50|bias", "", Stroop$term)
+
+Stroop <- split(Stroop, Stroop$parcel)
+
+m.Stroop <- lapply(Stroop, function(x) lmer(coef ~ hilo + (1 | subj), x))
+s.Stroop <- bind_rows(lapply(m.Stroop, tidy_lmer), .id = "parcel")
+s.Stroop %<>% filter(term != "(Intercept)") %>% mutate(p.holm = p.adjust(p.value, "holm"))
+
+s.Stroop %<>%
+  mutate(
+    hemi = substr(parcel, 1, 1),
+    num.roi = row_number()
+  )
+
+s.Stroop %>% filter(p.holm < 0.05 & estimate > 0) %>% arrange(term, p.holm) %>% kable
+s.Stroop %>% filter(p.holm < 0.05 & estimate > 0) %>% nrow
+
+```
+
+Unthresholded and thresholded t-statistics.
+Threshold at holm-corrected p-value (across all parcels) of 0.05.
+
+```{r Stroop_maps_hilo, fig.height = 7, fig.width = 11}
+
+s.Stroop %>%
+  filter(term == "hiloInCon") %>%
+  build_overlay("statistic", template = schaefer) %>%
+  plot_surface(underlay = hcp, hues = viridis::inferno(500))
+
+s.Stroop %>%
+  filter(term == "hiloInCon") %>%
+  mutate(statistic = ifelse(p.holm < 0.05, statistic, 0)) %>%
+  build_overlay("statistic", template = schaefer) %>%
+  plot_surface(underlay = hcp, hues = viridis::inferno(500))
+
+```
+
+
+
+
+
+
+# Conjunction
+
+## Summary stats
+
+Parcels significantly activated ($\beta>0$) in each task.
+(Intersection of sets of significantly activated parcels in each task.)
+P-values Holm-corrected across all 400 parcels separately within each task.
+
+
+```{r conjunction_sumstats, fig.height = 7, fig.width = 11}
+
+conj.sumstats <- Reduce(
+ intersect, 
+   list(
+    s.Axcpt  %>% filter(p.holm < 0.05 & estimate > 0) %>% pull(parcel),
+    s.Cuedts %>% filter(p.holm < 0.05 & estimate > 0) %>% pull(parcel),
+    s.Stern  %>% filter(p.holm < 0.05 & estimate > 0) %>% pull(parcel),
+    s.Stroop %>% filter(p.holm < 0.05 & estimate > 0) %>% pull(parcel)
+  )
+)
+
+conj.sumstats
+
+data.frame(
+  is.conj = as.numeric(parcellation$key %in% conj.sumstats) + 1,
+  num.roi = seq_along(parcellation$key),
+  hemi = substr(parcellation$key, 1, 1)
+  ) %>%
+  build_overlay("is.conj", template = schaefer) %>%
+  plot_surface(underlay = hcp, hues = c("white", "firebrick1"))
+
+
+```
+
+
+## Task as random effect
+
+Parcels significantly activated ($\beta>0$), accounting for task variability.
+P-values Holm-corrected across all 400 parcels.
+
+* HLM random intercept model
+    * response variable: Hi-Lo contrast
+    * level-I: (TR within target window)\*(run)
+    * level-2: subject and task (fully crossed)
+    * $\beta_{trsk} = b_0 + d_s + d_k$
+      * $t, r, s, k$ are indices for TR, run, and subject, and task
+      * $d_s$ is subject-specific intercept
+      * $d_k$ is task-specific intercept
+    * p-values on contrast were Holm corrected across all 400 parcels.
+* NB: several models had singular fits (indicating overparameterzation) and several did not converge
+    * unsuprising: model attempts to estimate variance in effect across only 4 tasks.
+    * these model results weren't excluded from the figure
+    * so take results with grain of salt
+    
+
+
+```{r conjunction_ranef, fig.height = 7, fig.width = 11}
+
+Axcpt  <- d$Axcpt[tr %in% target.trs$Axcpt & term %in% c("BX", "BY")]
+Cuedts <- d$Cuedts[tr %in% target.trs$Cuedts]
+Stern  <- d$Stern[tr %in% target.trs$Stern & term %in% c("LL5RN", "LL5NN", "not5NN", "not5RN")]
+Stroop <- d$Stroop[tr %in% target.trs$Stroop]
+
+Axcpt  %<>% mutate(hilo = ifelse(term == "BX", "hi", "lo"), hilo = relevel(as.factor(hilo), "lo"))
+Cuedts %<>% mutate(hilo = ifelse(grepl("InCon", term), "hi", "lo"), hilo = relevel(as.factor(hilo), "lo"))
+Stern  %<>% mutate(hilo = ifelse(grepl("RN", term), "hi", "lo"), hilo = relevel(as.factor(hilo), "lo"))
+Stroop %<>% mutate(hilo = ifelse(grepl("InCon", term), "hi", "lo"), hilo = relevel(as.factor(hilo), "lo"))
+
+alltasks <- bind_rows(
+  Axcpt  = Axcpt,
+  Cuedts = Cuedts,
+  Stern  = Stern,
+  Stroop = Stroop,
+  .id = "task"
+)
+
+alltasks <- alltasks[, .(coef = mean(coef)), by = .(task, tr, parcel, subj, run, hemi, network, hilo)]
+alltasks <- dcast(alltasks, ... ~ hilo, value.var = "coef")
+alltasks$contrast <- alltasks$hi - alltasks$lo
+
+
+alltasks <- split(alltasks, alltasks$parcel)
+
+
+m.alltasks <- lapply(alltasks, function(x) lmer(contrast ~ 1 + (1 | subj) + (1 | task), x))
+warnings()
+s.alltasks <- bind_rows(lapply(m.alltasks, tidy_lmer), .id = "parcel")
+s.alltasks %<>% mutate(p.holm = p.adjust(p.value, "holm"))
+
+s.alltasks %<>%
+  mutate(
+    hemi = substr(parcel, 1, 1),
+    num.roi = row_number()
+  )
+
+s.alltasks %>% filter(p.holm < 0.05 & estimate > 0) %>% arrange(p.holm) %>% kable
+s.alltasks %>% filter(p.holm < 0.05 & estimate > 0) %>% nrow
+
+
+conj.ranef <- s.alltasks %>% filter(p.holm < 0.05 & estimate > 0) %>% pull(parcel)
+
+data.frame(
+  is.conj = as.numeric(parcellation$key %in% conj.ranef) + 1,
+  num.roi = seq_along(parcellation$key),
+  hemi = substr(parcellation$key, 1, 1)
+  ) %>%
+  build_overlay("is.conj", template = schaefer) %>%
+  plot_surface(underlay = hcp, hues = c("white", "firebrick1"))
+
+
+```
