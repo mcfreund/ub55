@@ -139,6 +139,14 @@ summary(m10)
 
 plot(m10)
 
+m11 <- lmer(
+  rt ~ cresp * trial.type * cue + switch + (cue + cresp | subj),
+  cuedts.rt, 
+  control = lmerControl(optimizer = "bobyqa")
+)
+summary(m11)
+
+
 cuedts.rt$resid <- resid(m10)
 cuedts.rt %>%
   

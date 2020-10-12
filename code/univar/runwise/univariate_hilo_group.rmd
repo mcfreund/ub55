@@ -7,6 +7,7 @@ output:
     toc: true
     highlight: zenburn
     number_sections: true
+    theme: spacelab
 ---
 
 
@@ -80,10 +81,11 @@ Notes on analyses:
 * within 'curves' sections, ribbons indicate 95% CI of bootstrapped mean beta across subjects (one ribbon per run).
 * 'target' trs were defined for each task: 
     * Axcpt, Cuedts, and Stern begins at roughly ~4 TRs post-cue onset, and ending at ~8 TRs post-cue onset
-    * Axcpt: `r target.trs["Axcpt"]`
-    * Cuedts: `r target.trs["Cuedts"]`
-    * Stern: `r target.trs["Stern"]`
-    * Stroop: `r target.trs["Stroop"]`
+    * Stroop: begins at 2 TRs post-target onset, ends at 6 TRs post-target onset
+    * Axcpt: `r target.trs$Axcpt`
+    * Cuedts: `r target.trs$Cuedts`
+    * Stern: `r target.trs$Stern`
+    * Stroop: `r target.trs$Stroop`
 * for "stats and maps" sections, HLM was used to estimate t-statistics on the hi-lo contrast per ROI:
     * random-intercept models
     * level-I: (TR within target window)\*(run)
@@ -107,7 +109,6 @@ Notes on analyses:
 #### marginal
 
 * Averaged across all conditions (trial types).
-* Ribbon shows bootstrapped 95% CI of mean beta across subjects.
 
 ```{r axcpt_curves_network_marginal, fig.height = 7, fig.width = 8}
 
@@ -128,8 +129,6 @@ d$Axcpt[, .(m = mean(coef)), by = .(run, network, tr, subj)] %>%
 ```
 
 #### conditional
-
-* Ribbon shows bootstrapped 95% CI of mean beta across subjects.
 
 ```{r axcpt_curves_network_conditional, fig.height = 7, fig.width = 11}
 
@@ -152,8 +151,6 @@ d$Axcpt[, .(m = mean(coef)), by = .(run, network, tr, term, subj)] %>%
 
 
 #### HiLo contrast
-
-* Ribbon shows bootstrapped 95% CI of mean HiLo contrast of betas across subjects.
 
 ```{r axcpt_curves_network_contrast, fig.height = 7, fig.width = 8}
 
@@ -322,7 +319,7 @@ d$Cuedts[, .(m = mean(coef)), by = .(run, network, tr, term, subj)] %>%
   labs(
     y = "Mean beta", 
     x = "TR post stimtime", 
-    title = "Cuedts hilo curves (InConSwitch + InConRepeat - ConSwitch + ConRepeat)/4"
+    title = "Cuedts hilo curves (InConSwitch + InConRepeat - ConSwitch - ConRepeat)/4"
   )
 
 ```
@@ -351,7 +348,12 @@ d$Cuedts[
   scale_x_continuous(breaks = seq(0, 16, 2)) +
   theme(legend.position = "none") +
   
-  labs(y = "Mean beta", x = "TR post stimtime", title = "Cuedts hilo curves DMCC34 (BX-BY)")
+  labs(
+    y = "Mean beta", 
+    x = "TR post stimtime", 
+    title = "Cuedts hilo curves (InConSwitch + InConRepeat - ConSwitch - ConRepeat)/4"
+  )
+
 
 ```
 
@@ -462,7 +464,7 @@ d$Stern[
   
   dcast(run + network + tr + subj ~ term, value_var = "m") %>%
   
-  mutate(hilo = (LL5RN + not5RN - LL5NN - not5NN)/2, tr = as.numeric(tr)) %>%
+  mutate(hilo = (LL5RN + LL5NN)/2, tr = as.numeric(tr)) %>%
   
   ggplot(aes(tr, hilo, fill = run)) +
   geom_hline(yintercept = 0) +
@@ -777,7 +779,7 @@ P-values Holm-corrected across all 400 parcels.
 
 Axcpt  <- d$Axcpt[tr %in% target.trs$Axcpt & term %in% c("BX", "BY")]
 Cuedts <- d$Cuedts[tr %in% target.trs$Cuedts]
-Stern  <- d$Stern[tr %in% target.trs$Stern & term %in% c("LL5RN", "LL5NN", "not5NN", "not5RN")]
+Stern  <- d$Stern[tr %in% target.trs$Stern & term %in% c("LL5RN", "LL5NN")]
 Stroop <- d$Stroop[tr %in% target.trs$Stroop]
 
 Axcpt  %<>% mutate(hilo = ifelse(term == "BX", "hi", "lo"), hilo = relevel(as.factor(hilo), "lo"))

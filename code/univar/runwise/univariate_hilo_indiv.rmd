@@ -6,6 +6,9 @@ output:
   html_document:
     toc: true
     highlight: zenburn
+    number_sections: true
+    theme: spacelab
+
 ---
 
 
@@ -135,7 +138,7 @@ d$Axcpt[
   scale_x_continuous(breaks = seq(0, 16, 2)) +
   theme(legend.position = "none") +
   
-  labs(y = "difference in cross-run correlation", x = "TR post stimtime", title = "Axcpt hilo curves (BX-BY)")
+  labs(y = "cross-run correlation", x = "TR post stimtime", title = "Axcpt hilo curves (BX-BY)")
 
 ```
 
@@ -171,7 +174,7 @@ d$Axcpt[
   scale_x_continuous(breaks = seq(0, 16, 2)) +
   theme(legend.position = "none") +
   
-  labs(y = "difference in cross-run correlation", x = "TR post stimtime", title = "Axcpt hilo curves (BX-BY) DMCC34")
+  labs(y = "cross-run correlation", x = "TR post stimtime", title = "Axcpt hilo curves (BX-BY) DMCC34")
 
 ```
 
@@ -301,7 +304,7 @@ d$Cuedts[,
   theme(legend.position = "none") +
   
   labs(
-    y = "difference in cross-run correlation", 
+    y = "cross-run correlation", 
     x = "TR post stimtime", 
     title = "Cuedts hilo curves: (InCon_Switch + InCon_Repeat - Con_Switch - Con_Repeat)/2"
     )
@@ -341,7 +344,7 @@ d$Cuedts[
   theme(legend.position = "none") +
   
   labs(
-    y = "difference in cross-run correlation", 
+    y = "cross-run correlation", 
     x = "TR post stimtime", 
     title = "Cuedts hilo curves: (InCon_Switch + InCon_Repeat - Con_Switch - Con_Repeat)/2"
     )
@@ -476,7 +479,7 @@ d$Stern[
   theme(legend.position = "none") +
   
   labs(
-    y = "difference in cross-run correlation", 
+    y = "cross-run correlation", 
     x = "TR post stimtime", 
     title = "Stern hilo curves (LL5RN + not5RN - LL5NN - not5NN)/2"
     )
@@ -516,7 +519,7 @@ d$Stern[
   theme(legend.position = "none") +
   
   labs(
-    y = "difference in cross-run correlation", 
+    y = "cross-run correlation", 
     x = "TR post stimtime", 
     title = "Stern hilo curves (LL5RN + not5RN - LL5NN - not5NN)/2"
     )
@@ -651,7 +654,7 @@ d$Stroop[,
   theme(legend.position = "none") +
   
   labs(
-    y = "difference in cross-run correlation", 
+    y = "cross-run correlation", 
     x = "TR post stimtime", 
     title = "Stroop hilo curves (biasInCon + PC50InCon - biasCon - PC50Con)/2"
     )
@@ -691,7 +694,7 @@ d$Stroop[
   theme(legend.position = "none") +
   
   labs(
-    y = "difference in cross-run correlation", 
+    y = "cross-run correlation", 
     x = "TR post stimtime", 
     title = "Stroop hilo curves (biasInCon + PC50InCon - biasCon - PC50Con)/2"
     )
