@@ -83,3 +83,54 @@ read_betas <- function(
   betas
     
 }
+
+
+
+
+symmat4ggplot <- function(R, var.names = c("v1", "v2"), val.name = "value") {
+  
+  ## make factors for row and column labels
+  dn <- dimnames(R)
+  if (is.null(dn)) {
+    dn <- setNames(list(paste0("cell_", 1:nrow(R)), paste0("cell_", 1:ncol(R))), var.names)
+  } else {
+    names(dn) <- var.names  
+  }
+  
+  labels <- expand.grid(dn, KEEP.OUT.ATTRS = FALSE, stringsAsFactors = TRUE)
+  labels[[2]] <- factor(labels[[2]], levels = rev(levels(labels[[2]])))
+  
+  r <- c(R)
+  
+  cbind(labels, setNames(as.data.frame(c(R)), val.name))
+  
+}
+
+
+
+
+read_resid <- function(
+  .subj,
+  .task,
+  .glm,
+  .run,
+  .dir
+) {
+  # .subj = subjs[1]; .task = "Axcpt"; .glm = "baseline_Cues_EVENTS_censored_shifted"; .dir = dir.analysis; run.i = 1
+  
+  
+  
+  fname_l <- file.path(
+    .dir, .subj, "RESULTS",  .task, 
+    paste0(.glm, "_", .run),
+    paste0("wherr_", .subj, "_", .run, "_L_REML.func.gii")
+  )
+  fname_r <- gsub("_L_REML", "_R_REML", fname_l)
+  
+  E_l <- mikeutils::read_gifti2matrix(fname_l)
+  E_r <- mikeutils::read_gifti2matrix(fname_r)
+  
+  cbind(E_l, E_r)
+  
+}
+
