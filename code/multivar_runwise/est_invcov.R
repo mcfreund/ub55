@@ -17,13 +17,13 @@ glminfo <- data.frame(
   task = "Axcpt",
   name.glm =
     "baseline_Cues_EVENTS_censored_shifted",
-  # task = c("Axcpt", "Cuedts", "Stern", "Stroop"),
-  # name.glm = c(
-  #   "baseline_Cues_EVENTS_censored_shifted", 
-  #   "baseline_CongruencySwitch_EVENTS_censored_shifted",
-  #   "baseline_ListLength_EVENTS_censored_shifted",
-  #   "baseline_Congruency_EVENTS_censored_shifted"
-  # ),
+  task = c("Axcpt", "Cuedts", "Stern", "Stroop"),
+  name.glm = c(
+    "baseline_Cues_EVENTS_censored_shifted",
+    "baseline_CongruencySwitch_EVENTS_censored_shifted",
+    "baseline_ListLength_EVENTS_censored_shifted",
+    "baseline_Congruency_EVENTS_censored_shifted"
+  ),
   stringsAsFactors = FALSE
 )
 glminfo <- as.data.table(glminfo)
@@ -47,7 +47,7 @@ for (glm.i in seq_len(nrow(glminfo))) {
   
   X <- readRDS(here("out", "glms", paste0("xmats_", name.task.i, "_", name.glm.i, ".RDS")))
   
-  for (subj.i in seq_along(subjs)[1]) {
+  for (subj.i in seq_along(subjs)) {
     # subj.i = 1
     
     name.subj.i <- subjs[subj.i]
@@ -76,7 +76,7 @@ for (glm.i in seq_len(nrow(glminfo))) {
     cl <- makeCluster(n.cores / 2)
     registerDoParallel(cl)
     # time.start <- Sys.time()
-    foreach(parcel.i = seq_along(parcellation$key), .inorder = FALSE) %dopar% {
+    res <- foreach(parcel.i = seq_along(parcellation$key), .inorder = FALSE) %dopar% {
     # for (parcel.i in seq_along(parcellation$key)) {
       # parcel.i = 20
       
@@ -125,18 +125,18 @@ for (glm.i in seq_len(nrow(glminfo))) {
         
         data.table::fwrite(
           data.table::as.data.table(W_1), 
-          file.path(dir.results.i1, paste0("invcov_error", suffix, ".txt"))
+          file.path(dir.results.i1, paste0("error_", suffix, ".txt"))
           )
         
       } else {
         
         saveRDS(
           W_1, 
-          file.path(dir.results.i1, paste0("invcov", suffix, ".RDS"))
+          file.path(dir.results.i1, paste0("invcov_", suffix, ".RDS"))
           )  ## save prewhitening
         saveRDS(
           list(vertex = has.bold, tr = is.included[, 1]), 
-          file.path(dir.results.i1, paste0("inclusions", suffix, ".RDS"))
+          file.path(dir.results.i1, paste0("inclusions_", suffix, ".RDS"))
           )  ## save information on data exclusions
         
       }
@@ -148,18 +148,18 @@ for (glm.i in seq_len(nrow(glminfo))) {
         
         data.table::fwrite(
           data.table::as.data.table(W_2), 
-          file.path(dir.results.i2, paste0("invcov_error", suffix, ".txt"))
+          file.path(dir.results.i2, paste0("error_", suffix, ".txt"))
           )
         
       } else {
         
         saveRDS(
           W_2, 
-          file.path(dir.results.i2, paste0("invcov", suffix, ".RDS"))
+          file.path(dir.results.i2, paste0("invcov_", suffix, ".RDS"))
           )
         saveRDS(
           list(vertex = has.bold, tr = is.included[, 2]), 
-          file.path(dir.results.i2, paste0("inclusions", suffix, ".RDS"))
+          file.path(dir.results.i2, paste0("inclusions_", suffix, ".RDS"))
         )
         
       }
@@ -177,100 +177,4 @@ for (glm.i in seq_len(nrow(glminfo))) {
   
 }
 time.run <- Sys.time() - time.start
-
-
-
-
-
-
-
-
-
-
-
-
-
-  ## 1. loop over subjs, tasks
-  ## 2. read resid
-  ## 3. loop over ROIs
-  ##    - exclude censored frames, vertices with no variance
-  ## 4. prewhiten
-  ## 5. save (as RDS)
-
-
-
-  
-  
-  # lambda.cov <- attr(W, "lambda")
-  # lambda.var <- attr(W, "lambda.var")
-  # B %*% (W %*% B)
-  
-  
-  
-
-  
-  
-  for (hemi.i in c("L", "R")) {
-    # hemi.i = "L"
-    
-    
-    
-    fname <- file.path(
-      .dir, .subjs[subj.i], "RESULTS",  .task, paste0(.glm, "_", run.i),  
-      paste0("STATS_", subjs[subj.i], "_", run.i, "_", hemi.i, "_REML.func.gii")
-    )
-    
-    if (!file.exists(fname)) next
-    
-    B <- mikeutils::read_gifti2matrix(fname)[is.reg, ]
-    
-    is.ok.i <- isTRUE(all.equal(dim(B), c(n.reg * n.tr, n.vertex)))
-    if (!is.ok.i) stop("mismatched beta array")
-    
-    
-    for (reg.i in n.reg) {
-      
-      is.reg.i <- grepl(regs[reg.i], labs[is.reg])
-      B.reg.i <- t(B[is.reg.i, ])
-      
-      is.ok.ii <- isTRUE(all.equal(dim(betas[inds, reg.i, , subj.i, run.i]), dim(B.reg.i)))
-      if (!is.ok.ii) stop("mismatched regressor array")
-      
-      betas[inds, reg.i, , subj.i, run.i] <- B.reg.i
-      
-    }
-    
-  }
-      
-
-}
-
-
-
-
-
-
-
-
-
-for (glm.i in seq_len(nrow(glminfo))) {
-  
-  
-  
-  list.files()
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  # betas.i <- read_betas(subjs, glminfo[glm.i]$task, glminfo[glm.i]$name.glm, dir.analysis )
-  # saveRDS(betas.i, here("out", "glms", paste0("betas_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")))
-  
-}
 
