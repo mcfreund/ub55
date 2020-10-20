@@ -6,6 +6,8 @@ source(here("code", "_atlases.R"))
 source(here("code", "_settings.R"))
 source(here("code", "_funs.R"))
 
+subjs <- subjs[subjs %in% "432332"]
+
 # options(warn = 2)  ## warning
 
 
