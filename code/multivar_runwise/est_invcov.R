@@ -30,6 +30,13 @@ glminfo <- as.data.table(glminfo)
 
 errors <- c()
 
+n.iter <- nrow(glminfo) * length(subjs)
+pb <- progress_bar$new(
+  format = " running [:bar] :percent eta: :eta (elapsed: :elapsed)",
+  total = n.iter, clear = FALSE, width = 120
+)
+
+
 
 time.start <- Sys.time()
 for (glm.i in seq_len(nrow(glminfo))) {
@@ -66,9 +73,12 @@ for (glm.i in seq_len(nrow(glminfo))) {
     }
     
     
-    
-    for (parcel.i in seq_along(parcellation$key)) {
-      # parcel.i = 1
+    cl <- makeCluster(n.cores / 2)
+    registerDoParallel(cl)
+    # time.start <- Sys.time()
+    foreach(parcel.i = seq_along(parcellation$key), .inorder = FALSE) %dopar% {
+    # for (parcel.i in seq_along(parcellation$key)) {
+      # parcel.i = 20
       
       is.parcel <- schaefer10k == parcel.i
       
@@ -88,33 +98,85 @@ for (glm.i in seq_len(nrow(glminfo))) {
       
       # is.zero <- c(svd(cov(E_i1))$d < 1E-5, svd(cov(E_i2))$d < 1E-5)
       
-      W_1 <- corpcor::invcov.shrink(E_i1)
-      W_2 <- corpcor::invcov.shrink(E_i2)
-      
-      ## save prewhitening
-      
-      dir.results.i <- file.path(dir.analysis, name.subj.i, "RESULTS", name.task.i, name.glm.i)
-      
-      saveRDS(W_1, paste0(dir.results.i, "_1/", "invcov.RDS"))
-      saveRDS(W_2, paste0(dir.results.i, "_2/", "invcov.RDS"))
-      
-      ## save information on data exclusions
-      
-      saveRDS(
-        list(vertex = has.bold, tr = is.included[, 1]), 
-        paste0(dir.results.i, "_1/", "inclusions.RDS")
-        )
-      saveRDS(
-        list(vertex = has.bold, tr = is.included[, 2]), 
-        paste0(dir.results.i, "_2/", "inclusions.RDS")
+      W_1 <- tryCatch(
+        corpcor::invcov.shrink(E_i1),
+        warning = function(x) paste0("warning: ", name.glm.i, "|", name.subj.i, "|", parcel.i),
+        error = function(x) paste0("error: ", name.glm.i, "|", name.subj.i, "|", parcel.i)
+      )
+      W_2 <- tryCatch(
+        corpcor::invcov.shrink(E_i2),
+        warning = function(x) paste0("warning: ", name.glm.i, "|", name.subj.i, "|", parcel.i),
+        error = function(x) paste0("error: ", name.glm.i, "|", name.subj.i, "|", parcel.i)
       )
       
+      
+      ## save
+      
+      dir.results.i <- file.path(dir.analysis, name.subj.i, "RESULTS", name.task.i, name.glm.i)
+      dir.results.i1 <- paste0(dir.results.i, "_1/", "invcov")
+      dir.results.i2 <- paste0(dir.results.i, "_2/", "invcov")
+      if (!dir.exists(dir.results.i1)) dir.create(dir.results.i1)
+      if (!dir.exists(dir.results.i2)) dir.create(dir.results.i2)
+      suffix <- paste0("schaefer400-07_", parcellation$key[parcel.i])
+      
+      
+      had.prob1 <- class(W_1) == "character"
+      if (had.prob1) {
+        
+        data.table::fwrite(
+          data.table::as.data.table(W_1), 
+          file.path(dir.results.i1, paste0("invcov_error", suffix, ".txt"))
+          )
+        
+      } else {
+        
+        saveRDS(
+          W_1, 
+          file.path(dir.results.i1, paste0("invcov", suffix, ".RDS"))
+          )  ## save prewhitening
+        saveRDS(
+          list(vertex = has.bold, tr = is.included[, 1]), 
+          file.path(dir.results.i1, paste0("inclusions", suffix, ".RDS"))
+          )  ## save information on data exclusions
+        
+      }
+      
+      
+      
+      had.prob2 <- class(W_2) == "character" 
+      if (had.prob2) {
+        
+        data.table::fwrite(
+          data.table::as.data.table(W_2), 
+          file.path(dir.results.i2, paste0("invcov_error", suffix, ".txt"))
+          )
+        
+      } else {
+        
+        saveRDS(
+          W_2, 
+          file.path(dir.results.i2, paste0("invcov", suffix, ".RDS"))
+          )
+        saveRDS(
+          list(vertex = has.bold, tr = is.included[, 2]), 
+          file.path(dir.results.i2, paste0("inclusions", suffix, ".RDS"))
+        )
+        
+      }
+
     }
+    
+    
+    stopCluster(cl)
+    # time.end <- Sys.time() - time.start
+    
+    pb$tick()  ## progress bar
+    
     
   }
   
 }
-time.end <- Sys.time() - time.end
+time.run <- Sys.time() - time.start
 
 
 

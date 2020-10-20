@@ -19,6 +19,8 @@ if (nodename == "ccplinux1") {
   
 }
 
+n.cores <- detectCores()
+
 
 tasks <- c("Axcpt", "Cuedts", "Stern", "Stroop")
 dir.analysis <- here("out", "glms")
