@@ -6,26 +6,32 @@ source(here("code", "_atlases.R"))
 source(here("code", "_settings.R"))
 source(here("code", "_funs.R"))
 
+options(warn = 2)  ## warning
+
 
 ## input: subjs, task, glmname
 ## output: RDS file of inverse covariance matrices (array): both hemispheres for subj
 
 dirs <- expand.grid(subj = subjs, task = tasks, session = "baseline", stringsAsFactors = FALSE)
 glminfo <- data.frame(
-  task = c("Axcpt", "Cuedts", "Stern", "Stroop"),
-  name.glm = c(
-    "baseline_Cues_EVENTS_censored_shifted", 
-    "baseline_CongruencySwitch_EVENTS_censored_shifted",
-    "baseline_ListLength_EVENTS_censored_shifted",
-    "baseline_Congruency_EVENTS_censored_shifted"
-  ),
+  task = "Axcpt",
+  name.glm =
+    "baseline_Cues_EVENTS_censored_shifted",
+  # task = c("Axcpt", "Cuedts", "Stern", "Stroop"),
+  # name.glm = c(
+  #   "baseline_Cues_EVENTS_censored_shifted", 
+  #   "baseline_CongruencySwitch_EVENTS_censored_shifted",
+  #   "baseline_ListLength_EVENTS_censored_shifted",
+  #   "baseline_Congruency_EVENTS_censored_shifted"
+  # ),
   stringsAsFactors = FALSE
 )
 glminfo <- as.data.table(glminfo)
 
+errors <- c()
 
 
-
+time.start <- Sys.time()
 for (glm.i in seq_len(nrow(glminfo))) {
   # glm.i = 1
   
@@ -34,7 +40,7 @@ for (glm.i in seq_len(nrow(glminfo))) {
   
   X <- readRDS(here("out", "glms", paste0("xmats_", name.task.i, "_", name.glm.i, ".RDS")))
   
-  for (subj.i in seq_along(subjs)) {
+  for (subj.i in seq_along(subjs)[1]) {
     # subj.i = 1
     
     name.subj.i <- subjs[subj.i]
@@ -53,7 +59,13 @@ for (glm.i in seq_len(nrow(glminfo))) {
       along = 0
       )
     
-    ## check dims!
+    is.tr.ok <- dim(E)[2] == dim(X)[["tr"]]
+    if (!is.tr.ok) {
+        errors <- c(errors, paste0(name.glm.i, "|", name.subj.i))
+        next
+    }
+    
+    
     
     for (parcel.i in seq_along(parcellation$key)) {
       # parcel.i = 1
@@ -66,35 +78,43 @@ for (glm.i in seq_len(nrow(glminfo))) {
 
       ## remove vertices with 0 timecourse variance:
       
-      has.bold <- colSums(apply(E_i, 1:2, var) > 0) > 1  ## will need to write to file later
-      E_i <- E_i[, has.bold, ]
+      has.bold <- colSums(apply(E_i, c(1, 3), var) > 0) > 1  ## will need to write to file later
+      E_i <- E_i[, , has.bold]
       
       ## remove TRs censored from GLM and estimate prewhitening matrix 
       
-      W_1 <- corpcor::invcov.shrink(E_i[1, is.included[, 1], ])
-      W_2 <- corpcor::invcov.shrink(E_i[2, is.included[, 2], ])
+      E_i1 <- E_i[1, is.included[, 1], ]
+      E_i2 <- E_i[2, is.included[, 2], ]
       
-      ## save information on data exclusions:
+      # is.zero <- c(svd(cov(E_i1))$d < 1E-5, svd(cov(E_i2))$d < 1E-5)
       
-      inclusions <- list(
-        vertex = has.bold, 
-        tr = is.included
+      W_1 <- corpcor::invcov.shrink(E_i1)
+      W_2 <- corpcor::invcov.shrink(E_i2)
+      
+      ## save prewhitening
+      
+      dir.results.i <- file.path(dir.analysis, name.subj.i, "RESULTS", name.task.i, name.glm.i)
+      
+      saveRDS(W_1, paste0(dir.results.i, "_1/", "invcov.RDS"))
+      saveRDS(W_2, paste0(dir.results.i, "_2/", "invcov.RDS"))
+      
+      ## save information on data exclusions
+      
+      saveRDS(
+        list(vertex = has.bold, tr = is.included[, 1]), 
+        paste0(dir.results.i, "_1/", "inclusions.RDS")
         )
-      
-      
-      saveRDS(W_1, here("out", "invcov", paste0("betas_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")))
-      saveRDS()
-      saveRDS()
-      
-      
+      saveRDS(
+        list(vertex = has.bold, tr = is.included[, 2]), 
+        paste0(dir.results.i, "_2/", "inclusions.RDS")
+      )
       
     }
     
-    
   }
+  
 }
-
-
+time.end <- Sys.time() - time.end
 
 
 
