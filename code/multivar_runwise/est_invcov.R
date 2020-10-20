@@ -6,7 +6,7 @@ source(here("code", "_atlases.R"))
 source(here("code", "_settings.R"))
 source(here("code", "_funs.R"))
 
-options(warn = 2)  ## warning
+# options(warn = 2)  ## warning
 
 
 ## input: subjs, task, glmname
