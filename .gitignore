@@ -2,7 +2,7 @@
 *nii.gz
 *func.gii
 *betas*RDS
-*/invcov/*
+*RESULTS/*/invcov/
 
 ## r things
 .Rproj.user/
