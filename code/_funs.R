@@ -149,3 +149,13 @@ loads <- function(x, dims = c("PC1", "PC2")) {
   rot
   
 }
+
+
+distance_cv <- function(B1, B2, m, regressors) {
+  # B1 = B[, , 1]; B2 = B[, , 2]
+  
+  D <- colSums(t(m %*% B1 * m %*% B2)) / ncol(B1)
+  matrix(D, ncol = length(regressors), dimnames = list(.row = regressors, .col = regressors))
+  
+}
+
