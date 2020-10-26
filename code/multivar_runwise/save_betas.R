@@ -17,9 +17,9 @@ glminfo <- data.frame(
     "baseline_Cues_EVENTS_censored_shifted", 
     "baseline_CongruencySwitch_EVENTS_censored_shifted",
     "baseline_ListLength_EVENTS_censored_shifted",
-    "baseline_Congruency_EVENTS_censored_shifted"
-  ),
-  stringsAsFactors = FALSE
+    "baseline_Congruency_EVENTS_censored_shifted",
+    "baseline_fix-item_EVENTS_censored"
+  )
 )
 glminfo <- as.data.table(glminfo)
 

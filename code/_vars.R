@@ -51,16 +51,3 @@ target.trs <- list(
   Stern = 11:12,
   Stroop = 2:4
 )
-
-
-glminfo <- data.frame(
-  task = c("Axcpt", "Cuedts", "Stern", "Stroop"),
-  name.glm = c(
-    "baseline_Cues_EVENTS_censored_shifted",
-    "baseline_CongruencySwitch_EVENTS_censored_shifted",
-    "baseline_ListLength_EVENTS_censored_shifted",
-    "baseline_Congruency_EVENTS_censored_shifted"
-  ),
-  stringsAsFactors = FALSE
-)
-glminfo <- as.data.table(glminfo)

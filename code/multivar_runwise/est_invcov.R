@@ -14,6 +14,18 @@ subjs <- subjs[!subjs %in% "432332"]
 ## input: subjs, task, glmname
 ## output: RDS file of inverse covariance matrices (array): both hemispheres for subj
 
+glminfo <- data.frame(
+  task = c("Axcpt", "Cuedts", "Stern", "Stroop"),
+  name.glm = c(
+    "baseline_Cues_EVENTS_censored_shifted",
+    "baseline_CongruencySwitch_EVENTS_censored_shifted",
+    "baseline_ListLength_EVENTS_censored_shifted",
+    "baseline_Congruency_EVENTS_censored_shifted"
+  ),
+  stringsAsFactors = FALSE
+)
+glminfo <- as.data.table(glminfo)
+
 
 errors <- c()
 
