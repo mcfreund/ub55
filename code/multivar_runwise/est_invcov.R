@@ -162,12 +162,16 @@ for (glm.i in seq_len(nrow(glminfo))) {
         )
         
       }
+      
+      NULL
 
     }
     
     
     stopCluster(cl)
     # time.end <- Sys.time() - time.start
+    
+    print(paste0(subj.i, " subj of ", length(subjs)))
     
     pb$tick()  ## progress bar
     
