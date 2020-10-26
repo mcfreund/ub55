@@ -11,7 +11,7 @@ read_betas <- function(
   .glm,
   .dir
 ) {
-  # .subjs = subjs; .task = "Axcpt"; .glm = "baseline_Cues_EVENTS_censored_shifted"; .dir = dir.analysis
+  # .subjs = subjs; .task = "Cuedts"; .glm = "baseline_CongruencySwitch_EVENTS_censored_shifted"; .dir = dir.analysis
   
   ## initialize array
   
@@ -39,7 +39,7 @@ read_betas <- function(
   vertex.inds <- cbind(L = 1:n.vertex, R = (n.vertex + 1):(n.vertex * 2))
   
   for (subj.i in seq_along(subjs)) {
-    # subj.i = 1
+    # subj.i = 1; run.i = 1; hemi.i = "L"
     
     for (run.i in 1:2) {
       # run.i = 1
@@ -65,7 +65,7 @@ read_betas <- function(
         for (reg.i in seq_len(n.reg)) {
           # reg.i = 1
           
-          is.reg.i <- grepl(regs[reg.i], labs[is.reg])
+          is.reg.i <- grepl(paste0("^", regs[reg.i]), labs[is.reg])
           B.reg.i <- t(B[is.reg.i, ])
           
           is.ok.ii <- isTRUE(all.equal(dim(betas[inds, reg.i, , subj.i, run.i]), dim(B.reg.i)))
