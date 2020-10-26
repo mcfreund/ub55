@@ -1,7 +1,8 @@
 ## afni / glm things
 *nii.gz
 *func.gii
-betas*RDS
+*betas*RDS
+**/invcov
 
 ## r things
 .Rproj.user/
