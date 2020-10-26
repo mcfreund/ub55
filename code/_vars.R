@@ -46,10 +46,21 @@ dmcc34 <- c(
 )
 
 target.trs <- list(
-  Axcpt = 7:12,
-  Cuedts = 7:11,
-  Stern = 11:16,
-  Stroop = 2:6
+  Axcpt = 7:10,
+  Cuedts = 9:10,
+  Stern = 11:12,
+  Stroop = 2:4
 )
 
 
+glminfo <- data.frame(
+  task = c("Axcpt", "Cuedts", "Stern", "Stroop"),
+  name.glm = c(
+    "baseline_Cues_EVENTS_censored_shifted",
+    "baseline_CongruencySwitch_EVENTS_censored_shifted",
+    "baseline_ListLength_EVENTS_censored_shifted",
+    "baseline_Congruency_EVENTS_censored_shifted"
+  ),
+  stringsAsFactors = FALSE
+)
+glminfo <- as.data.table(glminfo)

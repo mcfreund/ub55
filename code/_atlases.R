@@ -12,11 +12,11 @@ hcp <- list(
 
 parcellation <- mikeutils::read_atlas("schaefer400")
 
-schaefer10k <-
-  c(
-    gifti::read_gifti(file.path(dir.schaefer, "Schaefer2018_400Parcels_7Networks_order_10K_L.label.gii"))$data[[1]],
-    gifti::read_gifti(file.path(dir.schaefer, "Schaefer2018_400Parcels_7Networks_order_10K_R.label.gii"))$data[[1]] + 200
-  )
+# schaefer10k <-
+#   c(
+#     gifti::read_gifti(file.path(dir.schaefer, "Schaefer2018_400Parcels_7Networks_order_10K_L.label.gii"))$data[[1]],
+#     gifti::read_gifti(file.path(dir.schaefer, "Schaefer2018_400Parcels_7Networks_order_10K_R.label.gii"))$data[[1]] + 200
+#   )
 
 
 over <- list(

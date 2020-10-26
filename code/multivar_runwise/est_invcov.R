@@ -14,21 +14,6 @@ subjs <- subjs[!subjs %in% "432332"]
 ## input: subjs, task, glmname
 ## output: RDS file of inverse covariance matrices (array): both hemispheres for subj
 
-dirs <- expand.grid(subj = subjs, task = tasks, session = "baseline", stringsAsFactors = FALSE)
-glminfo <- data.frame(
-  task = "Axcpt",
-  name.glm =
-    "baseline_Cues_EVENTS_censored_shifted",
-  task = c("Axcpt", "Cuedts", "Stern", "Stroop"),
-  name.glm = c(
-    "baseline_Cues_EVENTS_censored_shifted",
-    "baseline_CongruencySwitch_EVENTS_censored_shifted",
-    "baseline_ListLength_EVENTS_censored_shifted",
-    "baseline_Congruency_EVENTS_censored_shifted"
-  ),
-  stringsAsFactors = FALSE
-)
-glminfo <- as.data.table(glminfo)
 
 errors <- c()
 
@@ -58,11 +43,11 @@ for (glm.i in seq_len(nrow(glminfo))) {
     
     E <- abind(
       read_resid(
-        .subj = name.subj.i, .task = "Axcpt", .glm = "baseline_Cues_EVENTS_censored_shifted",
+        .subj = name.subj.i, .task = name.task.i, .glm = name.glm.i,
         .dir = dir.analysis, .run = 1
         ),
       read_resid(
-        .subj = name.subj.i, .task = "Axcpt", .glm = "baseline_Cues_EVENTS_censored_shifted",
+        .subj = name.subj.i, .task = name.task.i, .glm = name.glm.i,
         .dir = dir.analysis, .run = 2
         ),
       along = 0

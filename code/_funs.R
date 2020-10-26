@@ -1,8 +1,8 @@
-# tidy_lmer <- function(x) {
-#   coefs <- as.data.frame(coef(summary(x)))
-#   coefs$term <- rownames(coefs)
-#   dplyr::rename(coefs, estimate = "Estimate", se = "Std. Error", "statistic" = "t value", p.value = "Pr(>|t|)")
-# }
+tidy_lmer <- function(x) {
+  coefs <- as.data.frame(coef(summary(x)))
+  coefs$term <- rownames(coefs)
+  dplyr::rename(coefs, estimate = "Estimate", se = "Std. Error", "statistic" = "t value", p.value = "Pr(>|t|)")
+}
 
 
 read_betas <- function(
@@ -134,3 +134,17 @@ read_resid <- function(
   
 }
 
+
+get.network <- function(x) {
+  gsub("^.H_(Vis|SomMot|Cont|Default|Limbic|SalVentAttn|DorsAttn)_.*", "\\1", x)
+}
+
+
+loads <- function(x, dims = c("PC1", "PC2")) {
+  
+  rot <- as.data.frame(x$rotation)[, dims]
+  rot$variable <- rownames(rot)
+  
+  rot
+  
+}

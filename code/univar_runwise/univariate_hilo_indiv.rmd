@@ -211,16 +211,16 @@ s.Axcpt %<>%
   mutate(
     hemi = substr(parcel, 1, 1),
     num.roi = row_number(),
-    p.holm = p.adjust(p, "holm")
+    p.fdr = p.adjust(p, "fdr")
   )
 
-s.Axcpt %>% filter(p.holm < 0.05) %>% arrange(p.holm) %>% kable
+s.Axcpt %>% filter(p.fdr < 0.05) %>% arrange(p.fdr) %>% kable
 
 ```
 
 
 Unthresholded and thresholded t-statistics.
-Threshold at holm-corrected p-value (across all parcels) of 0.05.
+Threshold at fdr-corrected p-value (across all parcels) of 0.05.
 
 ```{r Axcpt_maps_hilo, fig.height = 7, fig.width = 11}
 
@@ -229,7 +229,7 @@ s.Axcpt %>%
   plot_surface(underlay = hcp, hues = viridis::inferno(500))
 
 s.Axcpt %>%
-  mutate(ICC = ifelse(p.holm < 0.05, 1, 0)) %>%
+  mutate(ICC = ifelse(p.fdr < 0.05, 1, 0)) %>%
   build_overlay("ICC", template = schaefer) %>%
   plot_surface(underlay = hcp, hues = c("white", "firebrick1"))
 
@@ -387,16 +387,16 @@ s.Cuedts %<>%
   mutate(
     hemi = substr(parcel, 1, 1),
     num.roi = row_number(),
-    p.holm = p.adjust(p, "holm")
+    p.fdr = p.adjust(p, "fdr")
   )
 
-s.Cuedts %>% filter(p.holm < 0.05) %>% arrange(p.holm) %>% kable
+s.Cuedts %>% filter(p.fdr < 0.05) %>% arrange(p.fdr) %>% kable
 
 ```
 
 
 Unthresholded and thresholded t-statistics.
-Threshold at holm-corrected p-value (across all parcels) of 0.05.
+Threshold at fdr-corrected p-value (across all parcels) of 0.05.
 
 ```{r Cuedts_maps_hilo, fig.height = 7, fig.width = 11}
 
@@ -405,7 +405,7 @@ s.Cuedts %>%
   plot_surface(underlay = hcp, hues = viridis::inferno(500))
 
 s.Cuedts %>%
-  mutate(ICC = ifelse(p.holm < 0.05, ICC, 0)) %>%
+  mutate(ICC = ifelse(p.fdr < 0.05, ICC, 0)) %>%
   build_overlay("ICC", template = schaefer) %>%
   plot_surface(underlay = hcp, hues = viridis::inferno(500))
 
@@ -561,17 +561,17 @@ s.Stern %<>%
   mutate(
     hemi = substr(parcel, 1, 1),
     num.roi = row_number(),
-    p.holm = p.adjust(p, "holm")
+    p.fdr = p.adjust(p, "fdr")
   )
 
-s.Stern %>% filter(p.holm < 0.05) %>% arrange(p.holm) %>% kable
-s.Stern %>% filter(p < 0.05) %>% arrange(p.holm) %>% kable
+s.Stern %>% filter(p.fdr < 0.05) %>% arrange(p.fdr) %>% kable
+s.Stern %>% filter(p < 0.05) %>% arrange(p.fdr) %>% kable
 
 ```
 
 
 Unthresholded and thresholded t-statistics.
-Threshold at holm-corrected p-value (across all parcels) of 0.05.
+Threshold at fdr-corrected p-value (across all parcels) of 0.05.
 
 ```{r Stern_maps_hilo, fig.height = 7, fig.width = 11}
 
@@ -736,17 +736,17 @@ s.Stroop %<>%
   mutate(
     hemi = substr(parcel, 1, 1),
     num.roi = row_number(),
-    p.holm = p.adjust(p, "holm")
+    p.fdr = p.adjust(p, "fdr")
   )
 
-s.Stroop %>% filter(p.holm < 0.05) %>% arrange(p.holm) %>% kable
-s.Stroop %>% filter(p < 0.05) %>% arrange(p.holm) %>% kable
+s.Stroop %>% filter(p.fdr < 0.05) %>% arrange(p.fdr) %>% kable
+s.Stroop %>% filter(p < 0.05) %>% arrange(p.fdr) %>% kable
 
 ```
 
 
 Unthresholded and thresholded t-statistics.
-Threshold at holm-corrected p-value (across all parcels) of 0.05.
+Threshold at fdr-corrected p-value (across all parcels) of 0.05.
 
 ```{r Stroop_maps_hilo, fig.height = 7, fig.width = 11}
 
@@ -755,7 +755,7 @@ s.Stroop %>%
   plot_surface(underlay = hcp, hues = viridis::inferno(500))
 
 s.Stroop %>%
-  mutate(ICC = ifelse(p.holm < 0.05, ICC, 0)) %>%
+  mutate(ICC = ifelse(p.fdr < 0.05, ICC, 0)) %>%
   build_overlay("ICC", template = schaefer) %>%
   plot_surface(underlay = hcp, hues = viridis::inferno(500))
 
