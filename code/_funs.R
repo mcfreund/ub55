@@ -62,7 +62,8 @@ read_betas <- function(
         if (!is.ok.i) stop("mismatched beta array")
         
         
-        for (reg.i in n.reg) {
+        for (reg.i in seq_len(n.reg)) {
+          # reg.i = 1
           
           is.reg.i <- grepl(regs[reg.i], labs[is.reg])
           B.reg.i <- t(B[is.reg.i, ])

@@ -27,7 +27,7 @@ glminfo <- as.data.table(glminfo)
 
 for (glm.i in seq_len(nrow(glminfo))) {
   
-  betas.i <- read_betas(subjs, glminfo[glm.i]$task, glminfo[glm.i]$name.glm, dir.analysis )
+  betas.i <- read_betas(subjs, glminfo[glm.i]$task, glminfo[glm.i]$name.glm, dir.analysis)
   saveRDS(betas.i, here("out", "glms", paste0("betas_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")))
     
 }

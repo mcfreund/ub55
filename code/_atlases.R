@@ -23,9 +23,6 @@ if (nodename == "ccplinux1") {
 }
 
 
-
-
-
 over <- list(
   L = parcellation$atlas[1:(nrow(parcellation$atlas) / 2)], 
   R = parcellation$atlas[(nrow(parcellation$atlas) / 2):nrow(parcellation$atlas)]
