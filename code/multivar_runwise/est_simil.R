@@ -10,7 +10,7 @@ subjs <- subjs[!subjs %in% "432332"]
 
 
 ## for tallying unresponsive voxels:
-counts.silent <- as.data.table(expand.grid(subj = subjs, session = sessi, glm = glms, roi = parcellation$key))
+counts.silent <- as.data.table(expand.grid(subj = subjs, glm = glminfo$name.glm, roi = parcellation$key))
 counts.silent$n <- as.numeric(NA)
 
 
