@@ -158,7 +158,7 @@ res <- foreach(glm.i = seq_len(nrow(glminfo)), .inorder = FALSE, .verbose = TRUE
   
   if (!dir.exists(here("out", "rsa"))) dir.create(here("out", "rsa"))
   
-  saveRDS(simil, here("out", "rsa", paste0("simil_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")))
+  saveRDS(simil, here("out", "rsa", paste0("simil_cv_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")))
   
   NULL
   
