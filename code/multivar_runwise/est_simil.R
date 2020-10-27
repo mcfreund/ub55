@@ -36,7 +36,11 @@ glminfo <- as.data.table(glminfo)
 cl <- makeCluster(nrow(glminfo))
 registerDoParallel(cl)
 time.start <- Sys.time()
-res <- foreach(glm.i = seq_len(nrow(glminfo)), .inorder = FALSE, .verbose = TRUE) %dopar% {
+res <- foreach(
+  glm.i = seq_len(nrow(glminfo)), .inorder = FALSE, .verbose = TRUE,
+  .combine = c,
+  .packages = c("mikeutils", "here", "data.table")
+  ) %dopar% {
 # for (glm.i in seq_len(nrow(glminfo))) {
   # glm.i = 1
   
@@ -47,7 +51,7 @@ res <- foreach(glm.i = seq_len(nrow(glminfo)), .inorder = FALSE, .verbose = TRUE
   ## read betas:
   
   betas.i <- readRDS(
-    here("out", "glms", paste0("betas_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS"))
+    here::here("out", "glms", paste0("betas_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS"))
   )
 
   ## make array for similarity matrices:
@@ -77,7 +81,7 @@ res <- foreach(glm.i = seq_len(nrow(glminfo)), .inorder = FALSE, .verbose = TRUE
     )
   )
   
-  cmat <- contrast_matrix(length(regressors), regressors)  ## contrast matrix
+  cmat <- mikeutils::contrast_matrix(length(regressors), regressors)  ## contrast matrix
   
   
   for (subj.i in seq_along(subjs)) {
