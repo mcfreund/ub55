@@ -25,20 +25,19 @@ glminfo <- as.data.table(glminfo)
 
 ## loop ----
 
-n.iter <- nrow(glminfo) * length(subjs)
-pb <- progress_bar$new(
-  format = " running [:bar] :percent eta: :eta (elapsed: :elapsed)",
-  total = n.iter, clear = FALSE, width = 120
-)
+# n.iter <- nrow(glminfo) * length(subjs)
+# pb <- progress_bar$new(
+#   format = " running [:bar] :percent eta: :eta (elapsed: :elapsed)",
+#   total = n.iter, clear = FALSE, width = 120
+# )
 
 
 
+cl <- makeCluster(nrow(glminfo))
+registerDoParallel(cl)
 time.start <- Sys.time()
-# cl <- makeCluster(n.cores / 2)
-# registerDoParallel(cl)
-# time.start <- Sys.time()
-# res <- foreach(parcel.i = seq_along(parcellation$key), .inorder = FALSE) %dopar% {
-for (glm.i in seq_len(nrow(glminfo))) {
+res <- foreach(glm.i = seq_len(nrow(glminfo)), .inorder = FALSE, .verbose = TRUE) %dopar% {
+# for (glm.i in seq_len(nrow(glminfo))) {
   # glm.i = 1
   
   name.glm.i <- glminfo[glm.i]$name.glm
@@ -151,7 +150,7 @@ for (glm.i in seq_len(nrow(glminfo))) {
     
     rm(D, D_prewh, D_stand, D_stand_prewh, W, W1, W2, B1, B2, B)
 
-    pb$tick()  ## progress bar
+    # pb$tick()  ## progress bar
     
     
   }
@@ -161,10 +160,10 @@ for (glm.i in seq_len(nrow(glminfo))) {
   
   saveRDS(simil, here("out", "rsa", paste0("simil_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")))
   
+  NULL
   
 }
-
-# stopCluster(cl)
+stopCluster(cl)
 time.end <- Sys.time() - time.start
 
 
