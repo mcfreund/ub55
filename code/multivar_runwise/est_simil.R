@@ -31,10 +31,6 @@ pb <- progress_bar$new(
   total = n.iter, clear = FALSE, width = 120
 )
 
-# glminfo$terms <- list(
-#   Axcpt = c("Ang", "Bng", "")
-# )
-
 
 
 time.start <- Sys.time()
@@ -129,13 +125,15 @@ for (glm.i in seq_len(nrow(glminfo))) {
       
       betas.subj.parcel.i <- betas.subj.parcel.i[inclusions$run1$vertex, , , ]  ## exclude verts with 0 var(BOLD)
       
+      B <- aperm(betas.subj.parcel.i, c(2, 1, 3, 4))  ## condition*vertex*run
       
       ## estimate similarity matrices:
       
       for (tr.i in trs) {
         # tr.i = 1
         
-        B <- aperm(betas.subj.parcel.i[, , tr.i, ], c(2, 1, 3))  ## condition*vertex*run
+        B1 <- B[, , tr.i, "run1"]
+        B2 <- B[, , tr.i, "run2"]
         
         D             <- distance_cv(B1, B2, cmat, regressors)
         D_prewh       <- distance_cv(B1 %*% W1, B2 %*% W2, cmat, regressors)
@@ -151,10 +149,7 @@ for (glm.i in seq_len(nrow(glminfo))) {
 
     }
     
-    rm(
-      D, D_prewh, D_stand, D_stand_prewh, W, W1, W2, dir.results, inclusions, is.parcel, betas.subj.parcel.i, 
-      name.subj.i, betas.subj.i
-      )
+    rm(D, D_prewh, D_stand, D_stand_prewh, W, W1, W2, B1, B2, B)
 
     pb$tick()  ## progress bar
     
