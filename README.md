@@ -16,3 +16,7 @@ unrelated baseline N = 55
 ### .\glms
 
 * Contains stimtimes, movreg info, afni design matrices, bash/afni scripts, and associated model output.
+
+### .\rsa
+
+* Contains similarity (distance) matrices of parcel-wise activity patterns
