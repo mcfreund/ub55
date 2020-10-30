@@ -159,3 +159,4 @@ distance_cv <- function(B1, B2, m, regressors) {
   
 }
 
+enlist <- function(x) setNames(vector("list", length(x)), x)

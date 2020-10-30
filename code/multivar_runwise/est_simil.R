@@ -160,9 +160,40 @@ res <- foreach(
   }
   
   
-  if (!dir.exists(here("out", "rsa"))) dir.create(here("out", "rsa"))
+  ## save
   
-  saveRDS(simil, here("out", "rsa", paste0("simil_cv_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")))
+  if (!dir.exists(here("out", "rsa"))) dir.create(here("out", "rsa"))
+  # saveRDS(simil, here("out", "rsa", paste0("simil_cv_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")))
+  
+  saveRDS(
+    simil[, , , , , "true", "true"],
+    here(
+      "out", "rsa", paste0("euclidean-cv-stand-prewh_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")
+    )
+  )
+  
+  saveRDS(
+    simil[, , , , , "false", "false"],
+    here(
+      "out", "rsa", paste0("euclidean-cv-unsta-unpre_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")
+    )
+  )
+  
+  
+  saveRDS(
+    simil[, , , , , "true", "false"],
+    here(
+      "out", "rsa", paste0("euclidean-cv-stand-unpre_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")
+    )
+  )
+  
+  saveRDS(
+    simil[, , , , , "false", "true"],
+    here(
+      "out", "rsa", paste0("euclidean-cv-unsta-prewh_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")
+    )
+  )
+  
   
   NULL
   
@@ -173,5 +204,39 @@ time.end <- Sys.time() - time.start
 
 
 
-
-
+# for (glm.i in seq_len(nrow(glminfo))) {
+#   
+#   simil <- readRDS(
+#     here("out", "rsa", paste0("simil_cv_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS"))
+#     )
+# 
+#   saveRDS(
+#     simil[, , , , , "true", "true"],
+#     here(
+#       "out", "rsa", paste0("euclidean-cv-stand-prewh_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")
+#     )
+#   )
+#   
+#   saveRDS(
+#     simil[, , , , , "false", "false"],
+#     here(
+#       "out", "rsa", paste0("euclidean-cv-unsta-unpre_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")
+#     )
+#   )
+# 
+#   
+#   saveRDS(
+#     simil[, , , , , "true", "false"],
+#     here(
+#       "out", "rsa", paste0("euclidean-cv-stand-unpre_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")
+#     )
+#   )
+#   
+#   saveRDS(
+#     simil[, , , , , "false", "true"],
+#     here(
+#       "out", "rsa", paste0("euclidean-cv-unsta-prewh_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")
+#     )
+#   )
+# 
+# }

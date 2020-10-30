@@ -139,6 +139,15 @@ data.frame(
   ) %>%
   kable(caption = "cue \\* switch")
 
+cuedts.tst <- with(cuedts[cuedts$switch != "", ], table(interaction(subj, run), interaction(cue, switch, trial.type)))
+data.frame(
+  mean_count = colMeans(cuedts.tst),
+  min = apply(cuedts.tst, 2, min),
+  max = apply(cuedts.tst, 2, max)
+  ) %>%
+  kable(caption = "cue \\* trial.type \\* switch")
+
+
 
 cuedts.tlns <- with(cuedts[cuedts$switch != "", ], table(interaction(subj, run), interaction(cue, letter, number, switch)))
 data.frame(
@@ -156,7 +165,6 @@ data.frame(
   max = apply(cuedts.tir, 2, max)
   ) %>%
   kable(caption = "cue \\* trial.type \\* cresp")
-
 
 ```
 

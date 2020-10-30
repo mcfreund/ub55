@@ -46,8 +46,15 @@ dmcc34 <- c(
 )
 
 target.trs <- list(
-  Axcpt = 7:10,
+  Axcpt = 7:9,
   Cuedts = 9:10,
   Stern = 11:12,
+  Stroop = 2:4
+)
+
+cue.trs <- list(
+  Axcpt = 8:9,  ### ????
+  Cuedts = 9:10, ### ????
+  Stern = 7:8,
   Stroop = 2:4
 )
