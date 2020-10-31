@@ -25,3 +25,16 @@ for each task:
 	
 	4. calculate fingerprint distance, increasing dimensionality
 		
+		
+		
+		vectorized_pdist <- function(A,B) 
+    an = apply(A, 1, function(rvec) crossprod(rvec,rvec))
+    bn = apply(B, 1, function(rvec) crossprod(rvec,rvec))
+
+    m = nrow(A)
+    n = nrow(B)
+
+    tmp = matrix(rep(an, n), nrow=m) 
+    tmp = tmp +  matrix(rep(bn, m), nrow=m, byrow=TRUE)
+    sqrt( tmp - 2 * tcrossprod(A,B) )
+}
