@@ -231,7 +231,7 @@ fprint <- function(B1, B2) {
   ##...however 2*diagonal needs to be removed from those sums (as diagonal included in both colsums and rowsums.)
   ##...scale by number of btw-subj comparisons per subject (nsubjs-1)
   
-  contrast <- diag(D) - d_bn  ## wn subject dists minus bw subj dists
+  contrast <- d_bn - diag(D)  ## bn-subj dists minus within subject dists
 
   
   list(contrast = contrast, D = D)

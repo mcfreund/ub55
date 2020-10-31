@@ -104,7 +104,7 @@ z <- foreach(
         univa = res.uv$contrast
       )
     
-    p <- grid.arrange(
+    p <- arrangeGrob(
       matplot(res.mv$D) + labs(title = "multivariate"),
       matplot(res.uv$D) + labs(title = "univariate"),
       top = parcellation$key[parcel.i],
