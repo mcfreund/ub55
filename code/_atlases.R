@@ -10,6 +10,17 @@ hcp <- list(
   )
 )
 
+hcp.vinf <- list(
+  L  = readGIfTI(
+    file.path(dir.atlas, "surf", "HCP_S1200_GroupAvg_v1", "S1200.L.very_inflated_MSMAll.32k_fs_LR.surf.gii")
+  ),
+  R = readGIfTI(
+    file.path(dir.atlas, "surf", "HCP_S1200_GroupAvg_v1", "S1200.R.very_inflated_MSMAll.32k_fs_LR.surf.gii")
+  )
+)
+
+
+
 parcellation <- mikeutils::read_atlas("schaefer400")
 
 if (nodename == "ccplinux1") {
