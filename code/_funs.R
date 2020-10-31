@@ -225,14 +225,14 @@ fprint <- function(B1, B2) {
   
   D <- pdist2(B1, B2) / m  ## pairwise squared euclidean distances, per feature
   
-  d_bn <- (colSums(D) - rowSums(D) - 2*diag(D)) / (n-1)*2  ## mean between-subj distances
+  d_bn <- (colSums(D) + rowSums(D) - 2*diag(D)) / ((n-1)*2)  ## mean between-subj distances
   ##...colSums corresponds to using run2 as "template" and run1 as "database"
   ##...rowSums corresponds to using run1 as "template" and run2 as "database"
   ##...however 2*diagonal needs to be removed from those sums (as diagonal included in both colsums and rowsums.)
-  ##...scale by number of btw-subj comparisons per subject (nsubjs-1)
+  ##...then we need to scale by twice the number of btw-subj comparisons per subject, (nsubjs-1)*2, to get the mean.
   
-  contrast <- d_bn - diag(D)  ## bn-subj dists minus within subject dists
-
+  contrast <- d_bn - diag(D)  ## bn-subj dists minus within subject dists.
+  ##...positive contrast indicates consistent, subject-specific idiosyncracy in effect of condition.
   
   list(contrast = contrast, D = D)
   
@@ -258,3 +258,7 @@ fprint <- function(B1, B2) {
 # (pdistfun.uv <- (res.uv$D[run1subj, run2subj]))
 # all.equal(manual.uv[[1]], pdistfun.uv)
 # 
+# all.equal(mean(c(D[1, 2:54], D[2:54, 1])), d_bn[[1]])
+# D[1, 1]
+# mean(c(D[1, 2:54], D[2:54, 1])) - D[1, 1]
+
