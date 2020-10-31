@@ -178,3 +178,83 @@ subchunkify <- function(g, fig_height=7, fig_width=5) {
   
   cat(knitr::knit(text = knitr::knit_expand(text = sub_chunk), quiet = TRUE))
 }
+
+
+
+
+matplot <- function(x) {
+  
+  ggplot(symmat4ggplot(x), aes(v1, v2, fill = value)) +
+  geom_raster() +
+  scale_fill_viridis_c(option = "inferno") +
+  theme_minimal() +
+  theme(
+    axis.text = element_blank(), axis.title = element_blank(), legend.position = "none",
+    panel.border = element_blank(), panel.grid = element_blank()
+    )
+  
+}
+
+
+
+pdist2 <- function(A,B) {
+  
+  an = apply(A, 1, function(rvec) crossprod(rvec,rvec))
+  bn = apply(B, 1, function(rvec) crossprod(rvec,rvec))
+  
+  m = nrow(A)
+  n = nrow(B)
+  
+  tmp = matrix(rep(an, n), nrow=m) 
+  tmp = tmp +  matrix(rep(bn, m), nrow=m, byrow=TRUE)
+  
+  tmp - 2 * tcrossprod(A,B)  ## squared euclidean distance
+  
+}
+
+
+
+fprint <- function(B1, B2) {
+  
+  ## dimensions: rows == subjects, colums == features
+  
+  if (!identical(dim(B1), dim(B2))) stop('mats have same dims')
+  
+  m <- ncol(B1)
+  n <- nrow(B1)
+  
+  D <- pdist2(B1, B2) / m  ## pairwise squared euclidean distances, per feature
+  
+  d_bn <- (colSums(D) - rowSums(D) - 2*diag(D)) / (n-1)*2  ## mean between-subj distances
+  ##...colSums corresponds to using run2 as "template" and run1 as "database"
+  ##...rowSums corresponds to using run1 as "template" and run2 as "database"
+  ##...however 2*diagonal needs to be removed from those sums (as diagonal included in both colsums and rowsums.)
+  ##...scale by number of btw-subj comparisons per subject (nsubjs-1)
+  
+  contrast <- diag(D) - d_bn  ## wn subject dists minus bw subj dists
+
+  
+  list(contrast = contrast, D = D)
+  
+}
+
+
+
+
+
+
+## spot-checking functions:
+# run1subj <- 25
+# run2subj <- 24
+# 
+# 
+# (pdistfun <- (res.mv$D[run1subj, run2subj] * nrow(B1))^2)
+# (manual <- sum((B1[run1subj, ] - B2[run2subj, ])^2))
+# (distfun <- c(dist(rbind(B1[run1subj, ], B2[run2subj, ]), method = "euclidean")^2))
+# all.equal(manual, distfun)
+# all.equal(manual, pdistfun)
+# 
+# (manual.uv <- (B1_bar[run1subj, ] - B2_bar[run2subj, ])^2)
+# (pdistfun.uv <- (res.uv$D[run1subj, run2subj]))
+# all.equal(manual.uv[[1]], pdistfun.uv)
+# 

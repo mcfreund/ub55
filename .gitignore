@@ -16,3 +16,4 @@
 *.knit.md
 .Renviron
 
+.Rproj.user

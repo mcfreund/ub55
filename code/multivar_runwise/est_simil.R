@@ -6,8 +6,6 @@ source(here("code", "_atlases.R"))
 source(here("code", "_settings.R"))
 source(here("code", "_funs.R"))
 
-subjs <- subjs[!subjs %in% "432332"]
-
 
 glminfo <- data.frame(
   task = c("Axcpt", "Cuedts", "Stern", "Stroop"),
@@ -53,7 +51,7 @@ res <- foreach(
   betas.i <- readRDS(
     here::here("out", "glms", paste0("betas_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS"))
   )
-
+  
   ## make array for similarity matrices:
 
   regressors <- dimnames(betas.i)$reg
@@ -85,7 +83,9 @@ res <- foreach(
   
   
   for (subj.i in seq_along(subjs)) {
-    # subj.i = 1
+    # subj.i = 23
+    
+    if (subjs[subj.i] == "432332") next  ## skip this person for now, as they don't have any betas.
     
     name.subj.i <- subjs[subj.i]
     betas.subj.i <- betas.i[, , , subj.i, ]

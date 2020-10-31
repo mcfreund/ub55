@@ -6,6 +6,7 @@ source(here("code", "_atlases.R"))
 source(here("code", "_settings.R"))
 source(here("code", "_funs.R"))
 
+
 subjs <- subjs[!subjs %in% "432332"]
 
 
@@ -20,223 +21,115 @@ glminfo <- data.frame(
   stringsAsFactors = FALSE
 )
 glminfo <- as.data.table(glminfo)
-
+hi = list(
+  Axcpt = "BX",
+  Cuedts = c("InConInc", "InConNoInc"),
+  Stern = "LL5RN",
+  Stroop = c("biasInCon", "PC50InCon")
+)
+lo = list(
+  Axcpt = "BY",
+  Cuedts = c("ConInc", "ConNoInc"),
+  Stern = "LL5NN",
+  Stroop = c("biasCon", "PC50Con")
+)
 
 
 ## loop ----
 
-# n.iter <- nrow(glminfo) * length(subjs)
-# pb <- progress_bar$new(
-#   format = " running [:bar] :percent eta: :eta (elapsed: :elapsed)",
-#   total = n.iter, clear = FALSE, width = 120
-# )
-
-
-
 cl <- makeCluster(nrow(glminfo))
 registerDoParallel(cl)
 time.start <- Sys.time()
-res <- foreach(
+z <- foreach(
   glm.i = seq_len(nrow(glminfo)), .inorder = FALSE, .verbose = TRUE,
   .combine = c,
-  .packages = c("mikeutils", "here", "data.table")
+  .packages = c("mikeutils", "here", "data.table", "ggplot2", "grid", "gridExtra", "dplyr")
   ) %dopar% {
-# for (glm.i in seq_len(nrow(glminfo))) {
   # glm.i = 1
+  
+  
+  res <- enlist(parcellation$key)
   
   name.glm.i <- glminfo[glm.i]$name.glm
   name.task.i <- glminfo[glm.i]$task
   
+  
+  out.dir <- here("out", "fprint", "unimulti_hilo_target_schaefer400-07")
+  if (!dir.exists(out.dir)) dir.create(out.dir, recursive = TRUE)
+  
+  fig.dir <-file.path(out.dir, "dmat_figs", paste0(name.task.i, "_", name.glm.i))
+  if (!dir.exists(fig.dir)) dir.create(fig.dir, recursive = TRUE)
   
   ## read betas:
   
   betas.i <- readRDS(
     here::here("out", "glms", paste0("betas_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS"))
   )
-
-  ## make array for similarity matrices:
-
-  regressors <- dimnames(betas.i)$reg
-  trs <- 1:dim(betas.i)[which(names(dimnames(betas.i)) == "tr")]
   
-  simil <- array(
-    NA,
-    dim = c(
-      .row   = length(regressors),
-      .col   = length(regressors),
-      tr     = length(trs),
-      parcel = length(parcellation$key), 
-      subj   = length(subjs),
-      prewh  = 2,
-      stand  = 2
-    ),
-    dimnames = list(
-      .row   = regressors,
-      .col   = regressors,
-      tr     = trs,
-      parcel = parcellation$key, 
-      subj   = subjs,
-      prewh  = c("true", "false"),
-      stand  = c("true", "false")
+  betas.i <- betas.i[, , , !dimnames(betas.i)$subj %in% "432332", ]  ## remove subj with missing data
+  
+  ## average across target TRs and calculate contrast:
+  
+  B_hi <- apply(betas.i[, hi[[glm.i]], target.trs[[glm.i]], , ], c("vertex", "subj", "run"), mean)
+  B_lo <- apply(betas.i[, lo[[glm.i]], target.trs[[glm.i]], , ], c("vertex", "subj", "run"), mean)
+  B <- B_hi - B_lo
+  
+  
+  
+  for (parcel.i in seq_along(parcellation$key)) {
+    # parcel.i = 1
+    
+    is.parcel <- schaefer10k == parcel.i
+    B_i <- B[is.parcel, , ]
+    
+    ## multivariate:
+    
+    B1 <- t(B_i[, , 1])  ## contrast pattern vectors for each run
+    B2 <- t(B_i[, , 2])
+    res.mv <- fprint(B1, B2)  ## input dims: subjects*features
+    
+    
+    ##  univariate:
+    
+    B1_bar <- cbind(rowMeans(B1))  ## get means
+    B2_bar <- cbind(rowMeans(B2))
+    res.uv <- fprint(B1_bar, B2_bar)
+    
+    
+    ## save 
+    
+    res[[parcel.i]] <- 
+      data.frame(
+        multi = res.mv$contrast,
+        univa = res.uv$contrast
+      )
+    
+    p <- grid.arrange(
+      matplot(res.mv$D) + labs(title = "multivariate"),
+      matplot(res.uv$D) + labs(title = "univariate"),
+      top = parcellation$key[parcel.i],
+      nrow = 1
     )
-  )
-  
-  cmat <- mikeutils::contrast_matrix(length(regressors), regressors)  ## contrast matrix
-  
-  
-  for (subj.i in seq_along(subjs)) {
-    # subj.i = 1
     
-    name.subj.i <- subjs[subj.i]
-    betas.subj.i <- betas.i[, , , subj.i, ]
+    ggsave(
+      file.path(fig.dir, paste0("euclidean_", parcellation$key[parcel.i], ".pdf")), 
+      p,
+      width = 14, height = 8, units = "cm",
+      device = "pdf"
+      )
     
-    ## loop over parcels:
-    
-    for (parcel.i in seq_along(parcellation$key)) {
-      # parcel.i = 20
-      
-      dir.results <- file.path(dir.analysis, name.subj.i, "RESULTS", name.task.i, name.glm.i)
-      suffix <- paste0("schaefer400-07_", parcellation$key[parcel.i])
-      
-      
-      ## read whitening matrices:
-      
-      W <- list(run1 = NA, run2 = NA)
-      inclusions <- list(run1 = NA, run2 = NA)
-      for (run.i in 1:2) {
-        # run.i = 1
-        
-        dir.results.run <- paste0(dir.results, "_", run.i, "/", "invcov")
-        W[[run.i]] <- readRDS(file.path(dir.results.run, paste0("invcov_", suffix, ".RDS")))
-        inclusions[[run.i]] <- readRDS(file.path(dir.results.run, paste0("inclusions_", suffix, ".RDS")))
-
-      }
-      
-      W1 <- pracma::sqrtm(W$run1)$B  ## root
-      W2 <- pracma::sqrtm(W$run2)$B
-      
-      
-      ## mask:
-      
-      is.parcel <- schaefer10k == parcel.i
-      betas.subj.parcel.i <- betas.subj.i[is.parcel, , , ]
-      
-      inclusions.are.ok <- 
-        identical(inclusions$run1$vertex, inclusions$run2$vertex) & 
-        isTRUE(all.equal(length(inclusions$run1$vertex), dim(betas.subj.parcel.i)[1]))
-      if (!inclusions.are.ok) stop("inclusions not ok")
-      
-      betas.subj.parcel.i <- betas.subj.parcel.i[inclusions$run1$vertex, , , ]  ## exclude verts with 0 var(BOLD)
-      
-      B <- aperm(betas.subj.parcel.i, c(2, 1, 3, 4))  ## condition*vertex*run
-      
-      ## estimate similarity matrices:
-      
-      for (tr.i in trs) {
-        # tr.i = 1
-        
-        B1 <- B[, , tr.i, "run1"]
-        B2 <- B[, , tr.i, "run2"]
-        
-        D             <- distance_cv(B1, B2, cmat, regressors)
-        D_prewh       <- distance_cv(B1 %*% W1, B2 %*% W2, cmat, regressors)
-        D_stand       <- distance_cv(t(scale(t(B1))), t(scale(t(B2))), cmat, regressors)
-        D_stand_prewh <- distance_cv(t(scale(t(B1))) %*% W1, t(scale(t(B2))) %*% W2, cmat, regressors)
-        
-        simil[, , tr.i, parcel.i, subj.i, 2, 2] <- D
-        simil[, , tr.i, parcel.i, subj.i, 1, 2] <- D_prewh
-        simil[, , tr.i, parcel.i, subj.i, 2, 1] <- D_stand
-        simil[, , tr.i, parcel.i, subj.i, 1, 1] <- D_stand_prewh
-        
-      }
-
-    }
-    
-    rm(D, D_prewh, D_stand, D_stand_prewh, W, W1, W2, B1, B2, B)
-
-    # pb$tick()  ## progress bar
-    
-    
+     
   }
   
-  
-  ## save
-  
-  if (!dir.exists(here("out", "rsa"))) dir.create(here("out", "rsa"))
-  # saveRDS(simil, here("out", "rsa", paste0("simil_cv_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")))
-  
-  saveRDS(
-    simil[, , , , , "true", "true"],
-    here(
-      "out", "rsa", paste0("euclidean-cv-stand-prewh_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")
-    )
-  )
-  
-  saveRDS(
-    simil[, , , , , "false", "false"],
-    here(
-      "out", "rsa", paste0("euclidean-cv-unsta-unpre_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")
-    )
-  )
-  
-  
-  saveRDS(
-    simil[, , , , , "true", "false"],
-    here(
-      "out", "rsa", paste0("euclidean-cv-stand-unpre_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")
-    )
-  )
-  
-  saveRDS(
-    simil[, , , , , "false", "true"],
-    here(
-      "out", "rsa", paste0("euclidean-cv-unsta-prewh_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")
-    )
-  )
-  
+  res <- bind_rows(res, .id = "parcel")
+  fwrite(res, file.path(out.dir, paste0("contrast_euclidean_",  name.task.i, "_", name.glm.i, ".csv")))
   
   NULL
   
 }
 stopCluster(cl)
-time.end <- Sys.time() - time.start
+time.run <- Sys.time() - time.start
 
 
 
 
-# for (glm.i in seq_len(nrow(glminfo))) {
-#   
-#   simil <- readRDS(
-#     here("out", "rsa", paste0("simil_cv_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS"))
-#     )
-# 
-#   saveRDS(
-#     simil[, , , , , "true", "true"],
-#     here(
-#       "out", "rsa", paste0("euclidean-cv-stand-prewh_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")
-#     )
-#   )
-#   
-#   saveRDS(
-#     simil[, , , , , "false", "false"],
-#     here(
-#       "out", "rsa", paste0("euclidean-cv-unsta-unpre_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")
-#     )
-#   )
-# 
-#   
-#   saveRDS(
-#     simil[, , , , , "true", "false"],
-#     here(
-#       "out", "rsa", paste0("euclidean-cv-stand-unpre_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")
-#     )
-#   )
-#   
-#   saveRDS(
-#     simil[, , , , , "false", "true"],
-#     here(
-#       "out", "rsa", paste0("euclidean-cv-unsta-prewh_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")
-#     )
-#   )
-# 
-# }
