@@ -78,6 +78,12 @@ z <- foreach(
   
   for (do.scale in c(TRUE, FALSE)) {
     
+    D <- 
+      array(
+        NA, 
+        dim = c(length(subjs), length(subjs), length(parcellation$key), 2), 
+        dimnames = list(subj_run1 = subjs, subj_run2 = subjs, parcellation$key, type = c("univariate", "multivariate"))
+      )
     
     for (parcel.i in seq_along(parcellation$key)) {
       # parcel.i = 1
@@ -106,27 +112,24 @@ z <- foreach(
       
       res.mv <- fprint(B1, B2)  ## input dims: subjects*features
       
+      D[, , parcel.i, "multivariate"] <- pdist2(B1, B2) / ncol(B1)  ## divide by number of features (vertices)
+      
       
       ##  univariate:
       
       B1_bar <- cbind(rowMeans(B1))  ## get means
       B2_bar <- cbind(rowMeans(B2))
-      res.uv <- fprint(B1_bar, B2_bar)
+      
+      D[, , parcel.i, "univariate"] <- pdist2(B1_bar, B2_bar)  / ncol(B1_bar) ## b/c univariate, denominator == 1
       
       
       ## save 
       
       suffix <- switch(do.scale + 1, "", "scaled_")  ## false, true
       
-      res[[parcel.i]] <- 
-        data.frame(
-          multi = res.mv$contrast,
-          univa = res.uv$contrast
-        )
-      
       p <- arrangeGrob(
-        matplot(res.mv$D) + labs(title = "multivariate"),
-        matplot(res.uv$D) + labs(title = "univariate"),
+        matplot(D[, , parcel.i, "multivariate"]) + labs(title = "multivariate"),
+        matplot(D[, , parcel.i, "univariate"]) + labs(title = "univariate"),
         top = parcellation$key[parcel.i],
         nrow = 1
       )
@@ -138,20 +141,21 @@ z <- foreach(
         device = "pdf"
         )
       
-       
     }
+    
+    
+    saveRDS(D, file.path(out.dir, paste0("euclidean_",  suffix, name.task.i, "_", name.glm.i, ".RDS")))
     
     
   }
   
-  res <- bind_rows(res, .id = "parcel")
-  fwrite(res, file.path(out.dir, paste0("contrast_euclidean_",  suffix, name.task.i, "_", name.glm.i, ".csv")))
   
   NULL
   
+  
 }
 stopCluster(cl)
-time.run <- Sys.time() - time.start
+(time.run <- Sys.time() - time.start)
 
 
 
