@@ -125,11 +125,10 @@ for (glm.i in seq_len(nrow(glminfo))) {
           freqp(res.contrast$t, "two.sided")
         )
       
-      l.parcel[[parcel.i]] <- istats
+      istats
       
     }
     stopCluster(cl)
-    (time.end <- Sys.time() - time.start)
     
     l.scale[[scale.i]] <- bind_rows(l.parcel, .id = "parcel")
     
@@ -141,7 +140,7 @@ for (glm.i in seq_len(nrow(glminfo))) {
   
   
 }
-
+(time.end <- Sys.time() - time.start)
 
 ## combine and save:
 
