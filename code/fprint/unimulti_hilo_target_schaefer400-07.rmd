@@ -15,8 +15,9 @@ output:
 
 Purpose: 
 
+To compare univariate and multivariate (multivertex) measures in terms of how well they discriminate subjects.
 
-
+ 
 
 ```{r setup, include = FALSE}
 
@@ -47,6 +48,58 @@ d <- d %>%
 
 
 ```
+
+
+Description:
+
+
+* Beta contrast patterns ($\text{high} - \text{low}$) were estimated for each run
+* with these contrast patterns, two types of euclidean distances were estimated:
+  * across-run, within-subject distances
+  * across-run, betwen-subject distances
+* the mean within-subject distance was subtracted from the mean between-subject distance
+* this formed the "multivariate" intersubject discrimintion index (IDI)
+* the same procedure was conducted on beta contrast *means*, to form the "univariate" IDI
+* these IDIs were tested against zero, and were also directly contrasted between univariate and multivariate.
+
+Inferential statistics:
+
+* non-parametric bootstrap tests were conducted:
+  * subjects resampled, and IDIs recalculated to form bootstrapped distributions
+  * 95% intervals were calculated on bootstrapped distributions with BCa method
+  * frequentists p-values derived from percentile bootstrap
+  * all p-value corrections were performed whole-cortex, with FDR.
+
+Parcellation:
+
+  * Schaefer 400, 7 network
+
+GLMs:
+
+  * DMCC55B
+  * run-wise, 1trpk, shifted TENTs
+  * Cuedts: terms for $\text{trial-type (congr, incon)}\times\text{sequence (switch, repeat)}$ instead of $\text{incentive}$
+
+Target TRs:
+
+  * Axcpt: `r target.trs$Axcpt`
+  * Cuedts: `r target.trs$Cuedts`
+  * Stern: `r target.trs$Stern`
+  * Stroop: `r target.trs$Stroop`
+
+Contrasts:
+
+  * Axcpt: $\text{BY} - \text{BX}$
+  * Cuedts: $(\text{InConSwitch} + \text{InConRepeat} - \text{ConSwitch} - \text{ConRepeat})/2$
+  * Stern: $\text{LL5RN} - \text{LL5NN}$
+  * Stroop: $(\text{PC50InCon} + \text{biasInCon} - \text{PC50Con} - \text{biasCon})/2$
+
+Transforms:
+
+  * "scaled": beta coefficients were divided by their root mean sum of squares prior to IDI procedure.
+  * non-prewhitened patterns
+
+
 
 # stats
 
@@ -166,6 +219,8 @@ d %>%
 
 # maps
 
+NB: dark colors are large effects and yellow/light colors are small effectss.
+
 ```{r brains, fig.width = 15, results = "asis"}
 
 
@@ -189,15 +244,15 @@ for (task.i in tasks) {
         filter(task == task.i, transform == transform.i, variable == variable.i) %>%
     
         build_overlay("estimate", template = schaefer) %>%
-        plot_surface(underlay = hcp, hues = viridis::inferno(500))
+        plot_surface(underlay = hcp, hues = rev(viridis::inferno(500)))
       
       d %>%
         
         filter(task == task.i, transform == transform.i, variable == variable.i) %>%
-        mutate(estimate = ifelse(p.fdr > 0.05, estimate, 0)) %>%
+        mutate(estimate = ifelse(p.fdr < 0.05, estimate, 0)) %>%
 
         build_overlay("estimate", template = schaefer) %>%
-        plot_surface(underlay = hcp, hues = viridis::inferno(500))
+        plot_surface(underlay = hcp, hues = rev(viridis::inferno(500)))
       
     }
     
