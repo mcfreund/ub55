@@ -49,7 +49,7 @@ idi_contrast <- function(d, ii, lt, ut) {
 
 freqp <- function(x, alternative = "two.sided") {
   
-  greater <- sum(x > 0) / length(x)
+  greater <- sum(x < 0) / length(x)
   lower <- 1 - greater
   two.sided <- 2*min(greater, lower)
   
