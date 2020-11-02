@@ -196,7 +196,7 @@ for (task.i in tasks) {
     geom_point(shape = 21, fill = "black", color = "white", size = 2) +
     geom_point(
       data = . %>% group_by(network, tr) %>% summarize(run1 = mean(run1), run2 = mean(run2)),
-      shape = 4, size = 2,
+      size = 2,
       color = "firebrick1"
       ) +
     
@@ -271,8 +271,10 @@ for (task.i in tasks) {
     
     facet_grid(vars(network), vars(run)) +
     scale_fill_brewer(type = "qual", palette = 2) +
+    
     scale_x_continuous(n.breaks = 3) +
-
+    scale_y_continuous(n.breaks = 3) +
+    
     labs(y = "Mean beta", x = "TR post stimtime", title = task.i) +
     theme(legend.position = "none")
   
@@ -292,7 +294,7 @@ for (task.i in tasks) {
     geom_point(shape = 21, fill = "black", color = "white", size = 2) +
     geom_point(
       data = . %>% group_by(network, tr) %>% summarize(run1 = mean(run1), run2 = mean(run2)),
-      shape = 4, size = 2,
+      size = 2,
       color = "firebrick1"
       ) +
     
@@ -450,13 +452,16 @@ subchunkify(p.parcel.sum.network, 12, 9)
 
 ### DMCC 34
 
-```{r parcel_contrasts_betas, fig.height = 8, fig.width = 10}
+#### beta estimates
+
+```{r parcel_contrasts_betas, fig.height = 12, fig.width = 15}
 
 
 for (task.i in tasks) {
   
   
   p.contrast.parcel <- 
+    
     d.contrast[
       task == task.i & parcel %in% parcellation$key[dmcc34],
       .(b = mean(b)), by = .(run, parcel, tr, subj)
@@ -468,9 +473,9 @@ for (task.i in tasks) {
     geom_hline(yintercept = 0) +
     stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 0.9) +
     
-    facet_wrap(vars(parcel)) +
+    facet_wrap(vars(parcel), scales = "free") +
     scale_fill_brewer(type = "qual", palette = 2) +
-    scale_x_continuous(n.breaks = 3) +
+    scale_x_continuous(breaks = seq(0, 20, 4)) +
 
     labs(y = "Mean beta", x = "TR post stimtime", title = task.i) +
     theme(legend.position = "none")
@@ -484,7 +489,9 @@ for (task.i in tasks) {
 ```
 
 
-```{r parcel_contrasts_tstats, fig.height = 8, fig.width = 10}
+#### t-statistics
+
+```{r parcel_contrasts_tstats, fig.height = 12, fig.width = 15}
 
 d.parcel.stats <- 
   
@@ -516,7 +523,7 @@ for (task.i in tasks) {
     scale_color_brewer(type = "qual", palette = 2) +
     scale_x_continuous(breaks = seq(0, 20, 4)) +
     
-    theme(legend.position = c(0.5, 0.15)) +
+    theme(legend.position = "none") +
     labs(x = "TR post stimtime", y = "t-statistic of contrast", title = task.i)
   
   
@@ -574,7 +581,7 @@ group.target.trs %>% group_by(task) %>%
 dmcc55b.parcels <- group.target.trs %>% filter(estimate > 0, p.fdr < 0.05) %>% pull(parcel) %>% table
 dmcc55b.parcels <- names(dmcc55b.parcels)[dmcc55b.parcels == 4]
 
-
+dmcc55b.parcels
 
 ```
 
@@ -583,19 +590,22 @@ dmcc55b.parcels <- names(dmcc55b.parcels)[dmcc55b.parcels == 4]
 ### Curves of "DMCC55B parcels"
 
 
-```{r parcel_contrasts_dmcc55b, fig.height = 8, fig.width = 10}
+
+#### beta estimates
+
+```{r parcel_contrasts_dmcc55b_betas, fig.height = 12, fig.width = 15}
 
 
 for (task.i in tasks) {
   
   
-  
   p.contrast.parcel.b.dmcc55b <- 
     
-    d.parcel.stats %>%
+    d.contrast[
+      task == task.i & parcel %in% dmcc55b.parcels,
+      .(b = mean(b)), by = .(run, parcel, tr, subj)
+      ] %>%
     
-    filter(task == task.i, parcel %in% dmcc55b.parcels) %>%
-
     mutate(tr = as.numeric(tr)) %>%
     
     ggplot(aes(tr, b, fill = run)) +
@@ -604,15 +614,38 @@ for (task.i in tasks) {
     
     facet_wrap(vars(parcel)) +
     scale_fill_brewer(type = "qual", palette = 2) +
-    scale_x_continuous(n.breaks = 3) +
+    scale_x_continuous(breaks = seq(0, 20, 4)) +
 
     labs(y = "Mean beta", x = "TR post stimtime", title = task.i) +
     theme(legend.position = "none")
   
   print(p.contrast.parcel.b.dmcc55b)
+
+  
+}
+
+
+```
+
+
+#### t-statistics
+
+```{r parcel_contrasts_dmcc55b_tstats, fig.height = 12, fig.width = 15}
+
+d.parcel.stats <- 
+  
+  d.contrast[, .(b = mean(b)), by = .(task, parcel, tr, run, subj)] %>%
+  
+  group_by(task, parcel, tr, run) %>%
+  summarize(t = t.test(b)$statistic, p = t.test(b)$p.value, b = mean(b)) %>%
+  
+  mutate(tr = as.numeric(tr))
+
+
+for (task.i in tasks) {
   
   
-  p.contrast.parcel.t.dmcc55b <- 
+  p.contrast.parcel.t <- 
     
     d.parcel.stats %>% 
     
@@ -631,8 +664,9 @@ for (task.i in tasks) {
     
     theme(legend.position = "none") +
     labs(x = "TR post stimtime", y = "t-statistic of contrast", title = task.i)
-
-  print(p.contrast.parcel.t.dmcc55b)
+  
+  
+  print(p.contrast.parcel.t)
 
   
 }
@@ -641,18 +675,19 @@ for (task.i in tasks) {
 ```
 
 
-
 ## Brains (contrasts)
 
 NB: colors are reversed (black = high, yellow = low) so large positive effects can be seen on white underlay.
 
-```{r brains, fig.height = 15, fig.width = 15, results = "asis"}
+```{r brains, fig.width = 15, results = "asis"}
 
 
 
 for (task.i in tasks) {
   
-  cat(sprintf("\n### %s\n", task.i))
+  cat("\n ")
+  cat(sprintf("\n### %s ", task.i))
+  cat("\n ")
 
   
   group.target.trs %>%
@@ -660,7 +695,7 @@ for (task.i in tasks) {
     filter(task == task.i) %>%
     
     build_overlay("statistic", template = schaefer) %>%
-    plot_surface(underlay = hcp.vinf, hues = rev(viridis::inferno(500)))
+    plot_surface(underlay = hcp, hues = rev(viridis::inferno(500)))
   
   
   group.target.trs %>%
@@ -669,7 +704,7 @@ for (task.i in tasks) {
     mutate(statistic = ifelse(p.fdr < 0.05, statistic, 0)) %>%
     
     build_overlay("statistic", template = schaefer) %>%
-    plot_surface(underlay = hcp.vinf, hues = rev(viridis::inferno(500)))
+    plot_surface(underlay = hcp, hues = rev(viridis::inferno(500)))
 
     
 }
@@ -682,7 +717,6 @@ for (task.i in tasks) {
 ```{r}
 
 fwrite(group.target.trs, here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
-
 
 ```
 

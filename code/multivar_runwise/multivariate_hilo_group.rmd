@@ -102,6 +102,11 @@ facet_labels <- c(
   "euclidean-cv-unsta-unpre" = "unstand unwhite" 
 )
 
+group.target.trs <- fread(here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
+dmcc55b.parcels <- group.target.trs %>% filter(estimate > 0, p.fdr < 0.05) %>% pull(parcel) %>% table
+dmcc55b.parcels <- names(dmcc55b.parcels)[dmcc55b.parcels == 4]
+
+
 
 ```
 
@@ -126,8 +131,10 @@ Contrasts (cross-validated euclidean):
 Normalizations:
 
   * "stand": standardized cross-validated euclidean (comparable to linear correlation)
+    * the across-vertex mean and standard deviation are removed from patterns prior to cross-validation
   * "unsta": unstandardized cross-validated euclidean (includes mean and scale information)
   * "white": spatially pre-whitened cross-validated euclidean ('mahalanobis')
+    * using vertex-by-vertex inverse covariance matrix derived from residual timeseries
   * "unwhite": not spatially pre-whitened
 
 Plotting and statistical details:
@@ -293,18 +300,16 @@ counts.parcel.curves.group %>%
 
 
 
-### runwise univariate ROIs
+### DMCC55B ROIs
 
 ```{r, fig.height = 7}
-
-parcels.univ.conj <- fread(here("out", "conjunction_univ_hilo_target_schaefer400-07.txt"))[[1]]
 
 
 for (task.i in tasks) {
   
   p.parcel.curves  <- d.parcel.curves.group %>%
     
-    filter(task == task.i, parcel %in% parcels.univ.conj) %>%
+    filter(task == task.i, parcel %in% dmcc55b.parcels) %>%
     mutate(tr = as.numeric(tr)) %>%
     
     ggplot(aes(tr, t, color = similtype, group = similtype)) +
@@ -334,8 +339,6 @@ for (task.i in tasks) {
 
 
 ```{r, fig.height = 7}
-
-parcels.univ.conj <- fread(here("out", "conjunction_univ_hilo_target_schaefer400-07.txt"))[[1]]
 
 
 for (task.i in tasks) {
@@ -382,44 +385,43 @@ for (task.i in tasks) {
 
 ```{r stats}
 
+d.group <- enlist(tasks)
+for (task.i in tasks) {
 
-# d.group <- enlist(tasks)
-# for (task.i in tasks) {
-#   
-#   
-#   d.i <- d[task %in% task.i & tr %in% target.trs[[task.i]]]
-#   
-#   
-#   l <- split(d.i, interaction(d.i$parcel, d.i$similtype))
-#   m <- lapply(l, function(x) lmer(value ~ 1 + (1 | subj), x))
-#   s <- bind_rows(lapply(m, tidy_lmer), .id = "parcel.similtype")
-#   s <- cbind(s, reshape2::colsplit(s$parcel.similtype, "\\.", c("parcel", "similtype")))
-#   s %<>% 
-#     mutate(
-#       parcel.similtype = NULL,
-#       term = NULL,
-#       p.fdr = p.adjust(p.value, "fdr"), 
-#       network = get.network(parcel),
-#       hemi = substr(parcel, 1, 1),
-#       num.roi = match(parcel, parcellation$key)
-#       )
-#   
-#   
-#   d.group[[task.i]] <- s
-#   
-#   
-# }
-# 
-# 
-# lapply(d.group, function(x) filter(x, p.fdr < 0.05 & estimate > 0) %>% nrow)
-# 
-# 
-# d.group <- bind_rows(d.group, .id = "task")
-# 
-# 
-# fwrite(d.group, here("out", "stats_multiv-euclidean-cv_hilo_target_alltasks_schaefer400-07.csv"))
 
-d.group <- fread(here("out", "stats_multiv-euclidean-cv_hilo_target_alltasks_schaefer400-07.csv"))
+  d.i <- d[task %in% task.i & tr %in% target.trs[[task.i]]]
+
+
+  l <- split(d.i, interaction(d.i$parcel, d.i$similtype))
+  m <- lapply(l, function(x) lmer(value ~ 1 + (1 | subj), x))
+  s <- bind_rows(lapply(m, tidy_lmer), .id = "parcel.similtype")
+  s <- cbind(s, reshape2::colsplit(s$parcel.similtype, "\\.", c("parcel", "similtype")))
+  s %<>%
+    mutate(
+      parcel.similtype = NULL,
+      term = NULL,
+      p.fdr = p.adjust(p.value, "fdr"),
+      network = get.network(parcel),
+      hemi = substr(parcel, 1, 1),
+      num.roi = match(parcel, parcellation$key)
+      )
+
+
+  d.group[[task.i]] <- s
+
+
+}
+
+
+lapply(d.group, function(x) filter(x, p.fdr < 0.05 & estimate > 0) %>% nrow)
+
+
+d.group <- bind_rows(d.group, .id = "task")
+
+
+fwrite(d.group, here("out", "stats_multiv-euclidean-cv_hilo_target_alltasks_schaefer400-07.csv"))
+
+# d.group <- fread(here("out", "stats_multiv-euclidean-cv_hilo_target_alltasks_schaefer400-07.csv"))
 
 ```
 
@@ -428,25 +430,25 @@ Unthresholded and thresholded t-statistics displayed on inflated brains.
 Threshold at fdr-corrected p-value (across all parcels) of 0.05.
 Note: colors are reverse-scaled, i.e., dark == strong effect, light == weak effect (so strong effects show up on white background).
 
-```{r maps_hilo, fig.height = 7, fig.width = 11, results = "asis"}
+```{r maps_hilo, fig.width = 15, results = "asis"}
 
 
 for (task.i in tasks) {
   
   cat(sprintf("\n### %s ", task.i))
-  
+  cat("\n ")
   for (similtype.i in similtype) {
     
-    
+    cat("\n ")
     cat(sprintf("\n#### %s ", facet_labels[similtype.i == names(facet_labels)]))
-    
+    cat("\n ")
     
     d.group %>%
       
       filter(task == task.i, similtype == similtype.i) %>%
       
       build_overlay("statistic", template = schaefer) %>%
-      plot_surface(underlay = hcp.vinf, hues = rev(viridis::inferno(500)))
+      plot_surface(underlay = hcp, hues = rev(viridis::inferno(500)))
     
     
     d.group %>%
@@ -455,7 +457,7 @@ for (task.i in tasks) {
       mutate(statistic = ifelse(p.fdr < 0.05, statistic, 0)) %>%
       
       build_overlay("statistic", template = schaefer) %>%
-      plot_surface(underlay = hcp.vinf, hues = rev(viridis::inferno(500)))
+      plot_surface(underlay = hcp, hues = rev(viridis::inferno(500)))
 
     
   }
