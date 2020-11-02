@@ -59,7 +59,8 @@ weights_lo <- list(
 
 
 similtype <- c(
-  "euclidean-cv-unsta-prewh", "euclidean-cv-stand-prewh", "euclidean-cv-unsta-unpre", "euclidean-cv-stand-unpre"
+  # "euclidean-cv-unsta-prewh", "euclidean-cv-stand-prewh", "euclidean-cv-unsta-unpre", "euclidean-cv-stand-unpre"
+  "euclidean-cv-unsta-prewh", "euclidean-cv-unsta-unpre"
   )
 
 d <- setNames(vector("list", nrow(glminfo)), glminfo$task)
@@ -96,10 +97,10 @@ d <- d[subj != "448347"]
 
 
 facet_labels <- c(
-  "euclidean-cv-stand-prewh" = "stand white",
-  "euclidean-cv-stand-unpre" = "stand unwhite",
-  "euclidean-cv-unsta-prewh" = "unstand white",
-  "euclidean-cv-unsta-unpre" = "unstand unwhite" 
+  # "euclidean-cv-stand-prewh" = "stand white",
+  # "euclidean-cv-stand-unpre" = "stand unwhite",
+  "euclidean-cv-unsta-prewh" = "whitened",
+  "euclidean-cv-unsta-unpre" = "unwhitened" 
 )
 
 group.target.trs <- fread(here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
@@ -107,7 +108,10 @@ dmcc55b.parcels <- group.target.trs %>% filter(estimate > 0, p.fdr < 0.05) %>% p
 dmcc55b.parcels <- names(dmcc55b.parcels)[dmcc55b.parcels == 4]
 
 
+colors.transform <- c(whitened = "#d73027", unwhitened = "#4575b4")
 
+d[similtype == "euclidean-cv-unsta-prewh"]$similtype <- "whitened"
+d[similtype == "euclidean-cv-unsta-unpre"]$similtype <- "unwhitened"
 ```
 
 
@@ -128,15 +132,13 @@ Contrasts (cross-validated euclidean):
   * Stern: $\text{LL5RN} - \text{LL5NN}$
   * Stroop: $(\text{PC50InCon} + \text{biasInCon} - \text{PC50Con} - \text{biasCon})/2$
 
-Normalizations:
+Transformations:
 
-  * "stand": standardized cross-validated euclidean (comparable to linear correlation)
-    * the across-vertex mean and standard deviation are removed from patterns prior to cross-validation
-  * "unsta": unstandardized cross-validated euclidean (includes mean and scale information)
-  * "white": spatially pre-whitened cross-validated euclidean ('mahalanobis')
+  * "whitened": spatially pre-whitened cross-validated euclidean ('mahalanobis')
     * using vertex-by-vertex inverse covariance matrix derived from residual timeseries
-  * "unwhite": not spatially pre-whitened
-
+  * "unwhitened": not spatially pre-whitened
+  * all results considered here use *unstandardized* euclidean distance (i.e., patterns are not z-score normalized).
+  
 Plotting and statistical details:
 
   * within 'curves' sections, ribbons indicate 95% CI of bootstrapped mean beta across subjects (one ribbon per run).
@@ -145,67 +147,61 @@ Plotting and statistical details:
       * random-intercept models
       * level-I: (TR within target window)\*(run)
       * level-2: subject
-      * $\beta_{trs} = b_0 + x_{tr}b_1 + d_s + \epsilon_{trs}$
-        * $t, r, s$ are indices for TR, run, and subject
-        * $x$ is dummy-coded predictor for hi condition; $b_1$ reflects hi-lo contrast (fixed effect)
+      * $\beta_{ts} = b_0 + d_s + \epsilon_{trs}$
+        * $\beta_{ts} is HiLo contrast per subject, tr
+        * $t, s$ are indices for TR, and subject
         * $d$ is is subject-specific intercept
         * $\epsilon$ is error
 
 
 
-# Network-level
+# Network-level contrasts
 
 Estimates are first averaged across parcels within network per subject.
 Group-level stats and plots are then displayed at the network-level.
 
-## curves
+## beta estimates
 
-### beta contrasts
+```{r network_curves_b, fig.height = 8}
 
-```{r network_curves_b, fig.height = 7}
-
-d.network.curves <- d[, .(m = mean(value)), by = .(similtype, task, network, tr, subj)]
 
 for (task.i in tasks) {
   
-  p.network.curves  <- d.network.curves %>%
+  
+  p.network.b <- d[task == task.i, .(b = mean(value)), by = .(similtype, network, tr, subj)] %>%  ## average across parcels
     
-    filter(task == task.i) %>%
     mutate(tr = as.numeric(tr)) %>%
     
-    ggplot(aes(tr, m)) +
+    ggplot(aes(tr, b, fill = similtype)) +
     geom_hline(yintercept = 0) +
-    geom_boxplot(width = 0.5, aes(group = tr)) +
-    stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 1/2) +
+    stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 0.9) +
     
-    facet_grid(
-      vars(similtype), vars(network), 
-      scale = "free_y", 
-      labeller = labeller(similtype = facet_labels)
-      ) +
+    facet_grid(vars(network), vars(similtype)) +
+    scale_fill_manual(values = colors.transform) +
     scale_x_continuous(breaks = seq(0, 20, 4)) +
-    scale_fill_brewer(type = "qual", palette = 2)  +
     
-    labs(y = "Mean contrast (beta)", x = "TR post stimtime", title = task.i)
+    labs(y = "Mean beta", x = "TR post stimtime", title = paste0(task.i)) +
+    theme(legend.position = "top")
   
-  print(p.network.curves)
+  print(p.network.b)
+  
   
 }
 
 ```
 
 
-### t-stats on contrast
+### t-stats
 
-```{r network_curves_t, fig.height = 7}
+```{r network_curves_t, fig.height = 8}
 
-d.network.curves.group <- d.network.curves %>%
+d.network.group <- d[, .(b = mean(value)), by = .(task, similtype, network, tr, subj)] %>%
 
   group_by(task, tr, network, similtype) %>%
   summarize(
-    p = t.test(m)$p.value,
-    t = t.test(m)$statistic,
-    b = mean(m)
+    p = t.test(b)$p.value,
+    t = t.test(b)$statistic,
+    b = mean(b)
   ) %>%
 
   group_by(task, tr, similtype) %>%
@@ -214,7 +210,7 @@ d.network.curves.group <- d.network.curves %>%
 
 for (task.i in tasks) {
   
-  p.network.curves.group <- d.network.curves.group %>%
+  p.network.curves.group <- d.network.group %>%
   
     filter(task == task.i) %>%
   
@@ -228,21 +224,21 @@ for (task.i in tasks) {
     geom_line(size = 2) +
   
     facet_wrap(vars(network)) +
-    scale_color_brewer(type = "qual", palette = 2, labels = facet_labels) +
+    scale_color_manual(values = colors.transform) +
     scale_x_continuous(breaks = seq(0, 20, 4)) +
     
     theme(legend.position = c(0.5, 0.15)) +
   
     labs(y = "t statistic on contrast", x = "TR post stimtime", title = task.i)
   
-  p.network.curves.group
+  print(p.network.curves.group)
   
 }
 
 ```
 
 
-# parcel-level
+# Parcel-level contrasts
 
 ```{r}
 
@@ -256,9 +252,10 @@ d.parcel.curves.group <- d %>%
 
 ```
 
+## counts of significant effects per TR
 
+Using t-test of subject parcel means.
 
-## curves
 
 ```{r}
 
@@ -275,8 +272,6 @@ counts.parcel.curves.group <- d.parcel.curves.group %>%
 ```
 
 
-### counts of significant effects per TR
-
 ```{r, fig.height = 7}
   
 counts.parcel.curves.group %>%
@@ -286,9 +281,9 @@ counts.parcel.curves.group %>%
   geom_point(size = 2) +
   geom_segment(aes(xend = tr, yend = 0), size = 1) +
   
-  facet_grid(vars(similtype), vars(task), labeller = labeller(similtype = facet_labels)) +
+  facet_grid(vars(similtype), vars(task)) +
   scale_color_brewer(type = "qual", palette = 1) +
-  scale_x_continuous(breaks = seq(0, 20, 2)) +
+  scale_x_continuous(breaks = seq(0, 20, 4)) +
   theme(legend.position = "none") +
   
   labs(
@@ -300,19 +295,62 @@ counts.parcel.curves.group %>%
 
 
 
-### DMCC55B ROIs
+## DMCC55B univariate ROIs
+Curves for conjunction ROIs defined in univariate_group.rmd.
 
-```{r, fig.height = 7}
+### beta estimates
+
+```{r parcel_contrasts_dmcc55b_betas, fig.height = 12, fig.width = 15}
 
 
 for (task.i in tasks) {
   
-  p.parcel.curves  <- d.parcel.curves.group %>%
+  
+  p.contrast.parcel.b.dmcc55b <- 
+    
+    d[
+      task == task.i & parcel %in% dmcc55b.parcels,
+      .(b = mean(value)), by = .(similtype, parcel, tr, subj)
+      ] %>%
+    
+    mutate(tr = as.numeric(tr)) %>%
+    
+    ggplot(aes(tr, b, fill = similtype)) +
+    geom_hline(yintercept = 0) +
+    stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 0.9) +
+    
+    facet_wrap(vars(parcel)) +
+    scale_fill_manual(values = colors.transform) +
+    scale_x_continuous(breaks = seq(0, 20, 4)) +
+
+    labs(y = "Mean conrast", x = "TR post stimtime", title = task.i) +
+    theme(legend.position = "top")
+  
+  print(p.contrast.parcel.b.dmcc55b)
+
+  
+}
+
+
+```
+
+
+### t-statistics
+
+```{r parcel_contrasts_dmcc55b_tstats, fig.height = 12, fig.width = 15}
+
+
+
+for (task.i in tasks) {
+  
+  
+  p.contrast.parcel.t <- 
+    
+    d.parcel.curves.group %>% 
     
     filter(task == task.i, parcel %in% dmcc55b.parcels) %>%
-    mutate(tr = as.numeric(tr)) %>%
     
-    ggplot(aes(tr, t, color = similtype, group = similtype)) +
+    ggplot(aes(tr, t, color = similtype)) +
     geom_hline(yintercept = 2, color = "grey50", linetype = "dashed") +
     geom_hline(yintercept = -2, color = "grey50", linetype = "dashed") +
     geom_hline(yintercept = 0) +
@@ -320,14 +358,15 @@ for (task.i in tasks) {
     geom_line(size = 2) +
   
     facet_wrap(vars(parcel)) +
-    scale_color_brewer(type = "qual", palette = 2, labels = facet_labels) +
+    scale_color_manual(values = colors.transform) +
     scale_x_continuous(breaks = seq(0, 20, 4)) +
     
     theme(legend.position = "top") +
+    labs(x = "TR post stimtime", y = "t-statistic of contrast", title = task.i)
   
-    labs(y = "t statistic", x = "TR post stimtime", title = paste0(task.i, ", parcels in univariate hilo conjunction"))
   
-  print(p.parcel.curves)
+  print(p.contrast.parcel.t)
+
   
 }
 
@@ -335,41 +374,108 @@ for (task.i in tasks) {
 ```
 
 
-### largest 20 ROIs
+## DMCC55B multivariate ROIs: Cross-task conjunction
+
+Here conjunction analysis is performed by feeding TR-level contrast estimates to an HLM (see description at beginning of doc).
+
+Number of parcels identified, and parcel names:
+
+```{r parcelwise_stats}
 
 
-```{r, fig.height = 7}
+
+group.target.trs <- enlist(tasks)
+for (task.i in tasks) {
+  
+  
+  d.task <- d[task == task.i & tr %in% target.trs[[task.i]]]
+  d.task <- split(d.task, interaction(d.task$parcel, d.task$similtype))
+  
+  m.task <- lapply(d.task, function(x) lmer(value ~ 1 + (1 | subj), x))
+  
+  s.task <- bind_rows(lapply(m.task, tidy_lmer), .id = "parcel")
+  
+  s.task <- cbind(
+      s.task %>% select(-parcel),
+      reshape2::colsplit(s.task$parcel, "\\.", c("parcel", "similtype"))
+    )
+
+  s.task %<>%
+    
+    select(-term) %>% 
+    
+    group_by(similtype) %>%
+    mutate(
+      p.fdr = p.adjust(p.value, "fdr"),
+      hemi = substr(parcel, 1, 1),
+      num.roi = row_number()
+      )
+  
+  group.target.trs[[task.i]] <- s.task
+  
+}
+
+group.target.trs <- bind_rows(group.target.trs, .id = "task")
+
+fwrite(group.target.trs, here("out", "stats_multiv-euclidean-cv_hilo_target_alltasks_schaefer400-07.csv"))
+
+
+dmcc55b.multi.parcels.unwhitened <- group.target.trs %>%
+  filter(estimate > 0, p.fdr < 0.05, similtype == "unwhitened") %>% 
+  pull(parcel) %>% 
+  table
+dmcc55b.multi.parcels.unwhitened <- names(dmcc55b.multi.parcels.unwhitened)[dmcc55b.multi.parcels.unwhitened > 1]
+
+dmcc55b.multi.parcels.whitened <- group.target.trs %>%
+  filter(estimate > 0, p.fdr < 0.05, similtype == "whitened") %>% 
+  pull(parcel) %>% 
+  table
+dmcc55b.multi.parcels.whitened <- names(dmcc55b.multi.parcels.whitened)[dmcc55b.multi.parcels.whitened > 1]
+
+dmcc55b.multi.parcels <- intersect(dmcc55b.multi.parcels.unwhitened, dmcc55b.multi.parcels.whitened)
+```
+
+
+* No parcels ID'd (pFDR<0.05) in all four tasks in either whitened or non-whitened measures.
+* Parcels ID'd in =>2 tasks with unwhitened: `r dmcc55b.multi.parcels.unwhitened`
+* Parcels ID'd in =>2 tasks with whitened: `r dmcc55b.multi.parcels.whitened`
+
+
+### intersection of parcels ID'd by unwhitened and whitened measures in =>2 tasks
+
+
+
+
+### beta estimates
+
+```{r parcel_contrasts_dmcc55b_mv_betas, fig.height = 12, fig.width = 15}
 
 
 for (task.i in tasks) {
   
-  parcels.max20 <- d.parcel.curves.group %>% 
-          filter(task == task.i) %>%
-          ungroup %>%
-          slice_max(order = abs(t), n = 20) %>% pull(parcel) %>% unique
   
-  p.parcel.curves  <- d.parcel.curves.group %>% 
+  p.contrast.parcel.b.dmcc55b.mv <- 
     
-    filter(task %in% task.i, parcel %in% parcels.max20) %>%
+    d[
+      task == task.i & parcel %in% dmcc55b.multi.parcels,
+      .(b = mean(value)), by = .(similtype, parcel, tr, subj)
+      ] %>%
     
     mutate(tr = as.numeric(tr)) %>%
     
-    ggplot(aes(tr, t, color = similtype, group = similtype)) +
-    geom_hline(yintercept = 2, color = "grey50", linetype = "dashed") +
-    geom_hline(yintercept = -2, color = "grey50", linetype = "dashed") +
+    ggplot(aes(tr, b, fill = similtype)) +
     geom_hline(yintercept = 0) +
-  
-    geom_line(size = 2) +
-  
-    facet_wrap(vars(parcel)) +
-    scale_color_brewer(type = "qual", palette = 2, labels = facet_labels) +
-    scale_x_continuous(breaks = seq(0, 20, 4)) +
+    stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 0.9) +
     
-    theme(legend.position = "top") +
+    facet_wrap(vars(parcel)) +
+    scale_fill_manual(values = colors.transform) +
+    scale_x_continuous(breaks = seq(0, 20, 4)) +
+
+    labs(y = "Mean conrast", x = "TR post stimtime", title = task.i) +
+    theme(legend.position = "top")
   
-    labs(y = "t statistic", x = "TR post stimtime", title = paste0(task.i, ", 20 parcels with maximum abs(t) stats"))
-  
-  print(p.parcel.curves)
+  print(p.contrast.parcel.b.dmcc55b.mv)
+
   
 }
 
@@ -377,53 +483,86 @@ for (task.i in tasks) {
 ```
 
 
+### t-statistics
+
+```{r parcel_contrasts_dmcc55b_mv_tstats, fig.height = 12, fig.width = 15}
+
+
+
+for (task.i in tasks) {
+  
+  
+  p.contrast.parcel.t <- 
+    
+    d.parcel.curves.group %>% 
+    
+    filter(task == task.i, parcel %in% dmcc55b.multi.parcels) %>%
+    
+    ggplot(aes(tr, t, color = similtype)) +
+    geom_hline(yintercept = 2, color = "grey50", linetype = "dashed") +
+    geom_hline(yintercept = -2, color = "grey50", linetype = "dashed") +
+    geom_hline(yintercept = 0) +
+  
+    geom_line(size = 2) +
+  
+    facet_wrap(vars(parcel)) +
+    scale_color_manual(values = colors.transform) +
+    scale_x_continuous(breaks = seq(0, 20, 4)) +
+    
+    theme(legend.position = "top") +
+    labs(x = "TR post stimtime", y = "t-statistic of contrast", title = task.i)
+  
+  
+  print(p.contrast.parcel.t)
+
+  
+}
+
+
+```
+
+
+
+
+## all parcels
+
+```{r}
+
+group.target.trs %>%
+  
+  select(task, statistic, p.fdr, parcel, similtype) %>%
+  as.data.table %>%
+  dcast(task + parcel ~ similtype, value.var = c("statistic", "p.fdr")) %>%
+  
+  ggplot(aes(statistic_whitened, statistic_unwhitened)) +
+  
+  geom_abline() +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  
+  geom_point(aes(fill = p.fdr_whitened < 0.05 | p.fdr_unwhitened < 0.05), shape = 21, color = "white") +
+  
+  facet_grid(cols = vars(task)) +
+  scale_fill_manual(
+    values = c("TRUE" = "firebrick1", "FALSE" = "black"), 
+    labels = c("pFDR<0.05", "pFDR>0.05"), 
+    name = NULL
+    ) +
+  
+  theme(legend.position = "top") +
+  labs(
+    title = "test statistics from whitened versus unwhitened contrasts", 
+    x = "t stat whitened", 
+    y = "t stat unwhitened"
+    )
+
+
+
+```
 
 
 
 ## maps (target TRs)
-
-
-```{r stats}
-
-d.group <- enlist(tasks)
-for (task.i in tasks) {
-
-
-  d.i <- d[task %in% task.i & tr %in% target.trs[[task.i]]]
-
-
-  l <- split(d.i, interaction(d.i$parcel, d.i$similtype))
-  m <- lapply(l, function(x) lmer(value ~ 1 + (1 | subj), x))
-  s <- bind_rows(lapply(m, tidy_lmer), .id = "parcel.similtype")
-  s <- cbind(s, reshape2::colsplit(s$parcel.similtype, "\\.", c("parcel", "similtype")))
-  s %<>%
-    mutate(
-      parcel.similtype = NULL,
-      term = NULL,
-      p.fdr = p.adjust(p.value, "fdr"),
-      network = get.network(parcel),
-      hemi = substr(parcel, 1, 1),
-      num.roi = match(parcel, parcellation$key)
-      )
-
-
-  d.group[[task.i]] <- s
-
-
-}
-
-
-lapply(d.group, function(x) filter(x, p.fdr < 0.05 & estimate > 0) %>% nrow)
-
-
-d.group <- bind_rows(d.group, .id = "task")
-
-
-fwrite(d.group, here("out", "stats_multiv-euclidean-cv_hilo_target_alltasks_schaefer400-07.csv"))
-
-# d.group <- fread(here("out", "stats_multiv-euclidean-cv_hilo_target_alltasks_schaefer400-07.csv"))
-
-```
 
 
 Unthresholded and thresholded t-statistics displayed on inflated brains.
@@ -435,6 +574,7 @@ Note: colors are reverse-scaled, i.e., dark == strong effect, light == weak effe
 
 for (task.i in tasks) {
   
+  cat("\n ")
   cat(sprintf("\n### %s ", task.i))
   cat("\n ")
   for (similtype.i in similtype) {
@@ -443,7 +583,7 @@ for (task.i in tasks) {
     cat(sprintf("\n#### %s ", facet_labels[similtype.i == names(facet_labels)]))
     cat("\n ")
     
-    d.group %>%
+    group.target.trs %>%
       
       filter(task == task.i, similtype == similtype.i) %>%
       
