@@ -433,12 +433,12 @@ Note: colors are reverse-scaled, i.e., dark == strong effect, light == weak effe
 
 for (task.i in tasks) {
   
-  cat(sprintf("\n### %s", task.i))
+  cat(sprintf("\n### %s ", task.i))
   
   for (similtype.i in similtype) {
     
     
-    cat(sprintf("\n#### %s", facet_labels[similtype.i == names(facet_labels)]))
+    cat(sprintf("\n#### %s ", facet_labels[similtype.i == names(facet_labels)]))
     
     
     d.group %>%
