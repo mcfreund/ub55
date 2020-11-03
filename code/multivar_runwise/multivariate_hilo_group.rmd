@@ -58,13 +58,11 @@ weights_lo <- list(
 
 
 
-similtype <- c(
-  # "euclidean-cv-unsta-prewh", "euclidean-cv-stand-prewh", "euclidean-cv-unsta-unpre", "euclidean-cv-stand-unpre"
-  "euclidean-cv-unsta-prewh", "euclidean-cv-unsta-unpre"
-  )
+similtype <- c("whitened", "unwhitened")
+fname <- c("euclidean-cv-unsta-prewh", "euclidean-cv-unsta-unpre")
 
 d <- setNames(vector("list", nrow(glminfo)), glminfo$task)
-for (rsa.i in similtype) {
+for (rsa.i in fname) {
   # rsa.i = similtype[1]
   
   l <- setNames(vector("list", nrow(glminfo)), glminfo$task)
@@ -96,12 +94,6 @@ d <- as.data.table(bind_rows(d, .id = "similtype"))
 d <- d[subj != "448347"]
 
 
-facet_labels <- c(
-  # "euclidean-cv-stand-prewh" = "stand white",
-  # "euclidean-cv-stand-unpre" = "stand unwhite",
-  "euclidean-cv-unsta-prewh" = "whitened",
-  "euclidean-cv-unsta-unpre" = "unwhitened" 
-)
 
 group.target.trs <- fread(here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
 dmcc55b.parcels <- group.target.trs %>% filter(estimate > 0, p.fdr < 0.05) %>% pull(parcel) %>% table
@@ -193,7 +185,7 @@ for (task.i in tasks) {
 
 ### t-stats
 
-```{r network_curves_t, fig.height = 8}
+```{r network_curves_t, fig.height = 7}
 
 d.network.group <- d[, .(b = mean(value)), by = .(task, similtype, network, tr, subj)] %>%
 
@@ -272,7 +264,7 @@ counts.parcel.curves.group <- d.parcel.curves.group %>%
 ```
 
 
-```{r, fig.height = 7}
+```{r, fig.height = 6}
   
 counts.parcel.curves.group %>%
   
@@ -437,11 +429,17 @@ dmcc55b.multi.parcels <- intersect(dmcc55b.multi.parcels.unwhitened, dmcc55b.mul
 
 
 * No parcels ID'd (pFDR<0.05) in all four tasks in either whitened or non-whitened measures.
-* Parcels ID'd in =>2 tasks with unwhitened: `r dmcc55b.multi.parcels.unwhitened`
-* Parcels ID'd in =>2 tasks with whitened: `r dmcc55b.multi.parcels.whitened`
+* Parcels ID'd in =>2 tasks with unwhitened: 
+```{r}
+dmcc55b.multi.parcels.unwhitened
+```
+
+* Parcels ID'd in =>2 tasks with whitened:
+```{r}
+dmcc55b.multi.parcels.whitened
+```
 
 
-### intersection of parcels ID'd by unwhitened and whitened measures in =>2 tasks
 
 
 
@@ -526,7 +524,7 @@ for (task.i in tasks) {
 
 ## all parcels
 
-```{r}
+```{r fig.height = 4}
 
 group.target.trs %>%
   
@@ -580,7 +578,7 @@ for (task.i in tasks) {
   for (similtype.i in similtype) {
     
     cat("\n ")
-    cat(sprintf("\n#### %s ", facet_labels[similtype.i == names(facet_labels)]))
+    cat(sprintf("\n#### %s ", similtype.i))
     cat("\n ")
     
     group.target.trs %>%
@@ -606,4 +604,70 @@ for (task.i in tasks) {
 
 ```
 
+
+# Task Profiles across parcels
+
+This is done with DMCC55B univariate ROIs, for comparability with univariate analysis.
+
+```{r fig.width = 10, fig.height = 6}
+
+# group.target.trs <- fread(here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
+
+parcel.order <- group.target.trs %>%
+  
+  filter(parcel %in% dmcc55b.parcels, similtype == "unwhitened") %>%
+  
+  group_by(parcel) %>%
+  summarize(b = mean(estimate)) %>%
+  arrange(-b) %>%
+  pull(parcel)
+
+
+group.target.trs %>%
+  
+  filter(parcel %in% dmcc55b.parcels) %>%
+  
+  ggplot(aes(factor(parcel, levels = parcel.order), estimate, color = task)) +
+  
+  geom_line(aes(group = task), size = 2) +
+  geom_point(size = 2.5) +
+  geom_errorbar(
+    aes(ymax = estimate + se*1.96, ymin = estimate - se*1.96), width = 0, size = 2
+    ) +
+  
+  scale_color_brewer(type = "qual", palette = 7) +
+  
+  facet_grid(vars(similtype), scales = "free_y") +
+  
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5), legend.position = "top"
+    ) +
+  
+  labs(x = NULL, y = "contrast estimate")
+
+
+group.target.trs %>%
+  
+  filter(parcel %in% dmcc55b.parcels) %>%
+  
+  group_by(task, similtype) %>%
+  mutate(estimate = scale(estimate)) %>%
+  
+  ggplot(aes(factor(parcel, levels = parcel.order), estimate, color = task)) +
+  
+  geom_line(aes(group = task), size = 2) +
+  geom_point(size = 2.5) +
+  
+  scale_color_brewer(type = "qual", palette = 7) +
+  
+  facet_grid(vars(similtype), scales = "free_y") +
+  
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5), legend.position = "top"
+    ) +
+  
+  labs(x = NULL, y = "z-scored contrast estimate")
+
+
+```
 

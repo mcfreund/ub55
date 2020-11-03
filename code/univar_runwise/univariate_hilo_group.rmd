@@ -675,6 +675,10 @@ for (task.i in tasks) {
 ```
 
 
+
+
+
+
 ## Brains (contrasts)
 
 NB: colors are reversed (black = high, yellow = low) so large positive effects can be seen on white underlay.
@@ -719,4 +723,81 @@ for (task.i in tasks) {
 fwrite(group.target.trs, here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
 
 ```
+
+
+
+# Task Profiles across parcels
+
+
+
+```{r}
+
+# group.target.trs <- fread(here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
+
+parcel.order <- group.target.trs %>%
+  
+  filter(parcel %in% dmcc55b.parcels) %>%
+  
+  group_by(parcel) %>%
+  summarize(b = mean(estimate)) %>%
+  arrange(-b) %>%
+  pull(parcel)
+
+group.target.trs %>%
+  
+  filter(parcel %in% dmcc55b.parcels) %>%
+  
+  ggplot(aes(factor(parcel, levels = parcel.order), estimate, color = task)) +
+  
+  geom_line(aes(group = task), size = 2) +
+  geom_point(size = 2.5) +
+  geom_errorbar(
+    aes(ymax = estimate + se*1.96, ymin = estimate - se*1.96), width = 0, size = 2
+    ) +
+  
+  scale_color_brewer(type = "qual", palette = 7) +
+  # scale_x_discrete()
+  
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5), legend.position = "top"
+    ) +
+  
+  labs(x = NULL, y = "contrast estimate")
+
+
+group.target.trs %>%
+  
+  filter(parcel %in% dmcc55b.parcels) %>%
+  
+  group_by(task) %>%
+  mutate(estimate = scale(estimate)) %>%
+  
+  ggplot(aes(factor(parcel, levels = parcel.order), estimate, color = task)) +
+  
+  geom_line(aes(group = task), size = 2) +
+  geom_point(size = 2.5) +
+  # geom_errorbar(aes(ymax = estimate + se*1.96, ymin = estimate - se*1.96), width = 0) +
+  
+  scale_color_brewer(type = "qual", palette = 7) +
+  
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5), legend.position = "top"
+    ) +
+  
+  labs(x = NULL, y = "z-scored contrast estimate")
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
 
