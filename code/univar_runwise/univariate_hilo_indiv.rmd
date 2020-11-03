@@ -52,362 +52,208 @@ for (glm.i in seq_len(nrow(glminfo))) {
   a <- as.data.table(reshape2::melt(a))
   
   a <- separate(a, term, c("term", "stat"), "_")
-  a <- a[!grepl("Full|block", term) & stat != "Fstat"]
+  a <- a[!grepl("Full|block", term) & stat == "Coef"]
   a <- separate(a, term, c("term", "tr"), "#")
   
   a$network <- a$parcel %>% gsub("LH_|RH_", "", .) %>% gsub("_.*", "", .)
   a$hemi <- substr(a$parcel, 1, 1)
   
-  a <- dcast(a, term + tr + parcel + subj + run + hemi + network ~ stat, value.var = "value")
-  names(a) <- tolower(names(a))
+  if (!identical(unique(a$stat), "Coef")) stop("more stats than coef in there")
+  # a <- dcast(a, term + tr + parcel + subj + run + hemi + network ~ stat, value.var = "value")
+  # names(a) <- tolower(names(a))
+  
+  a$stat <- NULL
+  a <- rename(a, b = value)
   
   d[[glm.i]] <- a
   
 }
 rm(glm.i, a)
+gc()
 
 ## fix cuedts labels: incorrect! (mislabeled in afni code)
 d$Cuedts$term <- gsub("NoInc$", "Repeat", d$Cuedts$term)
 d$Cuedts$term <- gsub("Inc$", "Switch", d$Cuedts$term)
 
 
-```
+## bind and create data.tables suitable for looping
 
-
-
-
-# AXCPT
-
-
-## curves
-
-### Network-level
-
-#### conditional
-
-```{r axcpt_curves_network_conditional, fig.height = 7, fig.width = 11}
-
-d$Axcpt[, .(m = mean(coef)), by = .(run, network, tr, term, subj)] %>%
+d <- bind_rows(d, .id = "task")
+d.marginal <- d[, .(b = mean(b)), by = .(task, run, network, parcel, tr, subj)]  ## average across conditions
+d.contrast <- rbind(
   
-  dcast(... ~ run, value.var = "m") %>%
+  d[task == "Axcpt" & term %in% c("BX", "BY"), ] %>%
+    dcast(... ~ term, value.var = "b") %>%
+    mutate(b = BX - BY) %>% select(-BX, -BY),
   
-  group_by(network, tr, term) %>%
-  summarize(r = cor(run1, run2), .groups = "drop_last") %>%
-
-  ggplot(aes(as.numeric(tr), r)) +
-  geom_hline(yintercept = 0) +
-  geom_line(size = 1) +
-
-  facet_grid(vars(network), vars(term)) +
-  scale_fill_brewer(type = "qual", palette = 2) +
-  scale_x_continuous(breaks = seq(0, 16, 2)) +
-  theme(legend.position = "none") +
+  d[task == "Cuedts"] %>% 
+    dcast(... ~ term, value.var = "b") %>%
+    mutate(b = (InConSwitch + InConRepeat - ConSwitch - ConRepeat)/2, tr = as.numeric(tr)) %>% 
+    select(-InConSwitch, -InConRepeat, -ConSwitch, -ConRepeat),
   
-  labs(y = "cross-run correlation", x = "TR post stimtime", title = "Axcpt conditional curves")
-
-```
-
-
-#### HiLo contrast
-
-```{r axcpt_curves_network_contrast, fig.height = 7, fig.width = 8}
-
-d$Axcpt[
-  term %in% c("BX", "BY"), 
-  .(m = mean(coef)), 
-  by = .(run, network, tr, term, subj)
-  ] %>%
+  d[task == "Stern" & term %in% c("LL5RN", "LL5NN")] %>%
+    dcast(... ~ term, value.var = "b") %>%
+    mutate(b = LL5RN - LL5NN, tr = as.numeric(tr)) %>%
+    select(-LL5NN, -LL5RN),
   
-  dcast(... ~ run + term, value.var = "m") %>%
-  
-  group_by(network, tr) %>%
-  summarize(
-    r = cor(
-      run1_BX - run1_BY, 
-      run2_BX - run2_BY
-      ),
-    .groups = "drop_last"
-    ) %>%
+  d[task == "Stroop"] %>%
+    dcast(... ~ term, value.var = "b") %>%  
+    mutate(b = (biasInCon + PC50InCon - biasCon - PC50Con)/2, tr = as.numeric(tr)) %>%
+    select(-biasInCon, -PC50InCon, -biasCon, -PC50Con)
 
-  ggplot(aes(as.numeric(tr), r)) +
-  geom_hline(yintercept = 0) +
-  geom_line(size = 1) +
-  
-  facet_grid(vars(network)) +
-  scale_fill_brewer(type = "qual", palette = 2) +
-  scale_x_continuous(breaks = seq(0, 16, 2)) +
-  theme(legend.position = "none") +
-  
-  labs(y = "cross-run correlation", x = "TR post stimtime", title = "Axcpt hilo curves (BX-BY)")
-
-```
-
-
-### DMCC 34
-#### HiLo contrast
-
-```{r axcpt_curves_dmcc34, fig.height = 7, fig.width = 11}
-
-d$Axcpt[
-  term %in% c("BX", "BY") & parcel %in% parcellation$key[dmcc34], 
-  .(m = mean(coef)), 
-  by = .(run, parcel, network, tr, term, subj)
-  ] %>%
-  
- dcast(... ~ run + term, value.var = "m") %>%
-  
-  group_by(parcel, tr) %>%
-  summarize(
-    r = cor(
-      run1_BX - run1_BY, 
-      run2_BX - run2_BY
-      ),
-    .groups = "drop_last"
-    ) %>%
-
-  ggplot(aes(as.numeric(tr), r)) +
-  geom_hline(yintercept = 0) +
-  geom_line(size = 1) +
-  
-  facet_wrap(vars(parcel)) +
-  scale_fill_brewer(type = "qual", palette = 2) +
-  scale_x_continuous(breaks = seq(0, 16, 2)) +
-  theme(legend.position = "none") +
-  
-  labs(y = "cross-run correlation", x = "TR post stimtime", title = "Axcpt hilo curves (BX-BY) DMCC34")
-
-```
-
-
-## stats and maps
-
-```{r axcpt_stats, fig.height = 7, fig.width = 11}
-
-Axcpt <- d$Axcpt[
-  tr %in% target.trs$Axcpt & term %in% c("BX", "BY"), 
-  .(coef = mean(coef)), 
-  by = .(term, parcel, subj, run, hemi, network)]
-
-Axcpt %<>% 
-  mutate(
-    hilo = ifelse(term == "BX", "hi", "lo"), hilo = relevel(as.factor(hilo), "lo"),
-    term = NULL
-    )
-
-Axcpt %<>% dcast(... ~ run + hilo, value.var = "coef") %>% 
-  mutate(run1 = run1_hi - run1_lo, run2 = run2_hi - run2_lo)
-
-Axcpt <- split(Axcpt, Axcpt$parcel)
-
-s.Axcpt <- lapply(
-  Axcpt, function(x) {
-    res <- psych::ICC(x[, c("run1", "run2")], lmer = FALSE)$results
-    res[3, c("ICC", "p", "lower bound", "upper bound")]  ## 3 index for single_fixed_raters
-  }
 )
-s.Axcpt <- bind_rows(s.Axcpt, .id = "parcel")
 
-s.Axcpt %<>%
-  mutate(
-    hemi = substr(parcel, 1, 1),
-    num.roi = row_number(),
-    p.fdr = p.adjust(p, "fdr")
+
+group.target.trs <- fread(here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
+dmcc55b.parcels <- group.target.trs %>% filter(estimate > 0, p.fdr < 0.05) %>% pull(parcel) %>% table
+dmcc55b.parcels <- names(dmcc55b.parcels)[dmcc55b.parcels == 4]
+
+
+w.contrast <- d.contrast %>% dcast(... ~ run, value.var = "b")
+
+
+
+```
+
+
+
+
+
+
+
+# cross-run correlations
+
+### Network-level curves
+
+```{r crossrun_network, fig.width = 8, fig.height = 10}
+
+d.contrast %>%
+  
+  dcast(... ~ run, value.var = "b") %>%
+  
+  group_by(task, network, tr) %>%
+  summarize(
+    r = cor(run1, run2), 
+    rho = cor(run1, run2, method = "spearman"), 
+    .groups = "drop_last"
+    ) %>%
+  
+  as.data.table %>%
+  melt(id.vars = c("task", "network", "tr"), measure.vars = c("r", "rho")) %>%
+
+  ggplot(aes(as.numeric(tr), value)) +
+  geom_hline(yintercept = 0) +
+  geom_line(aes(color = variable), size = 2) +
+
+  facet_grid(vars(network), vars(task), scales = "free_x") +
+  scale_x_continuous(breaks = seq(0, 20, 4)) +
+  
+  scale_color_brewer(type = "qual", palette = 3, name = NULL, labels = c("r" = "linear corr", "rho" = "rank corr")) +
+  theme(legend.position = "top") +
+  
+  labs(
+    y = "cross-run correlation", 
+    x = "TR post stimtime", 
+    title = "split-half (cross-run) reliability in HiLo contrast"
   )
 
-s.Axcpt %>% filter(p.fdr < 0.05) %>% arrange(p.fdr) %>% kable
 
 ```
 
+### Parcel-level curves (DMCC55B univariate ROIs)
 
-Unthresholded and thresholded t-statistics.
-Threshold at fdr-corrected p-value (across all parcels) of 0.05.
-
-```{r Axcpt_maps_hilo, fig.height = 7, fig.width = 11}
-
-s.Axcpt %>%
-  build_overlay("ICC", template = schaefer) %>%
-  plot_surface(underlay = hcp, hues = viridis::inferno(500))
-
-s.Axcpt %>%
-  mutate(ICC = ifelse(p.fdr < 0.05, 1, 0)) %>%
-  build_overlay("ICC", template = schaefer) %>%
-  plot_surface(underlay = hcp, hues = c("white", "firebrick1"))
-
-```
+```{r crossrun_dmcc55b, fig.width = 15, fig.height = 12}
 
 
-
-
-
-
-
-
-# Cuedts
-
-
-## curves
-
-### Network-level
-
-#### conditional
-
-```{r Cuedts_curves_network_conditional, fig.height = 7, fig.width = 11}
-
-d$Cuedts[, .(m = mean(coef)), by = .(run, network, tr, term, subj)] %>%
+for (task.i in tasks) {
   
-  dcast(... ~ run, value.var = "m") %>%
+ 
+  p.crossrun <- d.contrast %>%
+    
+    filter(task %in% task.i, parcel %in% dmcc55b.parcels) %>%
+    
+    dcast(... ~ run, value.var = "b") %>%
+    
+    group_by(task, parcel, tr) %>%
+    summarize(
+      r = cor(run1, run2), 
+      rho = cor(run1, run2, method = "spearman"), 
+      .groups = "drop_last"
+      ) %>%
+    
+    as.data.table %>%
+    melt(id.vars = c("task", "parcel", "tr"), measure.vars = c("r", "rho")) %>%
   
-  group_by(network, tr, term) %>%
-  summarize(r = cor(run1, run2), .groups = "drop_last") %>%
-
-  ggplot(aes(as.numeric(tr), r)) +
-  geom_hline(yintercept = 0) +
-  geom_line(size = 1) +
-
-  facet_grid(vars(network), vars(term)) +
-  scale_fill_brewer(type = "qual", palette = 2) +
-  scale_x_continuous(breaks = seq(0, 16, 2)) +
-  theme(legend.position = "none") +
+    ggplot(aes(as.numeric(tr), value)) +
+    geom_hline(yintercept = 0) +
+    geom_line(aes(color = variable), size = 2) +
   
-  labs(y = "cross-run correlation", x = "TR post stimtime", title = "Cuedts conditional curves")
-
-```
-
-
-#### HiLo contrast
-
-```{r Cuedts_curves_network_contrast, fig.height = 7, fig.width = 8}
-
-d$Cuedts[, 
-  .(m = mean(coef)), 
-  by = .(run, network, tr, term, subj)
-  ] %>%
-  
-  dcast(... ~ run + term, value.var = "m") %>%
-  
-  group_by(network, tr) %>%
-  summarize(
-    r = cor(
-      (run1_InConSwitch + run1_InConRepeat - run1_ConSwitch - run1_ConRepeat)/2,
-      (run2_InConSwitch + run2_InConRepeat - run2_ConSwitch - run2_ConRepeat)/2
-      ),
-    .groups = "drop_last"
-    ) %>%
-
-  ggplot(aes(as.numeric(tr), r)) +
-  geom_hline(yintercept = 0) +
-  geom_line(size = 1) +
-  
-  facet_grid(vars(network)) +
-  scale_fill_brewer(type = "qual", palette = 2) +
-  scale_x_continuous(breaks = seq(0, 18, 2)) +
-  theme(legend.position = "none") +
-  
-  labs(
-    y = "cross-run correlation", 
-    x = "TR post stimtime", 
-    title = "Cuedts hilo curves: (InCon_Switch + InCon_Repeat - Con_Switch - Con_Repeat)/2"
+    facet_wrap(vars(parcel)) +
+    scale_x_continuous(breaks = seq(0, 20, 4)) +
+    
+    scale_color_brewer(type = "qual", palette = 3, name = NULL, labels = c("r" = "linear corr", "rho" = "rank corr")) +
+    theme(legend.position = "top") +
+    
+    labs(
+      y = "cross-run correlation", 
+      x = "TR post stimtime", 
+      title = paste0(task.i, ": split-half (cross-run) reliability in HiLo contrast")
     )
+ 
+  print(p.crossrun)
+  
+}
 
 ```
 
 
-### DMCC 34
-#### HiLo contrast
 
-```{r Cuedts_curves_dmcc34, fig.height = 7, fig.width = 11}
+## Target TRs: Parcel-level scatterplots (DMCC55B univariate ROIs)
 
-d$Cuedts[
-  parcel %in% parcellation$key[dmcc34], 
-  .(m = mean(coef)), 
-  by = .(run, parcel, network, tr, term, subj)
-  ] %>%
-  
- dcast(... ~ run + term, value.var = "m") %>%
-  
-  group_by(parcel, tr) %>%
-  summarize(
-    r = cor(
-      (run1_InConSwitch + run1_InConRepeat - run1_ConSwitch - run1_ConRepeat)/2,
-      (run2_InConSwitch + run2_InConRepeat - run2_ConSwitch - run2_ConRepeat)/2
-      ),
-    .groups = "drop_last"
-    ) %>%
+```{r crossrun_dmcc55b_scatter, fig.width = 8, fig.height = 10}
 
-  ggplot(aes(as.numeric(tr), r)) +
-  geom_hline(yintercept = 0) +
-  geom_line(size = 1) +
+
+
+
+for (task.i in tasks) {
   
-  facet_wrap(vars(parcel)) +
-  scale_fill_brewer(type = "qual", palette = 2) +
-  scale_x_continuous(breaks = seq(0, 18, 2)) +
-  theme(legend.position = "none") +
+ 
+  p.scatter <- d.contrast %>%
+    
+    filter(task %in% task.i, parcel %in% dmcc55b.parcels, tr %in% target.trs[[task.i]]) %>%
+    
+    group_by(task, network, parcel, subj, run) %>%
+    summarize(
+      b = mean(b),
+      .groups = "drop_last"
+      ) %>%
+
+    as.data.table %>%
+    dcast(... ~ run, value.var = "b") %>%
+    
+    ggplot(aes(run1, run2)) +
+    geom_hline(yintercept = 0) +
+    geom_vline(xintercept = 0) +
+    geom_point(aes(fill = network), color = "white", size = 2, shape = 21) +
   
-  labs(
-    y = "cross-run correlation", 
-    x = "TR post stimtime", 
-    title = "Cuedts hilo curves: (InCon_Switch + InCon_Repeat - Con_Switch - Con_Repeat)/2"
+    facet_wrap(vars(parcel)) +
+    
+    scale_fill_brewer(type = "qual", palette = 2) +
+    theme(legend.position = "top") +
+    
+    labs(
+      y = "run 2 beta contrast", 
+      x = "run 1 beta contrast", 
+      title = paste0(task.i, ": HiLo contrast at target TRs")
     )
-
-```
-
-
-## stats and maps
-
-```{r Cuedts_stats, fig.height = 7, fig.width = 11}
-
-Cuedts <- d$Cuedts[
-  # tr %in% target.trs$Cuedts, 
-  tr %in% 7:16,
-  .(coef = mean(coef)), 
-  by = .(term, parcel, subj, run, hemi, network)
-  ]
-
-Cuedts %<>% 
-  mutate(
-    hilo = ifelse(grepl("InCon", term), "hi", "lo"), hilo = relevel(as.factor(hilo), "lo"),
-    term = NULL
-    ) %>%
-  .[, .(coef = mean(coef)), by = .(parcel, subj, hemi, network, run, hilo)]
-
-Cuedts %<>% dcast(... ~ run + hilo, value.var = "coef") %>%  
-  mutate(run1 = run1_hi - run1_lo, run2 = run2_hi - run2_lo)
-
-Cuedts <- split(Cuedts, Cuedts$parcel)
-
-s.Cuedts <- lapply(
-  Cuedts, function(x) {
-    res <- psych::ICC(x[, c("run1", "run2")], lmer = FALSE)$results
-    res[3, c("ICC", "p", "lower bound", "upper bound")]  ## 3 index for single_fixed_raters
-  }
-)
-s.Cuedts <- bind_rows(s.Cuedts, .id = "parcel")
-
-s.Cuedts %<>%
-  mutate(
-    hemi = substr(parcel, 1, 1),
-    num.roi = row_number(),
-    p.fdr = p.adjust(p, "fdr")
-  )
-
-s.Cuedts %>% filter(p.fdr < 0.05) %>% arrange(p.fdr) %>% kable
-
-```
+ 
+  print(p.scatter)
+  
+}
 
 
-Unthresholded and thresholded t-statistics.
-Threshold at fdr-corrected p-value (across all parcels) of 0.05.
 
-```{r Cuedts_maps_hilo, fig.height = 7, fig.width = 11}
 
-s.Cuedts %>%
-  build_overlay("ICC", template = schaefer) %>%
-  plot_surface(underlay = hcp, hues = viridis::inferno(500))
-
-s.Cuedts %>%
-  mutate(ICC = ifelse(p.fdr < 0.05, ICC, 0)) %>%
-  build_overlay("ICC", template = schaefer) %>%
-  plot_surface(underlay = hcp, hues = viridis::inferno(500))
 
 ```
 
@@ -415,174 +261,77 @@ s.Cuedts %>%
 
 
 
+# cross-parcel correlations
 
-# Stern
+## DMCC55B ROIs (univariate)
+
+```{r crossparcel_dmcc55b, fig.width = 6, fig.height = 6.5, results = "asis"}
 
 
-## curves
 
-### Network-level
-
-#### conditional
-
-```{r Stern_curves_network_conditional, fig.height = 7, fig.width = 11}
-
-d$Stern[, .(m = mean(coef)), by = .(run, network, tr, term, subj)] %>%
+for (task.i in tasks) {
   
-  dcast(... ~ run, value.var = "m") %>%
+  cat("\n ")
+  cat(sprintf("\n### %s ", task.i))
+  cat("\n ")
+
   
-  group_by(network, tr, term) %>%
-  summarize(r = cor(run1, run2), .groups = "drop_last") %>%
-
-  ggplot(aes(as.numeric(tr), r)) +
-  geom_hline(yintercept = 0) +
-  geom_line(size = 1) +
-
-  facet_grid(vars(network), vars(term)) +
-  scale_fill_brewer(type = "qual", palette = 2) +
-  scale_x_continuous(breaks = seq(0, 20, 2)) +
-  theme(legend.position = "none") +
+  R.dmcc55b <- d.contrast %>% 
+    
+    .[task.i == task & tr %in% target.trs[[task.i]] & parcel %in% dmcc55b.parcels, 
+      .(b = mean(b)), 
+      by = c("task", "parcel", "subj")] %>%
+    
+    dcast(... ~ parcel, value.var = "b") %>%
+    select(where(is.numeric)) %>%
+    
+    cor
   
-  labs(y = "cross-run correlation", x = "TR post stimtime", title = "Stern conditional curves")
-
-```
-
-
-#### HiLo contrast
-
-```{r Stern_curves_network_contrast, fig.height = 7, fig.width = 8}
-
-d$Stern[
-  term %in% c("LL5RN", "LL5NN", "not5RN", "not5NN"), 
-  .(m = mean(coef)), 
-  by = .(run, network, tr, term, subj)
-  ] %>%
+  p.R.dmcc55b <- R.dmcc55b %>%
+    
+    symmat4ggplot %>%
+    
+    ggplot(aes(v1, v2, fill = value)) +
+    geom_raster() +
+    
+    scale_fill_viridis_c(option = "magma", name = NULL) +
+    
+    theme_minimal() +
+    theme(
+      axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+      axis.title = element_blank(), 
+      title = element_text(size = rel(1.5)),
+      legend.position = "top", panel.border = element_blank(), panel.grid = element_blank()
+      )
   
-  dcast(... ~ run + term, value.var = "m") %>%
+  print(p.R.dmcc55b)
+  cat("\n ")
   
-  group_by(network, tr) %>%
-  summarize(
-    r = cor(
-      (run1_LL5RN + run1_not5RN - run1_LL5NN - run1_not5NN)/2,
-      (run2_LL5RN + run2_not5RN - run2_LL5NN - run2_not5NN)/2
-      ),
-    .groups = "drop_last"
-    ) %>%
-
-  ggplot(aes(as.numeric(tr), r)) +
-  geom_hline(yintercept = 0) +
-  geom_line(size = 1) +
   
-  facet_grid(vars(network)) +
-  scale_fill_brewer(type = "qual", palette = 2) +
-  scale_x_continuous(breaks = seq(0, 20, 2)) +
-  theme(legend.position = "none") +
+  pca.dmcc55b <- prcomp(R.dmcc55b, scale = TRUE)
+  subchunkify(plot(pca.dmcc55b, main = NULL), fig_height = 4, fig_width = 6)
   
-  labs(
-    y = "cross-run correlation", 
-    x = "TR post stimtime", 
-    title = "Stern hilo curves (LL5RN + not5RN - LL5NN - not5NN)/2"
-    )
-
-```
-
-
-### DMCC 34
-#### HiLo contrast
-
-```{r Stern_curves_dmcc34, fig.height = 7, fig.width = 11}
-
-d$Stern[
-  term %in% c("LL5RN", "LL5NN", "not5RN", "not5NN") & parcel %in% parcellation$key[dmcc34], 
-  .(m = mean(coef)), 
-  by = .(run, parcel, network, tr, term, subj)
-  ] %>%
   
- dcast(... ~ run + term, value.var = "m") %>%
+  p.pca.dmcc55b <- pca.dmcc55b$rotation[, 1:2] %>%
+    
+    as.data.frame %>%
+    tibble::rownames_to_column("parcel") %>%
+    mutate(network = get.network(parcel)) %>%
+    
+    ggplot(aes(PC1, PC2, color = network)) +
+    
+    geom_point(size = 2) +
+    geom_text(aes(label = parcel), fontface = "bold", nudge_y = -0.01) +
+    scale_color_brewer(type = "qual", palette = 2) +
+    
+    theme(legend.position = "none")
   
-  group_by(parcel, tr) %>%
-  summarize(
-    r = cor(
-      (run1_LL5RN + run1_not5RN - run1_LL5NN - run1_not5NN)/2,
-      (run2_LL5RN + run2_not5RN - run2_LL5NN - run2_not5NN)/2
-      ),
-    .groups = "drop_last"
-    ) %>%
+  subchunkify(p.pca.dmcc55b, fig_height = 6, fig_width = 6)
 
-  ggplot(aes(as.numeric(tr), r)) +
-  geom_hline(yintercept = 0) +
-  geom_line(size = 1) +
   
-  facet_wrap(vars(parcel)) +
-  scale_fill_brewer(type = "qual", palette = 2) +
-  scale_x_continuous(breaks = seq(0, 18, 2)) +
-  theme(legend.position = "none") +
-  
-  labs(
-    y = "cross-run correlation", 
-    x = "TR post stimtime", 
-    title = "Stern hilo curves (LL5RN + not5RN - LL5NN - not5NN)/2"
-    )
-
-```
+}
 
 
-## stats and maps
-
-```{r Stern_stats, fig.height = 7, fig.width = 11}
-
-Stern <- d$Stern[
-  term %in% c("LL5RN", "LL5NN", "not5RN", "not5NN") & tr %in% target.trs$Stern,
-  .(coef = mean(coef)), 
-  by = .(term, parcel, subj, run, hemi, network)
-  ]
-
-Stern %<>% 
-  mutate(
-    hilo = ifelse(grepl("RN", term), "hi", "lo"), hilo = relevel(as.factor(hilo), "lo"),
-    term = NULL
-    ) %>%
-  .[, .(coef = mean(coef)), by = .(parcel, subj, hemi, network, run, hilo)]
-
-Stern %<>% dcast(... ~ run + hilo, value.var = "coef") %>%  
-  mutate(run1 = run1_hi - run1_lo, run2 = run2_hi - run2_lo)
-
-Stern <- split(Stern, Stern$parcel)
-
-s.Stern <- lapply(
-  Stern, function(x) {
-    res <- psych::ICC(x[, c("run1", "run2")], lmer = FALSE)$results
-    res[3, c("ICC", "p", "lower bound", "upper bound")]  ## 3 index for single_fixed_raters
-  }
-)
-s.Stern <- bind_rows(s.Stern, .id = "parcel")
-
-s.Stern %<>%
-  mutate(
-    hemi = substr(parcel, 1, 1),
-    num.roi = row_number(),
-    p.fdr = p.adjust(p, "fdr")
-  )
-
-s.Stern %>% filter(p.fdr < 0.05) %>% arrange(p.fdr) %>% kable
-s.Stern %>% filter(p < 0.05) %>% arrange(p.fdr) %>% kable
-
-```
-
-
-Unthresholded and thresholded t-statistics.
-Threshold at fdr-corrected p-value (across all parcels) of 0.05.
-
-```{r Stern_maps_hilo, fig.height = 7, fig.width = 11}
-
-s.Stern %>%
-  build_overlay("ICC", template = schaefer) %>%
-  plot_surface(underlay = hcp, hues = viridis::inferno(500))
-
-s.Stern %>%
-  mutate(ICC = ifelse(p < 0.05, ICC, 0)) %>%
-  build_overlay("ICC", template = schaefer) %>%
-  plot_surface(underlay = hcp, hues = viridis::inferno(500))
 
 ```
 
@@ -590,181 +339,6 @@ s.Stern %>%
 
 
 
-
-
-# Stroop
-
-
-## curves
-
-### Network-level
-
-#### conditional
-
-```{r Stroop_curves_network_conditional, fig.height = 7, fig.width = 11}
-
-d$Stroop[, .(m = mean(coef)), by = .(run, network, tr, term, subj)] %>%
-  
-  dcast(... ~ run, value.var = "m") %>%
-  
-  group_by(network, tr, term) %>%
-  summarize(r = cor(run1, run2), .groups = "drop_last") %>%
-
-  ggplot(aes(as.numeric(tr), r)) +
-  geom_hline(yintercept = 0) +
-  geom_line(size = 1) +
-
-  facet_grid(vars(network), vars(term)) +
-  scale_fill_brewer(type = "qual", palette = 2) +
-  scale_x_continuous(breaks = seq(0, 20, 2)) +
-  theme(legend.position = "none") +
-  
-  labs(y = "cross-run correlation", x = "TR post stimtime", title = "Stroop conditional curves")
-
-```
-
-
-#### HiLo contrast
-
-```{r Stroop_curves_network_contrast, fig.height = 7, fig.width = 8}
-
-d$Stroop[, 
-  .(m = mean(coef)), 
-  by = .(run, network, tr, term, subj)
-  ] %>%
-  
-  dcast(... ~ run + term, value.var = "m") %>%
-  
-  group_by(network, tr) %>%
-  summarize(
-    r = cor(
-      (run1_biasInCon + run1_PC50InCon - run1_biasCon - run1_PC50Con)/2,
-      (run2_biasInCon + run2_PC50InCon - run2_biasCon - run2_PC50Con)/2,
-      ),
-    .groups = "drop_last"
-    ) %>%
-
-  ggplot(aes(as.numeric(tr), r)) +
-  geom_hline(yintercept = 0) +
-  geom_line(size = 1) +
-  
-  facet_grid(vars(network)) +
-  scale_fill_brewer(type = "qual", palette = 2) +
-  scale_x_continuous(breaks = seq(0, 20, 2)) +
-  theme(legend.position = "none") +
-  
-  labs(
-    y = "cross-run correlation", 
-    x = "TR post stimtime", 
-    title = "Stroop hilo curves (biasInCon + PC50InCon - biasCon - PC50Con)/2"
-    )
-
-```
-
-
-### DMCC 34
-#### HiLo contrast
-
-```{r Stroop_curves_dmcc34, fig.height = 7, fig.width = 11}
-
-d$Stroop[
-  parcel %in% parcellation$key[dmcc34], 
-  .(m = mean(coef)), 
-  by = .(run, parcel, network, tr, term, subj)
-  ] %>%
-  
- dcast(... ~ run + term, value.var = "m") %>%
-  
-  group_by(parcel, tr) %>%
-  summarize(
-    r = cor(
-      (run1_biasInCon + run1_PC50InCon - run1_biasCon - run1_PC50Con)/2,
-      (run2_biasInCon + run2_PC50InCon - run2_biasCon - run2_PC50Con)/2,
-      ),
-    .groups = "drop_last"
-    ) %>%
-
-  ggplot(aes(as.numeric(tr), r)) +
-  geom_hline(yintercept = 0) +
-  geom_line(size = 1) +
-  
-  facet_wrap(vars(parcel)) +
-  scale_fill_brewer(type = "qual", palette = 2) +
-  scale_x_continuous(breaks = seq(0, 18, 2)) +
-  theme(legend.position = "none") +
-  
-  labs(
-    y = "cross-run correlation", 
-    x = "TR post stimtime", 
-    title = "Stroop hilo curves (biasInCon + PC50InCon - biasCon - PC50Con)/2"
-    )
-
-```
-
-
-## stats and maps
-
-```{r Stroop_stats, fig.height = 7, fig.width = 11}
-
-Stroop <- d$Stroop[
-  tr %in% target.trs$Stroop,
-  .(coef = mean(coef)), 
-  by = .(term, parcel, subj, run, hemi, network)
-  ]
-
-Stroop %<>% 
-  mutate(
-    hilo = ifelse(grepl("InCon", term), "hi", "lo"), hilo = relevel(as.factor(hilo), "lo"),
-    term = NULL
-    ) %>%
-  .[, .(coef = mean(coef)), by = .(parcel, subj, hemi, network, run, hilo)]
-
-Stroop %<>% dcast(... ~ run + hilo, value.var = "coef") %>%  
-  mutate(run1 = run1_hi - run1_lo, run2 = run2_hi - run2_lo)
-
-Stroop <- split(Stroop, Stroop$parcel)
-
-s.Stroop <- lapply(
-  Stroop, function(x) {
-    res <- psych::ICC(x[, c("run1", "run2")], lmer = FALSE)$results
-    res[3, c("ICC", "p", "lower bound", "upper bound")]  ## 3 index for single_fixed_raters
-  }
-)
-s.Stroop <- bind_rows(s.Stroop, .id = "parcel")
-
-s.Stroop %<>%
-  mutate(
-    hemi = substr(parcel, 1, 1),
-    num.roi = row_number(),
-    p.fdr = p.adjust(p, "fdr")
-  )
-
-s.Stroop %>% filter(p.fdr < 0.05) %>% arrange(p.fdr) %>% kable
-s.Stroop %>% filter(p < 0.05) %>% arrange(p.fdr) %>% kable
-
-```
-
-
-Unthresholded and thresholded t-statistics.
-Threshold at fdr-corrected p-value (across all parcels) of 0.05.
-
-```{r Stroop_maps_hilo, fig.height = 7, fig.width = 11}
-
-s.Stroop %>%
-  build_overlay("ICC", template = schaefer) %>%
-  plot_surface(underlay = hcp, hues = viridis::inferno(500))
-
-s.Stroop %>%
-  mutate(ICC = ifelse(p.fdr < 0.05, ICC, 0)) %>%
-  build_overlay("ICC", template = schaefer) %>%
-  plot_surface(underlay = hcp, hues = viridis::inferno(500))
-
-s.Stroop %>%
-  mutate(ICC = ifelse(p < 0.05, ICC, 0)) %>%
-  build_overlay("ICC", template = schaefer) %>%
-  plot_surface(underlay = hcp, hues = viridis::inferno(500))
-
-```
 
 
 
@@ -773,175 +347,97 @@ s.Stroop %>%
 # cross-task correlations
 
 
-```{r crosstask_dmcc34_sumstat, fig.height = 7, fig.width = 7}
+## Per parcel
 
-alltasks <- bind_rows(
+
+
+```{r fig.width = 10, fig.height = 10}
+
+d.contrast$is.target <- FALSE
+for (task.i in tasks) d.contrast[task.i == task & tr %in% target.trs[[task.i]]]$is.target <- TRUE
+
+d.contrast.target <- d.contrast[is.target == TRUE, .(b = mean(b)), by = c("task", "subj", "parcel")]
+R.task.per.parcel <- enlist(dmcc55b.parcels)
+for (parcel.i in dmcc55b.parcels) {
   
-  Axcpt = d$Axcpt[
-    term %in% c("BX", "BY") & parcel %in% parcellation$key[dmcc34] & tr %in% target.trs$Axcpt, 
-    ] %>%
-   mutate(
-      hilo = ifelse(term == "BX", "hi", "lo"), hilo = relevel(as.factor(hilo), "lo"),
-      term = NULL
-      ) %>%
-    .[, .(coef = mean(coef)), by = .(parcel, subj, hemi, network, run, tr, hilo)],
+  R.task.per.parcel[[parcel.i]] <- 
+    
+    d.contrast.target[parcel == parcel.i] %>%
+    dcast(... ~ task, value.var = "b") %>%
+    select(where(is.numeric)) %>%
+    cor
+
+}
+
+d.task.per.parcel <- bind_rows(lapply(R.task.per.parcel, symmat4ggplot), .id = "parcel")
+
+d.task.per.parcel %>%
   
-  Cuedts = d$Cuedts[
-    parcel %in% parcellation$key[dmcc34] & tr %in% 7:16, 
-    ] %>%
-    mutate(
-      hilo = ifelse(grepl("InCon", term), "hi", "lo"), hilo = relevel(as.factor(hilo), "lo"),
-      term = NULL
-      ) %>%
-    .[, .(coef = mean(coef)), by = .(parcel, subj, hemi, network, run, tr, hilo)],
+  ggplot(aes(v1, v2, fill = value)) +
+  geom_raster() +
+  geom_text(aes(label = round(value, 1))) +
   
-  Stern = d$Stern[
-    term %in% c("LL5RN", "LL5NN", "not5RN", "not5NN") & parcel %in% parcellation$key[dmcc34] & tr %in% target.trs$Stern, 
-    ] %>%
-    mutate(
-      hilo = ifelse(grepl("RN", term), "hi", "lo"), hilo = relevel(as.factor(hilo), "lo"),
-      term = NULL
-      ) %>%
-    .[, .(coef = mean(coef)), by = .(parcel, subj, hemi, network, run, tr, hilo)],
+  scale_fill_viridis_c(option = "magma", name = NULL) +
   
-  Stroop = d$Stroop[
-    parcel %in% parcellation$key[dmcc34] & tr %in% target.trs$Stroop, 
-    ] %>%
-    mutate(
-      hilo = ifelse(grepl("InCon", term), "hi", "lo"), hilo = relevel(as.factor(hilo), "lo"),
-      term = NULL
-    ) %>%
-    .[, .(coef = mean(coef)), by = .(parcel, subj, hemi, network, run, tr, hilo)],
+  facet_wrap(vars(parcel)) +
   
-  .id = "task"
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1),
+    axis.title = element_blank(), 
+    title = element_text(size = rel(1.5)),
+    legend.position = c(0.92, 0.05), 
+    # legend.direction = "horizontal",
+    panel.border = element_blank(), panel.grid = element_blank()
+    ) +
   
+  labs(title = "cross-task correlations in subjects' effect size per DMCC55B ROI")
+  
+stats.task.per.parcel <- data.frame(
+  parcel = names(R.task.per.parcel),
+  invdet = 1 / vapply(R.task.per.parcel, det, numeric(1)),
+  mean_offdiag = vapply(R.task.per.parcel, function(x) mean(atanh(x[lower.tri(x)])), numeric(1))
 )
 
-alltasks %>%
-  
-  group_by(task, subj, hilo) %>%
-  summarize(coef = mean(coef), .groups = "drop") %>%
-  
-  pivot_wider(names_from = "hilo", values_from = "coef") %>%
-  mutate(contrast = hi - lo) %>%
-  
-  select(-lo, -hi) %>%
-  pivot_wider(names_from = "task", values_from = "contrast") %>%
-  select(-subj) %>%
-  
-  pairs(pch = 16)
-  
+
 ```
 
 
-
-```{r crosstask_conjunction_sumstat, fig.height = 7, fig.width = 7}
-
-conj.sumstats <- c(
-  "LH_SalVentAttn_FrOperIns_3", "LH_SalVentAttn_FrOperIns_5", "LH_Cont_PFCl_6",  "LH_Cont_PFCv_1", "LH_Default_PFC_10", 
-  "RH_SalVentAttn_FrOperIns_5", "RH_Cont_PFCv_1",  "RH_Cont_PFCl_9", "RH_Cont_PFCmp_2"
-)
+```{r fig.width = 4, fig.height = 6}
 
 
-alltasks.conj <- bind_rows(
+stats.task.per.parcel %>%
   
-  Axcpt = d$Axcpt[
-    term %in% c("BX", "BY") & parcel %in% conj.sumstats & tr %in% target.trs$Axcpt, 
-    ] %>%
-   mutate(
-      hilo = ifelse(term == "BX", "hi", "lo"), hilo = relevel(as.factor(hilo), "lo"),
-      term = NULL
-      ) %>%
-    .[, .(coef = mean(coef)), by = .(parcel, subj, hemi, network, run, tr, hilo)],
-  
-  Cuedts = d$Cuedts[
-    parcel %in% conj.sumstats & tr %in% 7:16, 
-    ] %>%
-    mutate(
-      hilo = ifelse(grepl("InCon", term), "hi", "lo"), hilo = relevel(as.factor(hilo), "lo"),
-      term = NULL
-      ) %>%
-    .[, .(coef = mean(coef)), by = .(parcel, subj, hemi, network, run, tr, hilo)],
-  
-  Stern = d$Stern[
-    term %in% c("LL5RN", "LL5NN", "not5RN", "not5NN") & parcel %in% conj.sumstats & tr %in% target.trs$Stern, 
-    ] %>%
-    mutate(
-      hilo = ifelse(grepl("RN", term), "hi", "lo"), hilo = relevel(as.factor(hilo), "lo"),
-      term = NULL
-      ) %>%
-    .[, .(coef = mean(coef)), by = .(parcel, subj, hemi, network, run, tr, hilo)],
-  
-  Stroop = d$Stroop[
-    parcel %in% conj.sumstats & tr %in% target.trs$Stroop, 
-    ] %>%
-    mutate(
-      hilo = ifelse(grepl("InCon", term), "hi", "lo"), hilo = relevel(as.factor(hilo), "lo"),
-      term = NULL
-    ) %>%
-    .[, .(coef = mean(coef)), by = .(parcel, subj, hemi, network, run, tr, hilo)],
-  
-  .id = "task"
-  
-)
+  ggplot(aes(invdet, parcel, color = get.network(parcel))) +
+  geom_point() +
+  geom_segment(aes(x = 0, xend = invdet, y = parcel, yend = parcel)) +
+  theme(legend.position = "none")
 
-
-alltasks.conj %>%
+stats.task.per.parcel %>%
   
-  group_by(task, subj, hilo) %>%
-  summarize(coef = mean(coef), .groups = "drop") %>%
-  
-  pivot_wider(names_from = "hilo", values_from = "coef") %>%
-  mutate(contrast = hi - lo) %>%
-  
-  select(-lo, -hi) %>%
-  pivot_wider(names_from = "task", values_from = "contrast") %>%
-  select(-subj) %>%
-  
-  pairs(pch = 16)
+  ggplot(aes(mean_offdiag, parcel, color = get.network(parcel))) +
+  geom_point() +
+  geom_segment(aes(x = 0, xend = mean_offdiag, y = parcel, yend = parcel)) +
+  theme(legend.position = "none")
 
 
 ```
 
 
 
-```{r crosstask_hlm, fig.height = 7, fig.width = 7}
-
-alltasks %<>%
-  
-  pivot_wider(names_from = "hilo", values_from = "coef") %>%
-  mutate(contrast = hi - lo)
-
-
-m.dmcc34 <- lmer(
-  contrast ~ task + (task | subj) + (1 | parcel), 
-  alltasks,
-  control = lmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1E9))
-  )
-
-plot(rePCA(m.dmcc34)$subj)
-
-VarCorr(m.dmcc34)
-pairs(ranef(m.dmcc34)$subj)
 
 
 
-alltasks.conj %<>%
-  
-  pivot_wider(names_from = "hilo", values_from = "coef") %>%
-  mutate(contrast = hi - lo)
-
-m.conj <- lmer(
-  contrast ~ task + (task | subj) + (1 | parcel), 
-  alltasks.conj,
-  control = lmerControl(optimizer = "bobyqa", optCtrl = list(maxfun = 1E9))
-  )
-
-plot(rePCA(m.conj)$subj)
-
-VarCorr(m.conj)
-pairs(ranef(m.conj)$subj)
+## Multi-parcel
 
 
-```
+* reduce subj to single number per task
+  * align PCs
+  * within vs btw network contrast
+  * ...
+
+
+
+
+
 
