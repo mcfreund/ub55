@@ -152,7 +152,7 @@ Plotting and statistical details:
 
 
 
-# Network-level
+# Network-level curves
 
 Estimates are first averaged across parcels within network per subject.
 Group-level stats and plots are then displayed at the network-level.
@@ -361,7 +361,7 @@ for (task.i in tasks) {
 ```
 
 
-# Parcel-level
+# Parcel-level curves
 
 
 ## counts of significant effects per TR
@@ -448,11 +448,9 @@ subchunkify(p.parcel.sum.network, 12, 9)
 ```
 
 
-## contrasts
+## DMCC 34: contrast curves per task
 
-### DMCC 34
-
-#### beta estimates
+### beta estimates
 
 ```{r parcel_contrasts_betas, fig.height = 12, fig.width = 15}
 
@@ -489,7 +487,7 @@ for (task.i in tasks) {
 ```
 
 
-#### t-statistics
+### t-statistics
 
 ```{r parcel_contrasts_tstats, fig.height = 12, fig.width = 15}
 
@@ -537,7 +535,10 @@ for (task.i in tasks) {
 
 
 
-### Cross-task conjunction ("DMCC55B parcels")
+## Cross-task conjunction ("DMCC55B parcels")
+
+
+### Parcels ID'd
 
 Here conjunction analysis is performed by feeding TR-level contrast estimates to an HLM (see description at beginning of doc).
 
@@ -586,8 +587,7 @@ dmcc55b.parcels
 ```
 
 
-
-### Curves of "DMCC55B parcels"
+### Contrast curves per task
 
 
 
@@ -679,9 +679,14 @@ for (task.i in tasks) {
 
 
 
-## Brains (contrasts)
+# Brains
 
-NB: colors are reversed (black = high, yellow = low) so large positive effects can be seen on white underlay.
+* Target TRs
+* t-values displayed; from HLM fitted to TR-level data (see intro)
+* colors are reversed (black = high, yellow = low) so large positive effects can be seen on white underlay.
+
+## Per task
+
 
 ```{r brains, fig.width = 15, results = "asis"}
 
@@ -718,6 +723,27 @@ for (task.i in tasks) {
 ```
 
 
+## DMCC55B conjunction
+
+Thresholded for p.fdr < 0.05 in each task (corrected across all 400 parcels).
+
+
+```{r brains_conjunction, fig.width = 15, results = "asis"}
+
+group.target.trs %>%
+  
+  filter(task == task.i) %>%
+  mutate(statistic = ifelse(parcel %in% dmcc55b.parcels, 2, 1)) %>%
+  
+  build_overlay("statistic", template = schaefer) %>%
+  plot_surface(underlay = hcp, hues = c("white", "black"))
+
+
+```
+
+
+
+
 ```{r}
 
 fwrite(group.target.trs, here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
@@ -726,7 +752,7 @@ fwrite(group.target.trs, here("out", "stats_univ_hilo_target_schaefer400-07.csv"
 
 
 
-# Task Profiles across parcels
+# Task Profiles across parcels: DMCC55B conjunction
 
 
 
