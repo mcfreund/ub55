@@ -120,7 +120,7 @@ z <- foreach(
       ndims <- min(dim(B)[2], length(subjs))
       
       for (ndim.i in seq_len(ndims)) {
-        # ndim.i = 20
+        # ndim.i = 3
         
         A1_n <- cbind(A1[, seq_len(ndim.i)], 1)  ## get reduced-dimension subspace (and append intercept)
         A2_n <- cbind(A2[, seq_len(ndim.i)], 1)
@@ -128,7 +128,7 @@ z <- foreach(
         B1_hat <- A1_n %*% coef(.lm.fit(x = A1_n, y = B1))  ## least-squares projection
         B2_hat <- A2_n %*% coef(.lm.fit(x = A2_n, y = B2))
         
-        D[, , parcel.i, ndim.i] <- pdist2(B1, B2) / ncol(B1)  ## divide by number of features (vertices)
+        D[, , parcel.i, ndim.i] <- pdist2(B1_hat, B2_hat) / ncol(B1)  ## divide by number of features (vertices)
         
         
       }
@@ -139,7 +139,7 @@ z <- foreach(
     
     suffix <- switch(do.scale + 1, "", "scaled_")  ## false, true
     
-    saveRDS(D, file.path(out.dir, paste0("euclidean_pca_",  suffix, name.task.i, "_", name.glm.i, ".RDS")))
+    saveRDS(D, file.path(out.dir, paste0("euclidean_svd_",  suffix, name.task.i, "_", name.glm.i, ".RDS")))
     
     
   }
