@@ -240,6 +240,21 @@ fprint <- function(B1, B2) {
 
 
 
+cowplot.title <- function(x) {
+  ggdraw() +
+    draw_label(
+      x,
+      fontface = 'bold',
+      x = 0,
+      hjust = 0
+    ) +
+    theme(
+      # add margin on the left of the drawing canvas,
+      # so title is aligned with left edge of first plot
+      plot.margin = margin(0, 0, 0, 7)
+    )
+}
+
 
 
 
