@@ -78,6 +78,8 @@ z <- foreach(
   
   for (do.scale in c(TRUE, FALSE)) {
     
+    suffix <- switch(do.scale + 1, "", "scaled_")  ## false, true
+    
     D <- 
       array(
         NA, 
@@ -110,8 +112,6 @@ z <- foreach(
       
       ## multivariate:
       
-      res.mv <- fprint(B1, B2)  ## input dims: subjects*features
-      
       D[, , parcel.i, "multivariate"] <- pdist2(B1, B2) / ncol(B1)  ## divide by number of features (vertices)
       
       
@@ -125,7 +125,6 @@ z <- foreach(
       
       ## save 
       
-      suffix <- switch(do.scale + 1, "", "scaled_")  ## false, true
       
       p <- arrangeGrob(
         matplot(D[, , parcel.i, "multivariate"]) + labs(title = "multivariate"),

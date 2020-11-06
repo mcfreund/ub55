@@ -76,13 +76,13 @@ z <- foreach(
   names(dimnames(betas.i)) <- c("condition", "vertex", "subj", "run")
   dimnames(betas.i)$condition <- c("lev1", "lev2")
   
-  for (do.scale in c(TRUE, FALSE)) {
+  for (do.scale in c(FALSE)) {
     
     D <- 
       array(
         NA, 
-        dim = c(length(subjs), length(subjs), length(parcellation$key), 2), 
-        dimnames = list(subj_run1 = subjs, subj_run2 = subjs, parcellation$key, type = c("univariate", "multivariate"))
+        dim = c(length(subjs), length(subjs), length(parcellation$key), length(subjs)), 
+        dimnames = list(subj_run1 = subjs, subj_run2 = subjs, parcellation$key, ndim = NULL)
       )
     
     for (parcel.i in seq_along(parcellation$key)) {
@@ -90,6 +90,12 @@ z <- foreach(
       
       is.parcel <- schaefer10k == parcel.i
       B <- betas.i[, is.parcel, , ]
+      
+      ## remove vertices that are unresponsive in any subject:
+      
+      has.signal.allsubjs <- apply(abs(B) <= .Machine$double.eps, "vertex", sum) < 1
+      B <- B[, has.signal.allsubjs, , ]
+      
       
       if (do.scale) {
         
@@ -108,43 +114,32 @@ z <- foreach(
       B1 <- t(B_contrast[, , 1])  ## separate by runs
       B2 <- t(B_contrast[, , 2])
       
-      ## multivariate:
+      A1 <- prcomp(B1)$x  ## projections of data onto PCs ('scores')
+      A2 <- prcomp(B2)$x
       
-      res.mv <- fprint(B1, B2)  ## input dims: subjects*features
+      ndims <- min(dim(B)[2], length(subjs))
       
-      D[, , parcel.i, "multivariate"] <- pdist2(B1, B2) / ncol(B1)  ## divide by number of features (vertices)
-      
-      
-      ##  univariate:
-      
-      B1_bar <- cbind(rowMeans(B1))  ## get means
-      B2_bar <- cbind(rowMeans(B2))
-      
-      D[, , parcel.i, "univariate"] <- pdist2(B1_bar, B2_bar)  / ncol(B1_bar) ## b/c univariate, denominator == 1
-      
-      
-      ## save 
-      
-      suffix <- switch(do.scale + 1, "", "scaled_")  ## false, true
-      
-      p <- arrangeGrob(
-        matplot(D[, , parcel.i, "multivariate"]) + labs(title = "multivariate"),
-        matplot(D[, , parcel.i, "univariate"]) + labs(title = "univariate"),
-        top = parcellation$key[parcel.i],
-        nrow = 1
-      )
-      
-      ggsave(
-        file.path(fig.dir, paste0("euclidean_", suffix, parcellation$key[parcel.i], ".pdf")), 
-        p,
-        width = 14, height = 8, units = "cm",
-        device = "pdf"
-        )
+      for (ndim.i in seq_len(ndims)) {
+        # ndim.i = 20
+        
+        A1_n <- cbind(A1[, seq_len(ndim.i)], 1)  ## get reduced-dimension subspace (and append intercept)
+        A2_n <- cbind(A2[, seq_len(ndim.i)], 1)
+        
+        B1_hat <- A1_n %*% coef(.lm.fit(x = A1_n, y = B1))  ## least-squares projection
+        B2_hat <- A2_n %*% coef(.lm.fit(x = A2_n, y = B2))
+        
+        D[, , parcel.i, ndim.i] <- pdist2(B1, B2) / ncol(B1)  ## divide by number of features (vertices)
+        
+        
+      }
       
     }
     
+    ## save
     
-    saveRDS(D, file.path(out.dir, paste0("euclidean_",  suffix, name.task.i, "_", name.glm.i, ".RDS")))
+    suffix <- switch(do.scale + 1, "", "scaled_")  ## false, true
+    
+    saveRDS(D, file.path(out.dir, paste0("euclidean_pca_",  suffix, name.task.i, "_", name.glm.i, ".RDS")))
     
     
   }
