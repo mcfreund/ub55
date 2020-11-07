@@ -1,0 +1,537 @@
+---
+title: 'UB55 trialwise univariate analysis: Stroop hi-lo contrast, group-level'
+author: "michael freund"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    highlight: zenburn
+    number_sections: true
+    theme: spacelab
+---
+
+
+# intro
+
+**Purpose**
+
+Validate trialwise ub55 Stroop GLM in terms of marginal beta (averaged across trialtypes) and high-vs-low contrast.
+    
+
+
+```{r setup, include = FALSE}
+
+
+source(here::here("code", "_packages.R"))
+source(here("code", "read-behav.R"))
+source(here("code", "_vars.R"))
+source(here("code", "_atlases.R"))
+source(here("code", "_settings.R"))
+source(here("code", "_funs.R"))
+
+## data ----
+
+glminfo <- data.frame(
+  task = c("Stroop"),
+  name.glm = c(
+    "baseline_fix-LSA_EVENTS_censored"
+  )
+)
+glminfo <- as.data.table(glminfo)
+
+d <- setNames(vector("list", nrow(glminfo)), glminfo$task)
+for (glm.i in seq_len(nrow(glminfo))) {
+  # glm.i = 1
+  
+  a <- readRDS(here("out", "glms", paste0("roistats_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm, ".RDS")))
+  a <- a[, , subjs[!subjs %in% "432332"], ]
+  a <- as.data.table(reshape2::melt(a))
+  
+  a <- separate(a, term, c("term", "stat"), "_")
+  a <- a[!grepl("Full|block", term) & stat == "Coef"]
+  a <- separate(a, term, c("term", "n"), "#")
+  
+  a$network <- a$parcel %>% gsub("LH_|RH_", "", .) %>% gsub("_.*", "", .)
+  a$hemi <- substr(a$parcel, 1, 1)
+  
+  if (!identical(unique(a$stat), "Coef")) stop("more stats than coef in there")
+
+  a$stat <- NULL
+  a <- rename(a, b = value)
+  
+  d[[glm.i]] <- a
+  
+}
+rm(glm.i, a)
+gc()
+
+
+
+## bind and create data.tables suitable for looping
+
+d <- bind_rows(d, .id = "task")
+
+
+```
+
+
+
+
+Notes on analyses:
+
+GLMs:
+
+  * DMCC55B
+  * trialwise LS-A, fix-shaped BLOCK(1,1), Stroop
+
+Contrasts (on regional means):
+
+  * Stroop: $(\text{PC50InCon} + \text{biasInCon} - \text{PC50Con} - \text{biasCon})/2$
+
+Plotting and statistical details:
+
+
+
+
+# quick look
+
+## raw data
+
+```{r}
+
+
+p.density <- d %>%
+  
+  # filter(run == "run1", subj == "132017") %>%
+  
+  ggplot(aes(b, term, fill = term)) +
+  geom_density_ridges() +
+  
+  scale_fill_brewer(type = "qual", palette = 5) +
+  
+  facet_grid(vars(run)) +
+  
+  theme(legend.position = "none") 
+
+
+
+p.box <-  d %>%
+  
+  # filter(run == "run1", subj == "132017") %>%
+  
+  ggplot(aes(term, b, fill = term)) +
+  geom_hline(yintercept = 0) +
+  geom_boxplot(width = 0.5, outlier.size = 0.5) +
+  
+  scale_fill_brewer(type = "qual", palette = 5) +
+  
+  facet_grid(vars(run))  +
+  
+  theme(legend.position = "none") +
+  coord_flip()
+
+
+
+
+p.network <- d %>%
+  
+  filter(run == "run1", subj == "132017") %>%
+  
+  ggplot(aes(term, b, fill = term)) +
+  geom_hline(yintercept = 0) +
+  geom_boxplot(width = 0.5, outlier.size = 0.5) +
+
+  
+  scale_fill_brewer(type = "qual", palette = 5) +
+  
+  facet_grid(
+    rows = vars(get.network(parcel)), 
+    cols = vars(run), 
+    scales = "free_x"
+    ) +
+  
+  theme(legend.position = "none") +
+  coord_flip()
+
+
+
+plot_grid(
+  cowplot.title("Beta estimates by trialtype"),
+  plot_grid(plot_grid(p.density, p.box, ncol = 1), p.network, nrow = 1),
+  ncol = 1, 
+  rel_heights = c(0.1, 1)
+)
+
+
+
+```
+
+## residuals
+
+```{r}
+
+
+
+
+
+```
+
+
+
+# prelim models
+
+
+
+```{r}
+
+## contrast matrix:
+
+A <- rbind(
+  bias_stroop = c(-1, 1, 0, 0),
+  pc50_stroop = c(0, 0, -1, 1),
+  stroop      = c(-1, 1, 0, 0),
+  pc50_bias   = c(1, 1, -1, -1) / 2
+)
+
+
+## fit models
+
+l <- split(d, d$parcel)
+m0 <- lapply(l, function(x) lmer(b ~ 0 + term + (0 + term  | subj), x))
+
+
+## contrast coefficients
+
+h0 <- lapply(m0, function(x) multcomp::glht(x, A))
+h0 <- lapply(h0, function(x) bind_rows(summary(x)$test[c("coefficients", "sigma", "tstat", "pvalues")]))
+
+# stats.group.m0 <- rbindlist(h0, id)
+
+# s.task <- bind_rows(lapply(m.task, tidy_lmer), .id = "parcel")
+# s.task %<>% 
+#   ungroup %>%
+#   select(-term) %>% 
+#   mutate(
+#     p.fdr = p.adjust(p.value, "fdr"),
+#     hemi = substr(parcel, 1, 1),
+#     num.roi = row_number()
+#     )
+
+
+
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Cross-task conjunction ("DMCC55B parcels")
+
+
+### Parcels ID'd
+
+Here conjunction analysis is performed by feeding TR-level contrast estimates to an HLM (see description at beginning of doc).
+
+Number of parcels identified, and parcel names:
+
+```{r parcelwise_stats}
+
+
+
+group.target.trs <- enlist(tasks)
+for (task.i in tasks) {
+  
+  
+  d.task <- d.contrast[task == task.i & tr %in% target.trs[[task.i]]]
+  d.task <- split(d.task, d.task$parcel)
+  
+  m.task <- lapply(d.task, function(x) lmer(b ~ 1 + (1 | subj), x))
+  
+  s.task <- bind_rows(lapply(m.task, tidy_lmer), .id = "parcel")
+  s.task %<>% 
+    ungroup %>%
+    select(-term) %>% 
+    mutate(
+      p.fdr = p.adjust(p.value, "fdr"),
+      hemi = substr(parcel, 1, 1),
+      num.roi = row_number()
+      )
+  
+  group.target.trs[[task.i]] <- s.task
+  
+}
+
+group.target.trs <- bind_rows(group.target.trs, .id = "task")
+
+
+group.target.trs %>% group_by(task) %>% 
+  summarize(n.activated = sum(estimate > 0 & p.fdr < 0.05)) %>%
+  kable
+
+
+dmcc55b.parcels <- group.target.trs %>% filter(estimate > 0, p.fdr < 0.05) %>% pull(parcel) %>% table
+dmcc55b.parcels <- names(dmcc55b.parcels)[dmcc55b.parcels == 4]
+
+dmcc55b.parcels
+
+```
+
+
+### Contrast curves per task
+
+
+
+#### beta estimates
+
+```{r parcel_contrasts_dmcc55b_betas, fig.height = 12, fig.width = 15}
+
+
+for (task.i in tasks) {
+  
+  
+  p.contrast.parcel.b.dmcc55b <- 
+    
+    d.contrast[
+      task == task.i & parcel %in% dmcc55b.parcels,
+      .(b = mean(b)), by = .(run, parcel, tr, subj)
+      ] %>%
+    
+    mutate(tr = as.numeric(tr)) %>%
+    
+    ggplot(aes(tr, b, fill = run)) +
+    geom_hline(yintercept = 0) +
+    stat_summary(fun.data = "mean_cl_boot", geom = "ribbon", alpha = 0.9) +
+    
+    facet_wrap(vars(parcel)) +
+    scale_fill_brewer(type = "qual", palette = 2) +
+    scale_x_continuous(breaks = seq(0, 20, 4)) +
+
+    labs(y = "Mean beta", x = "TR post stimtime", title = task.i) +
+    theme(legend.position = "none")
+  
+  print(p.contrast.parcel.b.dmcc55b)
+
+  
+}
+
+
+```
+
+
+#### t-statistics
+
+```{r parcel_contrasts_dmcc55b_tstats, fig.height = 12, fig.width = 15}
+
+d.parcel.stats <- 
+  
+  d.contrast[, .(b = mean(b)), by = .(task, parcel, tr, run, subj)] %>%
+  
+  group_by(task, parcel, tr, run) %>%
+  summarize(t = t.test(b)$statistic, p = t.test(b)$p.value, b = mean(b)) %>%
+  
+  mutate(tr = as.numeric(tr))
+
+
+for (task.i in tasks) {
+  
+  
+  p.contrast.parcel.t <- 
+    
+    d.parcel.stats %>% 
+    
+    filter(task == task.i, parcel %in% dmcc55b.parcels) %>%
+    
+    ggplot(aes(tr, t, color = run)) +
+    geom_hline(yintercept = 2, color = "grey50", linetype = "dashed") +
+    geom_hline(yintercept = -2, color = "grey50", linetype = "dashed") +
+    geom_hline(yintercept = 0) +
+  
+    geom_line(size = 2) +
+  
+    facet_wrap(vars(parcel)) +
+    scale_color_brewer(type = "qual", palette = 2) +
+    scale_x_continuous(breaks = seq(0, 20, 4)) +
+    
+    theme(legend.position = "none") +
+    labs(x = "TR post stimtime", y = "t-statistic of contrast", title = task.i)
+  
+  
+  print(p.contrast.parcel.t)
+
+  
+}
+
+
+```
+
+
+
+
+
+
+# Brains
+
+* Target TRs
+* t-values displayed; from HLM fitted to TR-level data (see intro)
+* colors are reversed (black = high, yellow = low) so large positive effects can be seen on white underlay.
+
+## Per task
+
+
+```{r brains, fig.width = 15, results = "asis"}
+
+
+
+for (task.i in tasks) {
+  
+  cat("\n ")
+  cat(sprintf("\n### %s ", task.i))
+  cat("\n ")
+
+  
+  group.target.trs %>%
+    
+    filter(task == task.i) %>%
+    
+    build_overlay("statistic", template = schaefer) %>%
+    plot_surface(underlay = hcp, hues = rev(viridis::inferno(500)))
+  
+  
+  group.target.trs %>%
+    
+    filter(task == task.i) %>%
+    mutate(statistic = ifelse(p.fdr < 0.05, statistic, 0)) %>%
+    
+    build_overlay("statistic", template = schaefer) %>%
+    plot_surface(underlay = hcp, hues = rev(viridis::inferno(500)))
+
+    
+}
+
+
+
+```
+
+
+## DMCC55B conjunction
+
+Thresholded for p.fdr < 0.05 in each task (corrected across all 400 parcels).
+
+
+```{r brains_conjunction, fig.width = 15, results = "asis"}
+
+group.target.trs %>%
+  
+  filter(task == task.i) %>%
+  mutate(statistic = ifelse(parcel %in% dmcc55b.parcels, 2, 1)) %>%
+  
+  build_overlay("statistic", template = schaefer) %>%
+  plot_surface(underlay = hcp, hues = c("white", "black"))
+
+
+```
+
+
+
+
+```{r}
+
+fwrite(group.target.trs, here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
+
+```
+
+
+
+# Task Profiles across parcels: DMCC55B conjunction
+
+
+
+```{r}
+
+# group.target.trs <- fread(here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
+
+parcel.order <- group.target.trs %>%
+  
+  filter(parcel %in% dmcc55b.parcels) %>%
+  
+  group_by(parcel) %>%
+  summarize(b = mean(estimate)) %>%
+  arrange(-b) %>%
+  pull(parcel)
+
+group.target.trs %>%
+  
+  filter(parcel %in% dmcc55b.parcels) %>%
+  
+  ggplot(aes(factor(parcel, levels = parcel.order), estimate, color = task)) +
+  
+  geom_line(aes(group = task), size = 2) +
+  geom_point(size = 2.5) +
+  geom_errorbar(
+    aes(ymax = estimate + se*1.96, ymin = estimate - se*1.96), width = 0, size = 2
+    ) +
+  
+  scale_color_brewer(type = "qual", palette = 7) +
+  # scale_x_discrete()
+  
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5), legend.position = "top"
+    ) +
+  
+  labs(x = NULL, y = "contrast estimate")
+
+
+group.target.trs %>%
+  
+  filter(parcel %in% dmcc55b.parcels) %>%
+  
+  group_by(task) %>%
+  mutate(estimate = scale(estimate)) %>%
+  
+  ggplot(aes(factor(parcel, levels = parcel.order), estimate, color = task)) +
+  
+  geom_line(aes(group = task), size = 2) +
+  geom_point(size = 2.5) +
+  # geom_errorbar(aes(ymax = estimate + se*1.96, ymin = estimate - se*1.96), width = 0) +
+  
+  scale_color_brewer(type = "qual", palette = 7) +
+  
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5), legend.position = "top"
+    ) +
+  
+  labs(x = NULL, y = "z-scored contrast estimate")
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+

@@ -11,13 +11,9 @@ source(here("code", "_settings.R"))
 
 dirs <- expand.grid(subj = subjs, task = tasks, session = "baseline", stringsAsFactors = FALSE)
 glminfo <- data.frame(
-  task = c("Axcpt", "Cuedts", "Stern", "Stroop", "Stroop"),
+  task = c("Stroop"),
   name.glm = c(
-    "baseline_Cues_EVENTS_censored_shifted", 
-    "baseline_CongruencySwitch_EVENTS_censored_shifted",
-    "baseline_ListLength_EVENTS_censored_shifted",
-    "baseline_Congruency_EVENTS_censored_shifted",
-    "baseline_fix-item_EVENTS_censored"
+    "baseline_fix-LSA_EVENTS_censored"
   )
 )
 glminfo <- as.data.table(glminfo)
