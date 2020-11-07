@@ -81,8 +81,8 @@ z <- foreach(
     D <- 
       array(
         NA, 
-        dim = c(length(subjs), length(subjs), length(parcellation$key), length(subjs)), 
-        dimnames = list(subj_run1 = subjs, subj_run2 = subjs, parcellation$key, ndim = NULL)
+        dim = c(length(subjs), length(subjs), length(parcellation$key), length(subjs), 2), 
+        dimnames = list(subj_run1 = subjs, subj_run2 = subjs, parcellation$key, ndim = NULL, type = c("noncv", "cv"))
       )
     
     for (parcel.i in seq_along(parcellation$key)) {
@@ -120,7 +120,7 @@ z <- foreach(
       ndims <- min(dim(B)[2], length(subjs))
       
       for (ndim.i in seq_len(ndims)) {
-        # ndim.i = 3
+        # ndim.i = 6
         
         A1_n <- cbind(A1[, seq_len(ndim.i)], 1)  ## get reduced-dimension subspace (and append intercept)
         A2_n <- cbind(A2[, seq_len(ndim.i)], 1)
@@ -128,8 +128,12 @@ z <- foreach(
         B1_hat <- A1_n %*% coef(.lm.fit(x = A1_n, y = B1))  ## least-squares projection
         B2_hat <- A2_n %*% coef(.lm.fit(x = A2_n, y = B2))
         
-        D[, , parcel.i, ndim.i] <- pdist2(B1_hat, B2_hat) / ncol(B1)  ## divide by number of features (vertices)
+        B1_hat_cv <- A2_n %*% coef(.lm.fit(x = A2_n, y = B1))  ## cross-validate: proejct into subspace of other run
+        B2_hat_cv <- A1_n %*% coef(.lm.fit(x = A1_n, y = B2))
         
+        
+        D[, , parcel.i, ndim.i, "noncv"] <- pdist2(B1_hat, B2_hat) / ncol(B1)  ## divide by number of features (verts)
+        D[, , parcel.i, ndim.i, "cv"] <- pdist2(B1_hat_cv, B2_hat_cv) / ncol(B1)
         
       }
       

@@ -82,7 +82,7 @@ for (glm.i in seq_len(nrow(glminfo))) {
     
     suffix <- switch(scale.i, "", "scaled_")  ## SAME ORDER AS names(l.scale)!!!!
     
-    D <- readRDS(file.path(out.dir, paste0("euclidean_pca_",  suffix, name.task.i, "_", name.glm.i, ".RDS")))
+    D <- readRDS(file.path(out.dir, paste0("euclidean_svd_",  suffix, name.task.i, "_", name.glm.i, ".RDS")))
     
     
     # time.start <- Sys.time()
@@ -98,19 +98,29 @@ for (glm.i in seq_len(nrow(glminfo))) {
     # for (parcel.i in seq_along(parcellation$key)) {
       # parcel.i = 1
       
-      D_i <- D[, , parcel.i, ]
+      D_i <- D[, , parcel.i, , ]
       ndims <- which(apply(D_i, 3, function(x) any(!is.na(x))))
       
       istats <- vector("list", length(ndims))
       for (ndim.i in ndims) {
         # ndim.i = 1
         
-        res <- boot(D_i[, , ndim.i], idi, R = nresamp, parallel = "multicore")
-        bca <- boot.ci(res, type = "bca")$bca
+        res.noncv <- boot(D_i[, , ndim.i, "noncv"], idi, R = nresamp, parallel = "multicore")
+        res.cv    <- boot(D_i[, , ndim.i, "cv"], idi, R = nresamp, parallel = "multicore")
+
+        bca.cv    <- boot.ci(res.cv, type = "bca")$bca
+        bca.noncv <- boot.ci(res.noncv, type = "bca")$bca
         
         istats[[ndim.i]] <- 
+          
           list(
-            estimate = res$t0, se = sd(res$t), p = freqp(res$t, "greater"), lb = bca[4], ub = bca[5]
+            
+            estimate = res.noncv$t0, se = sd(res.noncv$t), 
+            p = freqp(res.noncv$t, "greater"), lb = bca.noncv[4], ub = bca.noncv[5],
+            
+            estimate_cv = res.cv$t0, se_cv = sd(res.cv$t), 
+            p_cv = freqp(res.cv$t, "greater"), lb_cv = bca.cv[4], ub_cv = bca.cv[5]
+            
           )
         
       }
