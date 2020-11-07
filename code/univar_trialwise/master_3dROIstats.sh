@@ -6,9 +6,9 @@ glm_names=(fix-LSA)
 tasks=(Stroop)
 suffices=("")
 sessions=baseline
-#filename="/data/nil-external/ccp/freund/ub55/in/ub55_subjects.txt"
-#mapfile -t subjects < $filename
-subjects=132017
+filename="/data/nil-external/ccp/freund/ub55/in/ub55_subjects.txt"
+mapfile -t subjects < $filename
+#subjects=132017
 runs=(1 2)
 encoding_dir=(AP PA)
 hemis=(L R)
