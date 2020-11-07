@@ -3,7 +3,7 @@
 *func.gii
 *betas*RDS
 **/invcov
-**/euclidean_pca*
+**/euclidean_svd*
 
 ## r things
 .Rproj.user/
