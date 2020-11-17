@@ -158,6 +158,15 @@ data.frame(
   kable(caption = "cue \\* probetype \\* switch")
 
 
+cuedts.tln <- with(cuedts, table(interaction(subj, run), interaction(cue, letter, number)))
+data.frame(
+  mean_count = colMeans(cuedts.tln),
+  min = apply(cuedts.tln, 2, min),
+  max = apply(cuedts.tln, 2, max)
+  ) %>%
+  kable(caption = "cue \\* probetype")
+
+
 cuedts.tir <- with(cuedts[cuedts$switch != "", ], table(interaction(subj, run), interaction(cue, trial.type, cresp)))
 data.frame(
   mean_count = colMeans(cuedts.tir),

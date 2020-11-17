@@ -35,7 +35,24 @@ d.max <- fread(here("out", "fprint", "unimulti_hilo_target_schaefer400-07", "idi
 
 d <- d %>%
   
-  group_by(transform, ndim, task) %>%
+  melt(
+    id.vars = c("task", "transform", "parcel", "ndim"), 
+    measure.vars = list(
+      estimate = grep("^estimate", names(.)),
+      se = grep("^se", names(d)),
+      p = c("p", "p_cv"),
+      lb = grep("^lb", names(d)),
+      ub = grep("^ub", names(d))
+    ),
+    variable.name = "type"
+    ) %>%
+  
+  mutate(type = ifelse(type == 1, "noncv", "cv"))
+
+
+d <- d %>%
+  
+  group_by(type, transform, ndim, task) %>%
   mutate(
     p.fdr = p.adjust(p, "fdr"),
     network = get.network(parcel),
@@ -43,7 +60,7 @@ d <- d %>%
     num.roi = match(parcel, parcellation$key)
   ) %>%
   
-  arrange(transform, task, ndim, num.roi) %>%
+  arrange(type, transform, task, ndim, num.roi) %>%
   
   as.data.table
 
@@ -137,9 +154,9 @@ d %>%
   
   # filter(get.network(parcel) %in% c("Cont", "SalVentAttn"), task == "Axcpt") %>%
 
-  filter(parcel %in% intersect(parcels.axcpt.midi, parcels.stroop.midi)) %>%
+  filter(task == "Axcpt", parcel %in% parcels.axcpt.midi) %>%
   
-  ggplot(aes(ndim, estimate/se, color = task)) +
+  ggplot(aes(ndim, estimate / se, color = type)) +
   geom_hline(yintercept = 0) +
   geom_line(size = 2) +
   # geom_errorbar(aes(ymin = estimate - se, ymax = estimate + se), width = 0) +
@@ -153,21 +170,23 @@ d %>%
   
   filter(parcel %in% parcels.stroop.midi, task == "Stroop") %>%
   
-  ggplot(aes(ndim, estimate)) +
+  ggplot(aes(ndim, estimate / se, color = type)) +
+  geom_errorbar(aes(ymin = estimate / se - 1, ymax = estimate / se + 1), width = 0) +
+
   geom_line(size = 2) +
-  geom_errorbar(aes(ymin = estimate - se, ymax = estimate + se)) +
-  
-  facet_wrap(vars(parcel))
+
+  facet_wrap(vars(parcel)) +
+  scale_color_viridis_d()
+
 
 
 d %>%
   
-  filter(get.network(parcel) %in% c("Cont", "SalVentAttn"), task == "Stern") %>%
+  filter(get.network(parcel) %in% c("Limbic"), task == "Stern") %>%
   
-  ggplot(aes(ndim, estimate)) +
+  ggplot(aes(ndim, estimate / se, color = type)) +
   geom_hline(yintercept = 0) +
   geom_line(size = 2) +
-  geom_errorbar(aes(ymin = estimate - se, ymax = estimate + se)) +
   
   facet_wrap(vars(parcel))
 
@@ -175,18 +194,137 @@ d %>%
   
   filter(get.network(parcel) %in% c("Cont", "SalVentAttn"), task == "Cuedts") %>%
   
-  ggplot(aes(ndim, estimate)) +
+  ggplot(aes(ndim, estimate / se, color = type)) +
   geom_hline(yintercept = 0) +
   geom_line(size = 2) +
-  geom_errorbar(aes(ymin = estimate - se, ymax = estimate + se)) +
-  
+
   facet_wrap(vars(parcel))
+
+  f
+d %>%
+  
+  group_by(task, parcel, type) %>%
+  mutate(
+    is.in.range = (estimate / se) >= max(estimate / se) - 1
+  ) %>%
+  
+  filter(is.in.range) %>%
+  slice_min(ndim, 1) %>%
+  
+  # filter(parcel %in% parcels.stroop.midi, task == "Stroop") %>%
+  
+  ggplot(aes(ndim, fill = type)) +
+  geom_histogram() +
+  
+  facet_grid(vars(task))
+
+
+
+
+d %>%
+  
+  filter(type == "noncv") %>%
+  
+  group_by(task, parcel) %>%
+  mutate(
+    pseudo.t = estimate / se,
+    prop.max = pseudo.t / max(pseudo.t)
+    ) %>%
+  filter(prop.max >= 0.9) %>%
+  slice_min(ndim) %>%
+  
+  ggplot(aes(estimate / se, ndim, color = p.fdr < 0.05 & estimate > 0)) +
+  geom_point() +
+  
+  facet_grid(vars(task)) +
+  
+  scale_color_manual(values = c("TRUE" = "firebrick1", "FALSE" = "black"))
+
+
+
+d %>%
+  
+  filter(type == "noncv", task == "Stroop") %>%
+  
+  group_by(task, parcel) %>%
+  transmute(
+    
+    ndim = ndim,
+    estimate.max = estimate[ndim == max(ndim)], 
+    se.max = se[ndim == max(ndim)],
+    pseudo.t = estimate / se,
+    pseudo.t.max = estimate.max / se.max,
+    prop.max = pseudo.t / pseudo.t.max
+    
+    ) %>%
+  
+  filter(prop.max >= 0.9) %>%
+  slice_min(ndim) %>%
+  
+  ggplot(aes(estimate.max, ndim, color = parcel %in% parcels.stroop.midi)) +
+  geom_point() +
+  
+  scale_color_manual(values = c("TRUE" = "firebrick1", "FALSE" = "black")) +
+  
+  theme(legend.position = "none")
+
+
+
+
+
 
   
 
 d %>%
   
+  filter(task == "Axcpt", parcel %in% parcels.axcpt.midi, type == "noncv") %>%
   
+  ggplot(aes(ndim, estimate / se, color = parcel)) +
+  geom_line(size = 1, alpha = 0.5) +
+  
+  stat_smooth(color = "black", size = 2) +
+  
+  geom_vline(xintercept = 5) +
+  geom_vline(xintercept = 10) +
+   
+  scale_color_viridis_d() +
+  theme(legend.position = "none")
+
+d %>%
+  
+  filter(task == "Stroop", parcel %in% parcels.stroop.midi, type == "noncv") %>%
+  
+  ggplot(aes(ndim, estimate / se, color = parcel)) +
+  geom_line(aes(group = parcel), size = 1, alpha = 0.5) +
+  
+  stat_smooth(size = 2, color = "black") +
+  
+  geom_vline(xintercept = 5) +
+  geom_vline(xintercept = 10) +
+   
+  scale_color_viridis_d() +
+  theme(legend.position = "none")
+
+
+
+d %>%
+  
+  group_by(task, parcel, type) %>%
+  mutate(
+    pseudo.t = estimate / se,
+    prop.max = pseudo.t / max(pseudo.t)
+    ) %>%
+  
+  filter(prop.max >= 0.9) %>%
+  slice_min(ndim) %>%
+  # filter(type == "noncv", task == "Stroop", parcel %in% parcels.stroop.midi) %>%
+  filter(type == "noncv", task == "Axcpt", parcel %in% parcels.axcpt.midi) %>%
+  ggplot(aes(ndim, fill = task)) +
+  geom_histogram() +
+  facet_grid(vars(network))
+  
+
+
 
 
 
