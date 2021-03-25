@@ -24,7 +24,6 @@ read_betas <- function(
   trs <- as.numeric(unique(tab[, 2])) + 1
   regs <- unique(tab[, 1])
   
-  
   n.vertex <- 10242
   n.tr <- length(trs)
   n.reg <- length(regs)
@@ -85,6 +84,88 @@ read_betas <- function(
     
 }
 
+
+
+read_coefs <- function(
+  .subjs,
+  .task,
+  .glm,
+  .dir,
+  .getregs = function(x) !grepl("Full|block|Tstat|Fstat", x)
+) {
+  ## slightly more general function than read_betas: takes argument for pulling regressors, and works even if only
+  ## one regressor is pulled (hence the , drop = FALSE call)
+  
+  # .subjs = subjs; .task = "Cuedts"; .glm = "baseline_CongruencySwitch_EVENTS_censored_shifted"; .dir = dir.analysis
+  
+  ## initialize array
+  
+  pick.a.file <- 
+    file.path(.dir, .subjs[1], "RESULTS",  .task, paste0(.glm, "_1"), paste0("STATS_", subjs[1], "_1_L_REML.func.gii"))
+  labs <- afni("3dinfo", paste0("-label ", pick.a.file))
+  labs <- unlist(strsplit(labs, "\\|"))
+  # is.reg <- !grepl("Full|block|Tstat|Fstat", labs)
+  is.reg <- .getregs(labs)
+  regs <- labs[is.reg]
+  
+  n.vertex <- 10242
+  n.reg <- length(regs)
+  n.subj <- length(subjs)
+  
+  betas <- array(
+    NA,
+    dim = c(n.vertex*2, n.reg, n.subj, 2),
+    dimnames = list(vertex = NULL, reg = regs, subj = subjs, run = c("run1", "run2"))
+  )
+  
+  vertex.inds <- cbind(L = 1:n.vertex, R = (n.vertex + 1):(n.vertex * 2))
+  
+  for (subj.i in seq_along(subjs)) {
+    # subj.i = 1; run.i = 1; hemi.i = "L"
+    
+    for (run.i in 1:2) {
+      # run.i = 1
+      
+      for (hemi.i in c("L", "R")) {
+        # hemi.i = "L"
+        
+        inds <- vertex.inds[, hemi.i]
+        
+        fname <- file.path(
+          .dir, .subjs[subj.i], "RESULTS",  .task, paste0(.glm, "_", run.i),  
+          paste0("STATS_", subjs[subj.i], "_", run.i, "_", hemi.i, "_REML.func.gii")
+        )
+        
+        if (!file.exists(fname)) next
+        
+        B <- mikeutils::read_gifti2matrix(fname)[is.reg, , drop = FALSE]  ## keep as matrix if only one reg pulled
+        
+        is.ok.i <- isTRUE(all.equal(dim(B), c(n.reg, n.vertex)))
+        if (!is.ok.i) stop("mismatched beta array")
+        
+        
+        for (reg.i in seq_len(n.reg)) {
+          # reg.i = 1
+          
+          is.reg.i <- grepl(paste0("^", regs[reg.i]), labs[is.reg])
+          B.reg.i <- t(B[is.reg.i, , drop = FALSE])
+          
+          is.ok.ii <- isTRUE(all.equal(prod(dim(betas[inds, reg.i, subj.i, run.i, drop = FALSE])), prod(dim(B.reg.i))))
+          if (!is.ok.ii) stop("mismatched regressor array")
+          
+          betas[inds, reg.i, subj.i, run.i] <- B.reg.i
+          
+        }
+        
+      }
+      
+    }
+    
+  }
+  
+  betas
+  
+}
 
 
 

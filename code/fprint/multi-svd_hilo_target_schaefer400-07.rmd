@@ -269,41 +269,147 @@ d %>%
   theme(legend.position = "none")
 
 
+d %>%
+  
+  filter(type == "noncv", task == "Stroop", parcel %in% parcels.stroop.midi) %>%
+  
+  group_by(task, parcel) %>%
+  transmute(
+    
+    ndim = ndim,
+    estimate.max = estimate[ndim == max(ndim)], 
+    # prop.max = estimate / estimate.max
+    se.max = se[ndim == max(ndim)],
+    pseudo.t = estimate / se,
+    pseudo.t.max = estimate.max / se.max,
+    prop.max = pseudo.t / pseudo.t.max
+    
+    ) %>% 
+  
+  filter(prop.max >= 0.9) %>%
+  slice_min(ndim) %>% 
+  
+  ggplot(aes(ndim)) +
+  geom_histogram(bins = 20, color = "black")
+
+d %>%
+  
+  filter(type == "cv", task == "Axcpt", parcel %in% parcels.axcpt.midi) %>%
+  
+  group_by(task, parcel) %>%
+  transmute(
+    
+    ndim = ndim,
+    estimate.max = estimate[ndim == max(ndim)], 
+    # prop.max = estimate / estimate.max
+    se.max = se[ndim == max(ndim)],
+    pseudo.t = estimate / se,
+    pseudo.t.max = estimate.max / se.max,
+    prop.max = pseudo.t / pseudo.t.max
+    
+    ) %>% 
+  
+  filter(prop.max >= 0.9) %>%
+  slice_min(ndim) %>% 
+  
+  ggplot(aes(ndim)) +
+  geom_histogram(bins = 20, color = "black")
+
+d %>%
+  
+  filter(type == "cv", task == "Axcpt", parcel %in% parcels.axcpt.midi) %>%
+  
+  group_by(task, parcel) %>%
+  mutate(
+    
+    ndim = ndim,
+    estimate.max = estimate[ndim == max(ndim)], 
+    # prop.max = estimate / estimate.max
+    se.max = se[ndim == max(ndim)],
+    pseudo.t = estimate / se,
+    pseudo.t.max = estimate.max / se.max,
+    prop.max = pseudo.t / pseudo.t.max
+    
+    ) %>% 
+  
+  # filter(prop.max >= 0.9) %>%
+  # slice_min(ndim) %>% 
+  
+  ggplot(aes(ndim, estimate / se)) +
+  geom_point() +
+  geom_line(aes(group = parcel))
 
 
 
+  # 
+  # 
+  # 
+  # 
+  # ggplot(aes(estimate.max, ndim, color = parcel %in% parcels.stroop.midi)) +
+  # geom_point() +
+  # 
+  # scale_color_manual(values = c("TRUE" = "firebrick1", "FALSE" = "black")) +
+  # 
+  # theme(legend.position = "none")
 
   
 
 d %>%
   
-  filter(task == "Axcpt", parcel %in% parcels.axcpt.midi, type == "noncv") %>%
+  filter(type == "cv", task == "Axcpt", parcel %in% parcels.axcpt.midi) %>%
   
-  ggplot(aes(ndim, estimate / se, color = parcel)) +
-  geom_line(size = 1, alpha = 0.5) +
+  group_by(task, parcel) %>%
+  transmute(
+    
+    ndim = ndim,
+    estimate.max = estimate[ndim == max(ndim)], 
+    # prop.max = estimate / estimate.max
+    se.max = se[ndim == max(ndim)],
+    pseudo.t = estimate / se,
+    pseudo.t.max = estimate.max / se.max,
+    prop.max = pseudo.t / pseudo.t.max
+    
+    ) %>% 
   
-  stat_smooth(color = "black", size = 2) +
+  filter(prop.max >= 0.9) %>%
+  slice_min(ndim) %>% View
   
-  geom_vline(xintercept = 5) +
-  geom_vline(xintercept = 10) +
-   
-  scale_color_viridis_d() +
-  theme(legend.position = "none")
+  pull(ndim) %>% hist
+  
+
+
 
 d %>%
   
-  filter(task == "Stroop", parcel %in% parcels.stroop.midi, type == "noncv") %>%
+  filter(task == "Axcpt", parcel %in% parcels.axcpt.midi, type == "cv") %>%
   
-  ggplot(aes(ndim, estimate / se, color = parcel)) +
-  geom_line(aes(group = parcel), size = 1, alpha = 0.5) +
+  ggplot(aes(ndim, estimate/se, color = parcel)) +
+  geom_line(size = 1.25, alpha = 0.75) +
   
-  stat_smooth(size = 2, color = "black") +
+  stat_smooth(color = "black", size = 3) +
   
-  geom_vline(xintercept = 5) +
-  geom_vline(xintercept = 10) +
+  # geom_vline(xintercept = 5) +
+  # geom_vline(xintercept = 10) +
    
   scale_color_viridis_d() +
-  theme(legend.position = "none")
+  theme(legend.position = "none") +
+  labs(y = "MIDI / se", x = "number of dimensions", title = "AXCPT")
+
+d %>%
+  
+  filter(task == "Stroop", parcel %in% parcels.stroop.midi, type == "cv") %>%
+  
+  ggplot(aes(ndim, estimate/se, color = parcel)) +
+  geom_line(size = 1.25, alpha = 0.75) +
+  
+  stat_smooth(size = 3, color = "black") +
+  
+  # geom_vline(xintercept = 5) +
+  # geom_vline(xintercept = 10) +
+   
+  scale_color_viridis_d() +
+  theme(legend.position = "none") +
+  labs(y = "MIDI / se", x = "number of dimensions", title = "Stroop")
 
 
 

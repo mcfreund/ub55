@@ -10,6 +10,7 @@ hcp <- list(
   )
 )
 
+
 if (nodename == "ccp-freund") {
   
   hcp.vinf <- list(
@@ -25,7 +26,7 @@ if (nodename == "ccp-freund") {
 
 
 
-parcellation <- mikeutils::read_atlas("schaefer400")
+parcellation <- mikeutils::read_atlas("schaefer400", path.atlas = dir.schaefer)
 
 if (nodename == "ccplinux1") {
   
