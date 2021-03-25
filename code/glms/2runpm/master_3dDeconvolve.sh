@@ -1,18 +1,16 @@
 #!/usr/bin/env bash
 
 ### TODO:
-# remove hemisphere loop---same glm, so unneccessary.
 # make 3dDeconvolve parallel--- embed in function, call with forking.
 
 ## get vars
 
-glm_names=(Axcpt_Cues Cuedts_CongruencySwitch Stern_ListLength Stroop_Congruency Stroop_fix-item)
-#glm_names=(Axcpt_Cues_noblock Cuedts_CongruencySwitch_noblock Stern_ListLength_noblock Stroop_Congruency_noblock)
+#glm_names=(Axcpt_aggressive1 Cuedts_aggressive1 Stern_aggressive1 Stroop_aggressive1)
+glm_names=Stroop_aggressive1
 sessions=baseline
-filename="/data/nil-external/ccp/freund/ub55/in/ub55_subjects.txt"
-mapfile -t subjects < $filename
-runs=(1 2)
-encoding_dir=(AP PA)
+#filename="/data/nil-external/ccp/freund/ub55/in/ub55_subjects.txt"
+#mapfile -t subjects < $filename
+subjects=102008
 
 ## directories
 

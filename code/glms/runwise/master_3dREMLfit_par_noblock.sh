@@ -3,9 +3,9 @@
 
 ## get vars
 
-glms=(Cues CongruencySwitch ListLength Congruency)
+glms=(Cues_noblock CongruencySwitch_noblock ListLength_noblock Congruency_noblock)
 tasks=(Axcpt Cuedts Stern Stroop)
-suffices=(_shifted_noblock _shifted_noblock _shifted_noblock _shifted_noblock)
+suffices=(_shifted _shifted _shifted _shifted)
 sessions=baseline
 filename="/data/nil-external/ccp/freund/ub55/in/ub55_subjects.txt"
 mapfile -t subjects < $filename
