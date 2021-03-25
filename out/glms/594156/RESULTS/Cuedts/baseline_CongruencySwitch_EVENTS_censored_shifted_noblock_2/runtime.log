@@ -1,0 +1,21 @@
+++ 3dREMLfit: AFNI version=AFNI_18.3.16 (Dec 11 2018) [64-bit]
+++ Authored by: RWCox
+++ GOFORIT ==> Matrix de-singularization is engaged!
+++ Number of OpenMP threads = 15
+++ No mask ==> computing for all 10242 voxels
+++ -----  matrix condition (641x102):  4.02963  ++ VERY GOOD ++
+++ Loading input dataset into memory
+ + masked off 881 voxels for being all zero; 9361 left in mask
+++ starting REML setup calculations; total CPU=0.00 Elapsed=5.28
+ + X matrix: 15.042% of elements are nonzero
+ + starting 15 OpenMP threads for REML setup
+ + REML setup finished: matrix rows=641 cols=102; 109*1 cases; total CPU=0.00 Elapsed=13.14
+ +  average case bandwidth = 12.99
+++ REML voxel loop: [15 threads]0123456789.0123456789.0123456789.0123456789.01234567
+ + ARMA voxel parameters estimated: total CPU=0.00 Elapsed=33.22
+++ GLSQ loop00123456789.0123456789.0123456789.0123456789.0123456789.
+ + GLSQ regression done: total CPU=0.00 Elapsed=40.26
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/594156/RESULTS/Cuedts/baseline_CongruencySwitch_EVENTS_censored_shifted_noblock_2/stats_var_594156_2_R_REML.func.gii+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/594156/RESULTS/Cuedts/baseline_CongruencySwitch_EVENTS_censored_shifted_noblock_2/errts_594156_2_R_REML.func.gii+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/594156/RESULTS/Cuedts/baseline_CongruencySwitch_EVENTS_censored_shifted_noblock_2/wherr_594156_2_R_REML.func.gii
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/594156/RESULTS/Cuedts/baseline_CongruencySwitch_EVENTS_censored_shifted_noblock_2/STATS_594156_2_R_REML.func.gii
+ + unloading input dataset and REML matrices
+++ 3dREMLfit is all done! total CPU=0.00 Elapsed=45.07

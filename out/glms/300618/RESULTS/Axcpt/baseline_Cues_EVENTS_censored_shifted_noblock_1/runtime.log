@@ -1,0 +1,13 @@
+++ 3dREMLfit: AFNI version=AFNI_18.3.16 (Dec 11 2018) [64-bit]
+++ Authored by: RWCox
+++ GOFORIT ==> Matrix de-singularization is engaged!
+++ Number of OpenMP threads = 15
+++ No mask ==> computing for all 10242 voxels
+++ -----  matrix condition (604x127):  3.65473  ++ VERY GOOD ++
+++ Loading input dataset into memory
+ + masked off 881 voxels for being all zero; 9361 left in mask
+++ starting REML setup calculations; total CPU=0.00 Elapsed=4.03
+ + X matrix: 12.012% of elements are nonzero
+ + starting 15 OpenMP threads for REML setup
+
+libgomp: Thread creation failed: Resource temporarily unavailable

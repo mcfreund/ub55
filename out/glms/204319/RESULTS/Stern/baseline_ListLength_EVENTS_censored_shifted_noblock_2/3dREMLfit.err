@@ -1,0 +1,11 @@
+*+ WARNING: !! in  matrix:
+ * Largest singular value=1.92391
+ * 1 singular value is less than cutoff=1.92391e-07
+ * Implies strong collinearity in the matrix columns! 
+*+ WARNING: -GOFORIT ==> Charging ahead into battle!
+*+ WARNING: -----
+*+ WARNING: QR decomposition of [R]^(-1/2) [X] had 1 collinearity problem
+*+ WARNING: -----
+*+ WARNING: QR decomposition of GLT setup 151x139 matrix had 21 collinearity problems
+*+ WARNING: QR decomposition of GLT setup 151x139 matrix had 39 collinearity problems
+*+ WARNING: QR decomposition of GLT setup 151x139 matrix had 54 collinearity problems

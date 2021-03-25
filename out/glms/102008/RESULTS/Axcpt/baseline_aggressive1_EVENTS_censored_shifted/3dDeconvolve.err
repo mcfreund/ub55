@@ -1,0 +1,6 @@
+*+ WARNING: '-stim_times 6' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/102008/INPUT_DATA/Axcpt/baseline/102008_Axcpt_baseline_F_ng_shifted.txt'
+*+ WARNING: '-stim_times 10' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/102008/INPUT_DATA/Axcpt/baseline/102008_Axcpt_baseline_P_ng_shifted.txt'
+*+ WARNING: -stim_times 6 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 6' file '/data/nil-external/ccp/freund/ub55/out/glms/102008/INPUT_DATA/Axcpt/baseline/102008_Axcpt_baseline_F_ng_shifted.txt' has no good stimulus time values
+*+ WARNING: -stim_times 10 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 10' file '/data/nil-external/ccp/freund/ub55/out/glms/102008/INPUT_DATA/Axcpt/baseline/102008_Axcpt_baseline_P_ng_shifted.txt' has no good stimulus time values

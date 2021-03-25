@@ -1,0 +1,70 @@
+++ 3dREMLfit: AFNI version=AFNI_18.3.16 (Dec 11 2018) [64-bit]
+++ Authored by: RWCox
+++ GOFORIT ==> Matrix de-singularization is engaged!
+++ Number of OpenMP threads = 15
+++ No mask ==> computing for all 10242 voxels
+++ -----  matrix condition (596x151):  5.24465  ++ VERY GOOD ++
+[7m*+ WARNING:[0m !! in  matrix:
+ * Largest singular value=2.41844
+ * 1 singular value is less than cutoff=2.41844e-07
+ * Implies strong collinearity in the matrix columns! 
+++  matrix singular values:
+   3.02333e-08      0.087923      0.109203      0.155661      0.182382
+      0.212565      0.258794      0.270158      0.331462      0.409588
+      0.445046      0.498835      0.571184      0.605617      0.608594
+      0.614314      0.632997      0.637207      0.659084       0.66883
+      0.671066      0.693914      0.699129      0.710904      0.716343
+      0.719354      0.724789      0.730098      0.731998      0.736542
+      0.747257      0.748659      0.755428      0.768403      0.780929
+      0.790927      0.793318      0.798396      0.800392      0.804795
+      0.806889      0.809231      0.817374      0.818942      0.820613
+      0.826004       0.82841      0.836746      0.838155      0.847114
+      0.860403      0.869373      0.879558      0.880205      0.891243
+      0.897581      0.903117      0.906026      0.910153      0.915661
+      0.921156      0.923509      0.930229       0.93253      0.941653
+       0.94761      0.951902      0.957683      0.967185      0.967319
+      0.970588      0.976233      0.981152       0.98316      0.988641
+      0.993177      0.997044      0.998898      0.999897       1.00113
+       1.01246       1.01304       1.01644       1.01857       1.02599
+       1.03056       1.03323        1.0366       1.03831       1.04422
+       1.04624       1.04977       1.05485       1.06143       1.06515
+       1.06942       1.07152       1.08355         1.086       1.08892
+       1.09385       1.09757       1.10133       1.10491        1.1092
+       1.11754       1.12008       1.12291       1.12699       1.12941
+        1.1339       1.13587       1.13766       1.14727       1.14996
+       1.15145       1.15406       1.15583       1.16331        1.1655
+       1.17071       1.18318       1.18679       1.19352       1.19737
+       1.20103       1.20422       1.20713        1.2117       1.22169
+       1.22291       1.22933       1.23283       1.23542       1.23581
+       1.23924       1.24491       1.25095        1.2626       1.26828
+       1.27438       1.27906        1.2812       1.31756       1.32762
+        1.3508       1.37122       1.38348        1.4684       1.71019
+       2.41844
+[7m*+ WARNING:[0m -GOFORIT ==> Charging ahead into battle!
+ +                   ==> Check results carefully!
+++ Loading input dataset into memory
+ + masked off 881 voxels for being all zero; 9361 left in mask
+++ starting REML setup calculations; total CPU=0.00 Elapsed=3.55
+ + X matrix: 10.176% of elements are nonzero
+[7m*+ WARNING:[0m -----
+[7m*+ WARNING:[0m QR decomposition of [R]^(-1/2) [X] had 1 collinearity problem
+[7m*+ WARNING:[0m -----
+ + starting 15 OpenMP threads for REML setup
+ + REML setup finished: matrix rows=596 cols=151; 109*1 cases; total CPU=0.00 Elapsed=20.42
+ +  average case bandwidth = 13.06
+++ REML voxel loop: [15 threads]0123456789.0123456789.0123456789.0123456789.01234567
+ + ARMA voxel parameters estimated: total CPU=0.00 Elapsed=37.22
+++ GLSQ loop:
+[7m*+ WARNING:[0m QR decomposition of GLT setup 151x139 matrix had 24 collinearity problems
+
+[7m*+ WARNING:[0m QR decomposition of GLT setup 151x139 matrix had 41 collinearity problems
+
+[7m*+ WARNING:[0m QR decomposition of GLT setup 151x139 matrix had 55 collinearity problems
+0123456789.0123456789.0123456789.0123456789.0123456789.
+ + GLSQ regression done: total CPU=0.00 Elapsed=48.16
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/DMCC9850294/RESULTS/Stern/baseline_ListLength_EVENTS_censored_shifted_noblock_1/stats_var_DMCC9850294_1_R_REML.func.gii
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/DMCC9850294/RESULTS/Stern/baseline_ListLength_EVENTS_censored_shifted_noblock_1/errts_DMCC9850294_1_R_REML.func.gii
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/DMCC9850294/RESULTS/Stern/baseline_ListLength_EVENTS_censored_shifted_noblock_1/wherr_DMCC9850294_1_R_REML.func.gii
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/DMCC9850294/RESULTS/Stern/baseline_ListLength_EVENTS_censored_shifted_noblock_1/STATS_DMCC9850294_1_R_REML.func.gii
+ + unloading input dataset and REML matrices
+++ 3dREMLfit is all done! total CPU=0.00 Elapsed=53.73

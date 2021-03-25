@@ -1,0 +1,11 @@
+*+ WARNING: no -stim_label given for stim #1 ==> label = 'Stim#1'
+** ERROR: no stimulus #1 given
+*+ WARNING: no -stim_label given for stim #2 ==> label = 'Stim#2'
+** ERROR: no stimulus #2 given
+*+ WARNING: no -stim_label given for stim #3 ==> label = 'Stim#3'
+** ERROR: no stimulus #3 given
+*+ WARNING: no -stim_label given for stim #4 ==> label = 'Stim#4'
+** ERROR: no stimulus #4 given
+*+ WARNING: no -stim_label given for stim #5 ==> label = 'Stim#5'
+** ERROR: no stimulus #5 given
+** FATAL ERROR: Can't continue after above problems!

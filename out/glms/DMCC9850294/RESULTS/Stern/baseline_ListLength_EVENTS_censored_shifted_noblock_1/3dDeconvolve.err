@@ -1,0 +1,12 @@
+*+ WARNING: -------------------------------------------------
+*+ WARNING: Problems with the X matrix columns, listed below:
+*+ WARNING: !! * Columns 133 [not5RN#9] and 134 [not5RN#10] are (nearly?) collinear!
+*+ WARNING: -------------------------------------------------
+*+ WARNING: !! in Signal+Baseline matrix:
+ * Largest singular value=2.41844
+ * 1 singular value is less than cutoff=2.41844e-07
+ * Implies strong collinearity in the matrix columns! 
+*+ WARNING: !! in Signal-only matrix:
+ * Largest singular value=1.47112
+ * 1 singular value is less than cutoff=1.47112e-07
+ * Implies strong collinearity in the matrix columns! 
