@@ -17,7 +17,7 @@ glminfo <- data.frame(
     "baseline_Cues_EVENTS_censored_shifted", 
     "baseline_CongruencySwitch_EVENTS_censored_shifted",
     "baseline_ListLength_EVENTS_censored_shifted",
-    "baseline_Congruency_EVENTS_censored_shifted",
+    "baseline_Congruency_EVENTS_censored_shifted"
     # "baseline_fix-item_EVENTS_censored"
   )
 )
@@ -29,6 +29,24 @@ for (glm.i in seq_len(nrow(glminfo))) {
   
   betas.i <- read_betas(subjs, glminfo[glm.i]$task, glminfo[glm.i]$name.glm, dir.analysis)
   saveRDS(betas.i, here("out", "glms", paste0("betas_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS")))
-    
+  
+}
+
+
+for (glm.i in seq_len(nrow(glminfo))) {
+  
+  sustained.i <- read_coefs(
+    subjs, 
+    glminfo[glm.i]$task, 
+    glminfo[glm.i]$name.glm, 
+    dir.analysis, 
+    .getregs = function(x) grepl("block#0_Coef", x)
+  )
+  
+  saveRDS(
+    sustained.i, 
+    here("out", "glms", paste0("sustained_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm,  ".RDS"))
+  )
+  
 }
 

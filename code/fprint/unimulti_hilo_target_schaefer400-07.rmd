@@ -107,6 +107,7 @@ Transforms:
 
 d %>%
   
+  filter(transform == "unscaled") %>%
   select(task, transform, parcel, variable, estimate, p.fdr) %>%
   dcast(task + transform + parcel ~ variable, value.var = c("estimate", "p.fdr")) %>%
   
@@ -125,12 +126,13 @@ d %>%
     ) +
   theme(legend.position = "top") +
   
-  facet_grid(vars(transform), cols = vars(task), scales = "free") +
+  facet_grid(cols = vars(task), scales = "free") +
+  # facet_grid(vars(transform), cols = vars(task), scales = "free") +
   
   labs(
-    title = "mean univariate versus multivariate contrasts per parcel: scaled", 
-    x = "multivariate contrast (b/n - w/i)", 
-    y = "univariate contrast (b/n - w/i)",
+    title = "mean multivariate versus univariate IDIs per parcel", 
+    x = "multivariate IDI", 
+    y = "univariateariate IDI",
     caption = "p-value from non-parametric bootstrap"
     )
 

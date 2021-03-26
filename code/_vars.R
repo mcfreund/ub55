@@ -17,7 +17,13 @@ if (nodename == "ccplinux1") {
   dir.atlas <- "C:/local/atlases"
   dir.schaefer <- dir.atlas
   
+} else if (nodename == "PUTER") {
+
+  dir.atlas <- "C:/Users/mcf/Documents/atlases"
+  dir.schaefer <- file.path(dir.atlas, "ATLASES")
+  
 }
+
 
 n.cores <- detectCores()
 
