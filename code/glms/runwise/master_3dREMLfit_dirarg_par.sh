@@ -7,18 +7,13 @@ glms=(null null null null)
 tasks=(Axcpt Cuedts Stern Stroop)
 suffices=("" "" "" "")
 sessions=baseline
-#filename="/data/nil-external/ccp/freund/ub55/in/ub55_subjects.txt"
-filename="/data/nil-external/ccp/freund/ub55/code/glms/runwise/missing_subjs.txt"
+filename="/data/nil-external/ccp/freund/ub55/in/ub55_subjects.txt"
+#filename="/data/nil-external/ccp/freund/ub55/code/glms/runwise/missing_subjs.txt"
 mapfile -t subjects < $filename
 runs=(1 2)
 encoding_dir=(AP PA)
 hemis=(L R)
-
-#glms=(Cues CongruencySwitch ListLength Congruency fix-item)
-#tasks=(Axcpt Cuedts Stern Stroop Stroop)
-#suffices=(_shifted _shifted _shifted _shifted "")
-#subjects=132017
-
+dirname=""  ## e.g., _EVENTS_censored; in-between glm and suffix name
 
 ## directories
 
@@ -42,7 +37,7 @@ for subject in ${subjects[@]}; do
 		
 		echo ${task}_${glm}${suffix}
 
-		source 3dREMLfit_par.sh
+		source 3dREMLfit_dirarg_par.sh
 
 	done
 

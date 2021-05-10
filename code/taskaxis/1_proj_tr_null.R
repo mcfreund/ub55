@@ -22,10 +22,10 @@ glminfo <- data.frame(
     "baseline_Congruency_EVENTS_censored_shifted"
   ),
   name.glm.noblock = c(
-    "baseline_Cues_EVENTS_censored_shifted_noblock",
-    "baseline_CongruencySwitch_EVENTS_censored_shifted_noblock",
-    "baseline_ListLength_EVENTS_censored_shifted_noblock",
-    "baseline_Congruency_EVENTS_censored_shifted_noblock"
+    "baseline_null",
+    "baseline_null",
+    "baseline_null",
+    "baseline_null"
   ),
   stringsAsFactors = FALSE
 )
@@ -116,7 +116,7 @@ for (task.i in seq_along(tasks)) {
     
     name.subj.i <- subjs[subj.i]
     U <- contrs.task.i[, name.subj.i, ]
-
+    
     
     for (run.i in 1:2) {  ## test run
       # run.i = 1
@@ -147,7 +147,7 @@ for (task.i in seq_along(tasks)) {
         U_roi_j <- U_roi[j, ]
         
         # good.tr <- apply(x, 1, var) > .Machine$double.eps  ## TRs that weren't censored
-
+        
         ## project:
         
         U_roi_j <- apply(U_roi_j, 2, function(x) x / sqrt(sum(x^2)))  ## scale vectors to unit length
@@ -169,9 +169,9 @@ for (task.i in seq_along(tasks)) {
     proj, 
     here(
       "out", "taskaxis", 
-      paste0("projections_task-", name.task.i, "_parc-network_prew-vanilla_glm-noblock_resi-errts.RDS")
-      )
+      paste0("projections_task-", name.task.i, "_parc-network_prew-vanilla_glm-null_resi-errts.RDS")
     )
+  )
   
   print(paste0(name.task.i, " done."))
   
@@ -222,3 +222,4 @@ for (task.i in seq_along(tasks)) {
 # 
 # d[n.missing > 0]
 # 
+# here::here("out", "glms", name.subj.i, "RESULTS", name.task.i, paste0(glminfo[task.i]$name.glm.noblock, "_", run.i))
