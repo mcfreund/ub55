@@ -3,10 +3,9 @@
 
 ## get vars
 
-glms=(Cues CongruencySwitch ListLength Congruency Cues CongruencySwitch ListLength Congruency)
-tasks=(Axcpt Cuedts Stern Stroop Axcpt Cuedts Stern Stroop)
-suffices=(_shifted _shifted _shifted _shifted _shifted_noblock _shifted_noblock _shifted_noblock _shifted_noblock)
-#suffices=(_shifted_noblock _shifted_noblock _shifted_noblock _shifted_noblock)
+glms=(null null null null)
+tasks=(Axcpt Cuedts Stern Stroop)
+suffices=("" "" "" "")
 sessions=baseline
 #filename="/data/nil-external/ccp/freund/ub55/in/ub55_subjects.txt"
 filename="/data/nil-external/ccp/freund/ub55/code/glms/runwise/missing_subjs.txt"
@@ -14,7 +13,6 @@ mapfile -t subjects < $filename
 runs=(1 2)
 encoding_dir=(AP PA)
 hemis=(L R)
-#hemis=(R)
 
 #glms=(Cues CongruencySwitch ListLength Congruency fix-item)
 #tasks=(Axcpt Cuedts Stern Stroop Stroop)

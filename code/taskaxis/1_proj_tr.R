@@ -47,8 +47,6 @@ pb <- progress_bar$new(
 
 ## wrangle betas ----
 
-(time.start <- Sys.time())
-
 
 contrs <- 
   array(
@@ -83,6 +81,8 @@ gc()
 
 if (!dir.exists(here("out", "taskaxis"))) dir.create(here("out", "taskaxis"))
 
+(time.start <- Sys.time())
+
 
 for (task.i in seq_along(tasks)) {
   # task.i = 4
@@ -115,28 +115,20 @@ for (task.i in seq_along(tasks)) {
     if (subjs[subj.i] == "DMCC5820265") next
     
     name.subj.i <- subjs[subj.i]
-    U <- contrs.subj.i[, name.task.i, ]
-    contrs.subj.i <- contrs[, subj.i, , ]
-    
-    
+    U <- contrs.task.i[, name.subj.i, ]
+
     
     for (run.i in 1:2) {  ## test run
-      
+      # run.i = 1
       
       eps.name <- here::here(
         "out", "glms", name.subj.i, "RESULTS", name.task.i, paste0(glminfo[task.i]$name.glm.noblock, "_", run.i),
-        paste0("wherr_", name.subj.i, "_", run.i, "_", c("L", "R"), "_REML.func.gii")
-        # paste0("errts_", name.subj.i, "_", run.i, "_", c("L", "R"), "_REML.func.gii")
+        paste0("errts_", name.subj.i, "_", run.i, "_", c("L", "R"), "_REML.func.gii")
       )  ## LEFT then RIGHT
       eps <- cbind(read_gifti2matrix(eps.name[1]), read_gifti2matrix(eps.name[2]))  ## LEFT then RIGHT
       
-      # run.train <- switch(run.i, 2, 1)
-      # contrs.subj.i.run.i <- contrs.subj.i[, , run.train]
-
       for (mask.i in seq_along(rois)) {
         # mask.i = 5
-        
-        ## prepare task axis ----
         
         ## mask:
         
@@ -154,13 +146,12 @@ for (task.i in seq_along(tasks)) {
         x_j <- x[, j]
         U_roi_j <- U_roi[j, ]
         
-        good.tr <- apply(x, 1, var) > .Machine$double.eps  ## TRs that weren't censored
-        
+        # good.tr <- apply(x, 1, var) > .Machine$double.eps  ## TRs that weren't censored
+
         ## project:
         
         U_roi_j <- apply(U_roi_j, 2, function(x) x / sqrt(sum(x^2)))  ## scale vectors to unit length
         p_j <- x_j %*% U_roi_j
-        
         
         
         proj[, paste0(1:2, "_", run.i), mask.i, subj.i] <- p_j
@@ -170,6 +161,7 @@ for (task.i in seq_along(tasks)) {
       
     }
     
+    
   }
   
   
@@ -177,7 +169,7 @@ for (task.i in seq_along(tasks)) {
     proj, 
     here(
       "out", "taskaxis", 
-      paste0("projections_task-", name.task.i, "_parc-network_prew-vanilla_resi-errts.RDS")
+      paste0("projections_task-", name.task.i, "_parc-network_prew-vanilla_glm-noblock_resi-errts.RDS")
       )
     )
   
