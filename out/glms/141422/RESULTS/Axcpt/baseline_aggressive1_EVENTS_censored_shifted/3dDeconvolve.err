@@ -1,0 +1,62 @@
+*+ WARNING: '-stim_times 11' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/141422/INPUT_DATA/Axcpt/baseline/141422_Axcpt_baseline_T_ng_shifted.txt'
+*+ WARNING: '-stim_times 12' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/141422/INPUT_DATA/Axcpt/baseline/141422_Axcpt_baseline_U_ng_shifted.txt'
+*+ WARNING: -stim_times 11 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 11' file '/data/nil-external/ccp/freund/ub55/out/glms/141422/INPUT_DATA/Axcpt/baseline/141422_Axcpt_baseline_T_ng_shifted.txt' has no good stimulus time values
+*+ WARNING: -stim_times 12 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 12' file '/data/nil-external/ccp/freund/ub55/out/glms/141422/INPUT_DATA/Axcpt/baseline/141422_Axcpt_baseline_U_ng_shifted.txt' has no good stimulus time values
+*+ WARNING: -------------------------------------------------
+*+ WARNING: Problems with the X matrix columns, listed below:
+*+ WARNING: !! * Columns 84 [F_ng#7] and 85 [F_ng#8] are (nearly?) collinear!
+*+ WARNING: !! * Columns 86 [F_ng#9] and 87 [F_ng#10] are (nearly?) collinear!
+*+ WARNING: !! * Column 162 [T_ng#0] is all zeros
+*+ WARNING: !! * Column 163 [T_ng#1] is all zeros
+*+ WARNING: !! * Column 164 [T_ng#2] is all zeros
+*+ WARNING: !! * Column 165 [T_ng#3] is all zeros
+*+ WARNING: !! * Column 166 [T_ng#4] is all zeros
+*+ WARNING: !! * Column 167 [T_ng#5] is all zeros
+*+ WARNING: !! * Column 168 [T_ng#6] is all zeros
+*+ WARNING: !! * Column 169 [T_ng#7] is all zeros
+*+ WARNING: !! * Column 170 [T_ng#8] is all zeros
+*+ WARNING: !! * Column 171 [T_ng#9] is all zeros
+*+ WARNING: !! * Column 172 [T_ng#10] is all zeros
+*+ WARNING: !! * Column 173 [T_ng#11] is all zeros
+*+ WARNING: !! * Column 174 [T_ng#12] is all zeros
+*+ WARNING: !! * Column 175 [T_ng#13] is all zeros
+*+ WARNING: !! * Column 176 [T_ng#14] is all zeros
+*+ WARNING: !! * Column 177 [T_ng#15] is all zeros
+*+ WARNING: !! * Column 178 [T_ng#16] is all zeros
+*+ WARNING: !! * Column 179 [U_ng#0] is all zeros
+*+ WARNING: !! * Column 180 [U_ng#1] is all zeros
+*+ WARNING: !! * Column 181 [U_ng#2] is all zeros
+*+ WARNING: !! * Column 182 [U_ng#3] is all zeros
+*+ WARNING: !! * Column 183 [U_ng#4] is all zeros
+*+ WARNING: !! * Column 184 [U_ng#5] is all zeros
+*+ WARNING: !! * Column 185 [U_ng#6] is all zeros
+*+ WARNING: !! * Column 186 [U_ng#7] is all zeros
+*+ WARNING: !! * Column 187 [U_ng#8] is all zeros
+*+ WARNING: !! * Column 188 [U_ng#9] is all zeros
+*+ WARNING: !! * Column 189 [U_ng#10] is all zeros
+*+ WARNING: !! * Column 190 [U_ng#11] is all zeros
+*+ WARNING: !! * Column 191 [U_ng#12] is all zeros
+*+ WARNING: !! * Column 192 [U_ng#13] is all zeros
+*+ WARNING: !! * Column 193 [U_ng#14] is all zeros
+*+ WARNING: !! * Column 194 [U_ng#15] is all zeros
+*+ WARNING: !! * Column 195 [U_ng#16] is all zeros
+*+ WARNING: !! * Columns 272 [H_X#8] and 298 [N_X#0] are (nearly?) collinear!
+*+ WARNING: !! * Columns 273 [H_X#9] and 299 [N_X#1] are (nearly?) collinear!
+*+ WARNING: !! * Columns 274 [H_X#10] and 300 [N_X#2] are (nearly?) collinear!
+*+ WARNING: !! * Columns 275 [H_X#11] and 301 [N_X#3] are (nearly?) collinear!
+*+ WARNING: !! * Columns 276 [H_X#12] and 302 [N_X#4] are (nearly?) collinear!
+*+ WARNING: !! * Columns 277 [H_X#13] and 303 [N_X#5] are (nearly?) collinear!
+*+ WARNING: !! * Columns 278 [H_X#14] and 304 [N_X#6] are (nearly?) collinear!
+*+ WARNING: !! * Columns 279 [H_X#15] and 305 [N_X#7] are (nearly?) collinear!
+*+ WARNING: !! * Columns 280 [H_X#16] and 306 [N_X#8] are (nearly?) collinear!
+*+ WARNING: -------------------------------------------------
+*+ WARNING: !! in Signal+Baseline matrix:
+ * Largest singular value=2.14274
+ * 48 singular values are less than cutoff=2.14274e-07
+ * Implies strong collinearity in the matrix columns! 
+*+ WARNING: !! in Signal-only matrix:
+ * Largest singular value=1.87895
+ * 48 singular values are less than cutoff=1.87895e-07
+ * Implies strong collinearity in the matrix columns! 

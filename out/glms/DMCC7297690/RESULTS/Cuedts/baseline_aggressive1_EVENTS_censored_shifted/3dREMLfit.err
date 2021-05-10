@@ -1,0 +1,19 @@
+** ERROR: matrix column #253 is all zero!?
+** ERROR: matrix column #254 is all zero!?
+** ERROR: matrix column #255 is all zero!?
+** ERROR: matrix column #490 is all zero!?
+** ERROR: matrix column #491 is all zero!?
+** ERROR: matrix column #492 is all zero!?
+*+ WARNING: You said to GOFORIT, so here we GO!
+*+ WARNING: !! in  matrix:
+ * Largest singular value=2.19744
+ * 13 singular values are less than cutoff=2.19744e-07
+ * Implies strong collinearity in the matrix columns! 
+*+ WARNING: -GOFORIT ==> Charging ahead into battle!
+*+ WARNING: -----
+*+ WARNING: QR decomposition of [R]^(-1/2) [X] had 13 collinearity problems
+*+ WARNING: -----
+*+ WARNING: QR decomposition of GLT setup 642x616 matrix had 4 collinearity problems
+*+ WARNING: QR decomposition of GLT setup 642x616 matrix had 11 collinearity problems
+*+ WARNING: QR decomposition of GLT setup 642x616 matrix had 48 collinearity problems
+*+ WARNING: QR decomposition of GLT setup 642x616 matrix had 89 collinearity problems

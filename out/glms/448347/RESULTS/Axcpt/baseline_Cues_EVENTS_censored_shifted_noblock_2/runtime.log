@@ -6,18 +6,22 @@
 ++ -----  matrix condition (592x127):  2.96118  ++ VERY GOOD ++
 ++ Loading input dataset into memory
  + masked off 881 voxels for being all zero; 9361 left in mask
-++ starting REML setup calculations; total CPU=0.00 Elapsed=3.61
+++ starting REML setup calculations; total CPU=0.00 Elapsed=3.89
  + X matrix: 11.979% of elements are nonzero
  + starting 15 OpenMP threads for REML setup
- + REML setup finished: matrix rows=592 cols=127; 109*1 cases; total CPU=0.00 Elapsed=10.14
+ + REML setup finished: matrix rows=592 cols=127; 109*1 cases; total CPU=0.00 Elapsed=9.60
  +  average case bandwidth = 12.81
-++ REML voxel loop: [15 threads]0123456789.0123456789.0123456789.0123456789.0123456
-
- + ARMA voxel parameters estimated: total CPU=0.00 Elapsed=23.37
-++ GLSQ loop00123456789.0123456789.0123456789.0123456789.0123456789.
- + GLSQ regression done: total CPU=0.00 Elapsed=30.98
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/448347/RESULTS/Axcpt/baseline_Cues_EVENTS_censored_shifted_noblock_2/stats_var_448347_2_R_REML.func.gii+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/448347/RESULTS/Axcpt/baseline_Cues_EVENTS_censored_shifted_noblock_2/errts_448347_2_R_REML.func.gii++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/448347/RESULTS/Axcpt/baseline_Cues_EVENTS_censored_shifted_noblock_2/wherr_448347_2_L_REML.func.gii
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/448347/RESULTS/Axcpt/baseline_Cues_EVENTS_censored_shifted_noblock_2/STATS_448347_2_L_REML.func.gii
+++ REML voxel loop: [15 threads]0123456789.0123456789.0123456789.0123456789.01234567
+ + ARMA voxel parameters estimated: total CPU=0.00 Elapsed=19.61
+++ GLSQ loop:0123456789.0123456789.0123456789.0123456789.0123456789.
+ + GLSQ regression done: total CPU=0.00 Elapsed=29.44
+[7m** ERROR:[0m output dataset name 'stats_var_448347_2_R_REML.func.gii' conflicts with existing file
+[7m** ERROR:[0m dataset NOT written to disk!
+[7m** ERROR:[0m output dataset name 'errts_448347_2_R_REML.func.gii' conflicts with existing file
+[7m** ERROR:[0m dataset NOT written to disk!
+[7m** ERROR:[0m output dataset name 'wherr_448347_2_R_REML.func.gii' conflicts with existing file
+[7m** ERROR:[0m dataset NOT written to disk!
+[7m** ERROR:[0m output dataset name 'STATS_448347_2_R_REML.func.gii' conflicts with existing file
+[7m** ERROR:[0m dataset NOT written to disk!
  + unloading input dataset and REML matrices
-++ 3dREMLfit is all done! total CPU=0.00 Elapsed=34.56
-
+++ 3dREMLfit is all done! total CPU=0.00 Elapsed=30.07

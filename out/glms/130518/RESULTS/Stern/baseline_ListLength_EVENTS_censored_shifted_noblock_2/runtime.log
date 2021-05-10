@@ -6,18 +6,17 @@
 ++ -----  matrix condition (593x151):  4.10567  ++ VERY GOOD ++
 ++ Loading input dataset into memory
  + masked off 881 voxels for being all zero; 9361 left in mask
-++ starting REML setup calculations; total CPU=0.00 Elapsed=3.46
+++ starting REML setup calculations; total CPU=0.00 Elapsed=0.82
  + X matrix: 10.173% of elements are nonzero
  + starting 15 OpenMP threads for REML setup
- + REML setup finished: matrix rows=593 cols=151; 109*1 cases; total CPU=0.00 Elapsed=9.01
+ + REML setup finished: matrix rows=593 cols=151; 109*1 cases; total CPU=0.00 Elapsed=5.32
  +  average case bandwidth = 13.00
-++ REML voxel loop: [15 threads]0123456789.0123456789.0123456789.0123456789.01234567
- + ARMA voxel parameters estimated: total CPU=0.00 Elapsed=23.44
-++ GLSQ loop:0123456789.0123456789.0123456789.0123456789.0123456789.
- + GLSQ regression done: total CPU=0.00 Elapsed=33.89
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/130518/RESULTS/Stern/baseline_ListLength_EVENTS_censored_shifted_noblock_2/stats_var_130518_2_L_REML.func.gii
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/130518/RESULTS/Stern/baseline_ListLength_EVENTS_censored_shifted_noblock_2/errts_130518_2_L_REML.func.gii
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/130518/RESULTS/Stern/baseline_ListLength_EVENTS_censored_shifted_noblock_2/wherr_130518_2_L_REML.func.gii
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/130518/RESULTS/Stern/baseline_ListLength_EVENTS_censored_shifted_noblock_2/STATS_130518_2_L_REML.func.gii
- + unloading input dataset and REML matrices
-++ 3dREMLfit is all done! total CPU=0.00 Elapsed=36.88
+++ REML voxel loop: [15 threads]01234
+F
+Fatal Signal 2 (SIGINT) received
+ Bottom of Debug Stack
+** Command line was:
+3dREMLfit -matrix /data/nil-external/ccp/freund/ub55/out/glms/130518/RESULTS/Stern/baseline_ListLength_EVENTS_censored_shifted_noblock_2/X_2.xmat.1D -input /data/nil-bluearc/ccp-hcp/DMCC_ALL_BACKUPS/HCP_SUBJECTS_BACKUPS/fMRIPrep_AFNI_ANALYSIS/130518/INPUT_DATA/Stern/baseline/lpi_scale_tfMRI_SternBas2_PA_L.func.gii -Rvar /data/nil-external/ccp/freund/ub55/out/glms/130518/RESULTS/Stern/baseline_ListLength_EVENTS_censored_shifted_noblock_2/stats_var_130518_2_L_REML.func.gii -Rbuck /data/nil-external/ccp/freund/ub55/out/glms/130518/RESULTS/Stern/baseline_ListLength_EVENTS_censored_shifted_noblock_2/STATS_130518_2_L_REML.func.gii -rwherr /data/nil-external/ccp/freund/ub55/out/glms/130518/RESULTS/Stern/baseline_ListLength_EVENTS_censored_shifted_noblock_2/wherr_130518_2_L_REML.func.gii -rerrts /data/nil-external/ccp/freund/ub55/out/glms/130518/RESULTS/Stern/baseline_ListLength_EVENTS_censored_shifted_noblock_2/errts_130518_2_L_REML.func.gii -GOFORIT -fout -tout -nobout -noFDR -verb
+** AFNI version = AFNI_18.3.16  Compile date = Dec 11 2018
+** [[Precompiled binary linux_openmp_64: Dec 11 2018]]
+** Program Death **

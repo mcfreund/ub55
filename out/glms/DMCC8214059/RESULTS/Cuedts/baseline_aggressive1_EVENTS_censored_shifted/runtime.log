@@ -1,0 +1,23 @@
+++ 3dREMLfit: AFNI version=AFNI_18.3.16 (Dec 11 2018) [64-bit]
+++ Authored by: RWCox
+++ GOFORIT ==> Matrix de-singularization is engaged!
+++ Number of OpenMP threads = 15
+++ No mask ==> computing for all 10242 voxels
+++ -----  matrix condition (1300x642):  7.05702  ++ VERY GOOD ++
+++ Loading input dataset into memory
+ + masked off 888 voxels for being all zero; 9354 left in mask
+++ starting REML setup calculations; total CPU=0.00 Elapsed=10.85
+ + X matrix: 2.506% of elements are nonzero
+ + starting 15 OpenMP threads for REML setup
+ + REML setup finished: matrix rows=1300 cols=642; 109*1 cases; total CPU=0.00 Elapsed=669.79
+ +  average case bandwidth = 13.16
+++ REML voxel loop: [15 threads]0123456789.0123456789.0123456789.0123456789.01234567
+ + ARMA voxel parameters estimated: total CPU=0.00 Elapsed=716.32
+++ GLSQ loop:0123456789.0123456789.0123456789.0123456789.0123456789.
+ + GLSQ regression done: total CPU=0.00 Elapsed=1602.20
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/DMCC8214059/RESULTS/Cuedts/baseline_aggressive1_EVENTS_censored_shifted/stats_var_DMCC8214059_L_REML.func.gii
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/DMCC8214059/RESULTS/Cuedts/baseline_aggressive1_EVENTS_censored_shifted/errts_DMCC8214059_L_REML.func.gii
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/DMCC8214059/RESULTS/Cuedts/baseline_aggressive1_EVENTS_censored_shifted/wherr_DMCC8214059_L_REML.func.gii
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/DMCC8214059/RESULTS/Cuedts/baseline_aggressive1_EVENTS_censored_shifted/STATS_DMCC8214059_L_REML.func.gii
+ + unloading input dataset and REML matrices
+++ 3dREMLfit is all done! total CPU=0.00 Elapsed=1610.20

@@ -1,0 +1,12 @@
+** ERROR: matrix column #247 is all zero!?
+** ERROR: matrix column #248 is all zero!?
+** ERROR: matrix column #251 is all zero!?
+*+ WARNING: You said to GOFORIT, so here we GO!
+*+ WARNING: !! in  matrix:
+ * Largest singular value=2.0095
+ * 3 singular values are less than cutoff=2.0095e-07
+ * Implies strong collinearity in the matrix columns! 
+*+ WARNING: -GOFORIT ==> Charging ahead into battle!
+*+ WARNING: -----
+*+ WARNING: QR decomposition of [R]^(-1/2) [X] had 3 collinearity problems
+*+ WARNING: -----

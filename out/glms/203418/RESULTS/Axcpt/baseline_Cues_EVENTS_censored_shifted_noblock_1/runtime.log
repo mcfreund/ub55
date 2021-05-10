@@ -6,18 +6,18 @@
 ++ -----  matrix condition (610x127):  3.98629  ++ VERY GOOD ++
 ++ Loading input dataset into memory
  + masked off 881 voxels for being all zero; 9361 left in mask
-++ starting REML setup calculations; total CPU=0.00 Elapsed=2.98
+++ starting REML setup calculations; total CPU=0.00 Elapsed=2.99
  + X matrix: 12.037% of elements are nonzero
  + starting 15 OpenMP threads for REML setup
- + REML setup finished: matrix rows=610 cols=127; 109*1 cases; total CPU=0.00 Elapsed=8.64
+ + REML setup finished: matrix rows=610 cols=127; 109*1 cases; total CPU=0.00 Elapsed=5.75
  +  average case bandwidth = 13.15
 ++ REML voxel loop: [15 threads]0123456789.0123456789.0123456789.0123456789.01234567
- + ARMA voxel parameters estimated: total CPU=0.00 Elapsed=25.14
+ + ARMA voxel parameters estimated: total CPU=0.00 Elapsed=17.36
 ++ GLSQ loop:0123456789.0123456789.0123456789.0123456789.0123456789.
- + GLSQ regression done: total CPU=0.00 Elapsed=33.33
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/203418/RESULTS/Axcpt/baseline_Cues_EVENTS_censored_shifted_noblock_1/stats_var_203418_1_L_REML.func.gii
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/203418/RESULTS/Axcpt/baseline_Cues_EVENTS_censored_shifted_noblock_1/errts_203418_1_L_REML.func.gii
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/203418/RESULTS/Axcpt/baseline_Cues_EVENTS_censored_shifted_noblock_1/wherr_203418_1_L_REML.func.gii
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/203418/RESULTS/Axcpt/baseline_Cues_EVENTS_censored_shifted_noblock_1/STATS_203418_1_L_REML.func.gii
+ + GLSQ regression done: total CPU=0.00 Elapsed=27.71
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/203418/RESULTS/Axcpt/baseline_Cues_EVENTS_censored_shifted_noblock_1/stats_var_203418_1_R_REML.func.gii
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/203418/RESULTS/Axcpt/baseline_Cues_EVENTS_censored_shifted_noblock_1/errts_203418_1_R_REML.func.gii
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/203418/RESULTS/Axcpt/baseline_Cues_EVENTS_censored_shifted_noblock_1/wherr_203418_1_R_REML.func.gii
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/203418/RESULTS/Axcpt/baseline_Cues_EVENTS_censored_shifted_noblock_1/STATS_203418_1_R_REML.func.gii
  + unloading input dataset and REML matrices
-++ 3dREMLfit is all done! total CPU=0.00 Elapsed=37.66
+++ 3dREMLfit is all done! total CPU=0.00 Elapsed=31.37

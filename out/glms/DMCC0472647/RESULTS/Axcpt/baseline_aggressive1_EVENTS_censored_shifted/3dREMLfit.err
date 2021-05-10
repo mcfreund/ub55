@@ -1,0 +1,46 @@
+** ERROR: matrix column #60 is all zero!?
+** ERROR: matrix column #61 is all zero!?
+** ERROR: matrix column #62 is all zero!?
+** ERROR: matrix column #63 is all zero!?
+** ERROR: matrix column #64 is all zero!?
+** ERROR: matrix column #65 is all zero!?
+** ERROR: matrix column #66 is all zero!?
+** ERROR: matrix column #67 is all zero!?
+** ERROR: matrix column #68 is all zero!?
+** ERROR: matrix column #69 is all zero!?
+** ERROR: matrix column #70 is all zero!?
+** ERROR: matrix column #71 is all zero!?
+** ERROR: matrix column #72 is all zero!?
+** ERROR: matrix column #73 is all zero!?
+** ERROR: matrix column #74 is all zero!?
+** ERROR: matrix column #75 is all zero!?
+** ERROR: matrix column #76 is all zero!?
+** ERROR: matrix column #162 is all zero!?
+** ERROR: matrix column #163 is all zero!?
+** ERROR: matrix column #164 is all zero!?
+** ERROR: matrix column #165 is all zero!?
+** ERROR: matrix column #166 is all zero!?
+** ERROR: matrix column #167 is all zero!?
+** ERROR: matrix column #168 is all zero!?
+** ERROR: matrix column #169 is all zero!?
+** ERROR: matrix column #170 is all zero!?
+** ERROR: matrix column #171 is all zero!?
+** ERROR: matrix column #172 is all zero!?
+** ERROR: matrix column #173 is all zero!?
+** ERROR: matrix column #174 is all zero!?
+** ERROR: matrix column #175 is all zero!?
+** ERROR: matrix column #176 is all zero!?
+** ERROR: matrix column #177 is all zero!?
+** ERROR: matrix column #178 is all zero!?
+*+ WARNING: You said to GOFORIT, so here we GO!
+*+ WARNING: !! in  matrix:
+ * Largest singular value=2.16224
+ * 37 singular values are less than cutoff=2.16224e-07
+ * Implies strong collinearity in the matrix columns! 
+*+ WARNING: -GOFORIT ==> Charging ahead into battle!
+*+ WARNING: -----
+*+ WARNING: QR decomposition of [R]^(-1/2) [X] had 37 collinearity problems
+*+ WARNING: -----
+*+ WARNING: QR decomposition of GLT setup 542x490 matrix had 8 collinearity problems
+*+ WARNING: QR decomposition of GLT setup 542x490 matrix had 13 collinearity problems
+*+ WARNING: QR decomposition of GLT setup 542x490 matrix had 19 collinearity problems
