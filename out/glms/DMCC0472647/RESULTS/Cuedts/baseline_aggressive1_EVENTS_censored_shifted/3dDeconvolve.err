@@ -1,0 +1,14 @@
+*+ WARNING: -------------------------------------------------
+*+ WARNING: Problems with the X matrix columns, listed below:
+*+ WARNING: !! * Column 258 [l_A1#2] is all zeros
+*+ WARNING: !! * Columns 260 [l_A1#4] and 327 [l_2B#14] are (nearly?) collinear!
+*+ WARNING: !! * Column 271 [l_A1#15] is all zeros
+*+ WARNING: -------------------------------------------------
+*+ WARNING: !! in Signal+Baseline matrix:
+ * Largest singular value=1.97396
+ * 3 singular values are less than cutoff=1.97396e-07
+ * Implies strong collinearity in the matrix columns! 
+*+ WARNING: !! in Signal-only matrix:
+ * Largest singular value=1.71203
+ * 3 singular values are less than cutoff=1.71203e-07
+ * Implies strong collinearity in the matrix columns! 

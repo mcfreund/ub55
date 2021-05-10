@@ -1,0 +1,171 @@
+++ 3dREMLfit: AFNI version=AFNI_18.3.16 (Dec 11 2018) [64-bit]
+++ Authored by: RWCox
+++ GOFORIT ==> Matrix de-singularization is engaged!
+++ Number of OpenMP threads = 15
+++ No mask ==> computing for all 10242 voxels
+[7m** ERROR:[0m matrix column #162 is all zero!?
+[7m** ERROR:[0m matrix column #163 is all zero!?
+[7m** ERROR:[0m matrix column #164 is all zero!?
+[7m** ERROR:[0m matrix column #165 is all zero!?
+[7m** ERROR:[0m matrix column #166 is all zero!?
+[7m** ERROR:[0m matrix column #167 is all zero!?
+[7m** ERROR:[0m matrix column #168 is all zero!?
+[7m** ERROR:[0m matrix column #169 is all zero!?
+[7m** ERROR:[0m matrix column #170 is all zero!?
+[7m** ERROR:[0m matrix column #171 is all zero!?
+[7m** ERROR:[0m matrix column #172 is all zero!?
+[7m** ERROR:[0m matrix column #173 is all zero!?
+[7m** ERROR:[0m matrix column #174 is all zero!?
+[7m** ERROR:[0m matrix column #175 is all zero!?
+[7m** ERROR:[0m matrix column #176 is all zero!?
+[7m** ERROR:[0m matrix column #177 is all zero!?
+[7m** ERROR:[0m matrix column #178 is all zero!?
+[7m*+ WARNING:[0m You said to GOFORIT, so here we GO!
+ +          Note that a bunch of further WARNINGs will be generated below.
+++ Denominator DOF increased from 675 to 692 to allow for all zero columns
+++ -----  matrix condition (1217x542):  6.15814  ++ VERY GOOD ++
+[7m*+ WARNING:[0m !! in  matrix:
+ * Largest singular value=2.20498
+ * 20 singular values are less than cutoff=2.20498e-07
+ * Implies strong collinearity in the matrix columns! 
+++  matrix singular values:
+             0             0             0   4.64914e-09     1.288e-08
+   1.33834e-08   1.64721e-08   1.83847e-08   2.11659e-08   2.14706e-08
+   2.45793e-08   2.88061e-08   3.19406e-08   3.31159e-08   3.32688e-08
+   3.59766e-08   4.07492e-08   4.37237e-08    5.2744e-08   6.11038e-08
+      0.058144       0.11543      0.146626      0.190733      0.217255
+      0.223553      0.241279       0.25828      0.283807       0.29758
+      0.301869      0.309982      0.320237      0.322854      0.326202
+      0.333101      0.335096      0.347548      0.350725      0.354209
+      0.356894      0.357936      0.368613      0.371096      0.373365
+      0.382239      0.386799      0.395916      0.400175      0.402974
+      0.406199      0.412147      0.417343      0.423348      0.432633
+      0.441207      0.443875      0.447552      0.451364      0.458591
+      0.461613      0.462433      0.467949      0.471025      0.472565
+      0.482292      0.483377       0.48596      0.488825      0.490657
+      0.493138      0.498796      0.502749      0.505983      0.508289
+      0.513328      0.517699      0.521114      0.525745      0.527225
+      0.528309      0.532971      0.535736      0.536763      0.541204
+      0.541322      0.543157      0.546534      0.547987      0.551276
+      0.555441       0.55923      0.562705      0.564557      0.567646
+      0.571866      0.574847      0.575635      0.578757      0.583365
+      0.588177      0.588741      0.591409      0.594516      0.599613
+        0.6021      0.604818      0.608197       0.60974      0.613317
+      0.615267      0.615845      0.622015      0.624226      0.625034
+       0.62804      0.629533      0.636228      0.637034      0.639342
+      0.643996      0.646568      0.649466       0.65441      0.656957
+      0.657586      0.666095      0.668876       0.67055      0.673434
+      0.675449      0.677877      0.681663      0.683892      0.687331
+      0.688098      0.691106      0.693587      0.694783      0.696971
+       0.70101      0.702822      0.705874      0.707306      0.708724
+      0.710799      0.712292      0.713632      0.716036      0.718642
+       0.72202      0.723891      0.725868      0.730008       0.73297
+      0.734767      0.737473      0.741345      0.744114      0.744545
+      0.749262      0.751497      0.754798      0.758697       0.76094
+      0.766545      0.766955      0.768808      0.769709      0.771318
+      0.776568      0.777351      0.778056      0.779115      0.781001
+      0.784722      0.789517      0.790496      0.791445      0.795405
+      0.797758      0.801237      0.803853      0.806691      0.810211
+      0.813605      0.815798      0.816235      0.819065      0.821842
+      0.823641      0.826428       0.83007      0.831787      0.833584
+      0.836932       0.84004      0.840803      0.842775      0.843822
+      0.845399      0.848091       0.85307      0.854756      0.858486
+      0.860921      0.861872      0.863545      0.866959      0.870327
+      0.873441      0.874285      0.875573       0.88005      0.883589
+       0.88453      0.886766      0.887427      0.888781      0.893779
+      0.895034      0.897669      0.898516      0.902358      0.906565
+      0.906771      0.910098      0.913535      0.916119      0.917826
+      0.919286      0.922375      0.925077      0.926767      0.928775
+      0.931698      0.934679       0.93792      0.939835      0.943579
+      0.946332      0.950184      0.952096      0.955129      0.958453
+      0.958992      0.960254      0.961115      0.964096      0.968584
+      0.971358      0.973384      0.978193      0.981286      0.988466
+      0.992233      0.993733      0.995781      0.996589       0.99852
+      0.998889      0.999983      0.999988      0.999989      0.999992
+      0.999994      0.999997      0.999997      0.999998      0.999998
+      0.999999      0.999999      0.999999      0.999999      0.999999
+             1             1             1             1             1
+             1             1             1             1             1
+             1             1             1             1             1
+             1             1             1             1             1
+             1             1             1             1             1
+             1             1             1             1       1.00001
+       1.00001       1.00001       1.00016       1.00022        1.0004
+       1.00053       1.00085       1.00139       1.00192       1.00227
+       1.00293       1.00376       1.00514       1.00643       1.00811
+       1.00907       1.01011        1.0112       1.01214       1.01572
+       1.01583       1.01829       1.02087       1.02167       1.02373
+       1.02621       1.02821       1.02867       1.03271       1.03375
+       1.03581       1.03812       1.03975       1.04109       1.04482
+       1.04647       1.04772       1.04978       1.05155       1.05334
+       1.05383       1.05742       1.05934        1.0614       1.06454
+       1.06532       1.06748       1.06994       1.07264       1.07446
+       1.07696       1.07891       1.08103       1.08386       1.08623
+       1.08691       1.08904       1.08942       1.09244       1.09486
+       1.09632       1.09778       1.09906       1.10224       1.10416
+       1.10471       1.10708       1.10844       1.11008       1.11363
+       1.11598       1.11651       1.11931       1.12003       1.12243
+       1.12455       1.12576       1.12736       1.13147       1.13251
+       1.13447       1.13659       1.13865       1.13896       1.14108
+       1.14163       1.14389       1.14496        1.1467       1.14898
+       1.15114       1.15447       1.15558       1.15894       1.16003
+       1.16279       1.16508       1.16684       1.16873       1.17014
+       1.17201       1.17389       1.17744       1.18059       1.18195
+       1.18257       1.18454       1.18633       1.18875        1.1902
+        1.1928       1.19312       1.19538       1.19672       1.19897
+       1.19913       1.20226       1.20484       1.20765       1.20992
+       1.21064       1.21339        1.2142       1.21529       1.21845
+       1.21913       1.22108       1.22492        1.2267       1.22826
+       1.22858       1.22996         1.232       1.23315       1.23582
+       1.23794       1.23839       1.23986       1.24133       1.24324
+       1.24635       1.24681       1.25122       1.25342       1.25547
+        1.2564       1.25799       1.26189       1.26443       1.26515
+       1.26729       1.26917       1.27041       1.27244       1.27495
+       1.27566       1.27962       1.28275        1.2844       1.28791
+       1.28975       1.29082       1.29207       1.29312       1.29571
+       1.29634       1.29979       1.30171        1.3043       1.30647
+       1.30664       1.30755       1.30779       1.31011       1.31334
+       1.31425       1.31579       1.31817       1.31849       1.32203
+       1.32345       1.32458       1.32673       1.33001       1.33273
+       1.33515       1.33687        1.3409       1.34234       1.34501
+       1.34613       1.34794       1.35346       1.35709        1.3605
+       1.36214        1.3635       1.36725       1.36842       1.37078
+       1.37166       1.37452       1.37706       1.38206       1.38281
+       1.38606       1.38882       1.39121       1.39703       1.39887
+       1.40482       1.40843       1.41349       1.41863       1.42252
+       1.42534       1.43958       1.44426       1.44902       1.46011
+       1.46889       1.47613       1.47857       1.48684       1.49541
+       1.49984       1.50349        1.5147       1.52314       1.52546
+        1.5314       1.54029       1.54495       1.55313       1.69197
+       2.07683       2.20498
+[7m*+ WARNING:[0m -GOFORIT ==> Charging ahead into battle!
+ +                   ==> Check results carefully!
+++ Editing GLT matrices for all zero X matrix columns
+ + Removed 17 all zero rows from GLT matrix 'Full'; numerator DOF changes from 524 to 507
+ + GLT matrix 'T_ng' is all zero!
+++ Loading input dataset into memory
+ + masked off 881 voxels for being all zero; 9361 left in mask
+++ starting REML setup calculations; total CPU=0.00 Elapsed=5.83
+ + X matrix: 2.888% of elements are nonzero
+[7m*+ WARNING:[0m -----
+[7m*+ WARNING:[0m QR decomposition of [R]^(-1/2) [X] had 20 collinearity problems
+[7m*+ WARNING:[0m -----
+ + starting 15 OpenMP threads for REML setup
+ + REML setup finished: matrix rows=1217 cols=542; 109*1 cases; total CPU=0.00 Elapsed=636.63
+ +  average case bandwidth = 13.12
+++ REML voxel loop: [15 threads]0123456789.0123456789.0123456789.0123456789.01234567
+ + ARMA voxel parameters estimated: total CPU=0.00 Elapsed=685.18
+++ GLSQ loop:
+[7m*+ WARNING:[0m QR decomposition of GLT setup 542x507 matrix had 7 collinearity problems
+
+[7m*+ WARNING:[0m QR decomposition of GLT setup 542x507 matrix had 13 collinearity problems
+
+[7m*+ WARNING:[0m QR decomposition of GLT setup 542x17 matrix had 17 collinearity problems
+0123456789.0123456789.0123456789.0123456789.0123456789.
+ + GLSQ regression done: total CPU=0.00 Elapsed=1304.11
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/594156/RESULTS/Axcpt/baseline_aggressive1_EVENTS_censored_shifted/stats_var_594156_R_REML.func.gii
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/594156/RESULTS/Axcpt/baseline_aggressive1_EVENTS_censored_shifted/errts_594156_R_REML.func.gii
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/594156/RESULTS/Axcpt/baseline_aggressive1_EVENTS_censored_shifted/wherr_594156_R_REML.func.gii
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/594156/RESULTS/Axcpt/baseline_aggressive1_EVENTS_censored_shifted/STATS_594156_R_REML.func.gii
+ + unloading input dataset and REML matrices
+++ 3dREMLfit is all done! total CPU=0.00 Elapsed=1310.80

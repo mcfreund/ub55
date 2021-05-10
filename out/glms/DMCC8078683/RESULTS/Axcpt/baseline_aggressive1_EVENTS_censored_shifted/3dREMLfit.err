@@ -1,0 +1,27 @@
+** ERROR: matrix column #111 is all zero!?
+** ERROR: matrix column #112 is all zero!?
+** ERROR: matrix column #113 is all zero!?
+** ERROR: matrix column #114 is all zero!?
+** ERROR: matrix column #115 is all zero!?
+** ERROR: matrix column #116 is all zero!?
+** ERROR: matrix column #117 is all zero!?
+** ERROR: matrix column #118 is all zero!?
+** ERROR: matrix column #119 is all zero!?
+** ERROR: matrix column #120 is all zero!?
+** ERROR: matrix column #121 is all zero!?
+** ERROR: matrix column #122 is all zero!?
+** ERROR: matrix column #123 is all zero!?
+** ERROR: matrix column #124 is all zero!?
+** ERROR: matrix column #125 is all zero!?
+** ERROR: matrix column #126 is all zero!?
+** ERROR: matrix column #127 is all zero!?
+*+ WARNING: You said to GOFORIT, so here we GO!
+*+ WARNING: !! in  matrix:
+ * Largest singular value=2.11291
+ * 17 singular values are less than cutoff=2.11291e-07
+ * Implies strong collinearity in the matrix columns! 
+*+ WARNING: -GOFORIT ==> Charging ahead into battle!
+*+ WARNING: -----
+*+ WARNING: QR decomposition of [R]^(-1/2) [X] had 17 collinearity problems
+*+ WARNING: -----
+*+ WARNING: QR decomposition of GLT setup 542x17 matrix had 17 collinearity problems

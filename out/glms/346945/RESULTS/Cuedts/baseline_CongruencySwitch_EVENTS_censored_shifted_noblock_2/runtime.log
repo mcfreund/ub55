@@ -6,18 +6,18 @@
 ++ -----  matrix condition (650x102):  3.82065  ++ VERY GOOD ++
 ++ Loading input dataset into memory
  + masked off 881 voxels for being all zero; 9361 left in mask
-++ starting REML setup calculations; total CPU=0.00 Elapsed=4.20
+++ starting REML setup calculations; total CPU=0.00 Elapsed=3.72
  + X matrix: 15.011% of elements are nonzero
  + starting 15 OpenMP threads for REML setup
- + REML setup finished: matrix rows=650 cols=102; 109*1 cases; total CPU=0.00 Elapsed=7.35
+ + REML setup finished: matrix rows=650 cols=102; 109*1 cases; total CPU=0.00 Elapsed=7.46
  +  average case bandwidth = 13.16
 ++ REML voxel loop: [15 threads]0123456789.0123456789.0123456789.0123456789.01234567
- + ARMA voxel parameters estimated: total CPU=0.00 Elapsed=22.24
+ + ARMA voxel parameters estimated: total CPU=0.00 Elapsed=18.76
 ++ GLSQ loop:0123456789.0123456789.0123456789.0123456789.0123456789.
- + GLSQ regression done: total CPU=0.00 Elapsed=28.28
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/346945/RESULTS/Cuedts/baseline_CongruencySwitch_EVENTS_censored_shifted_noblock_2/stats_var_346945_2_L_REML.func.gii
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/346945/RESULTS/Cuedts/baseline_CongruencySwitch_EVENTS_censored_shifted_noblock_2/errts_346945_2_L_REML.func.gii
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/346945/RESULTS/Cuedts/baseline_CongruencySwitch_EVENTS_censored_shifted_noblock_2/wherr_346945_2_L_REML.func.gii
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/346945/RESULTS/Cuedts/baseline_CongruencySwitch_EVENTS_censored_shifted_noblock_2/STATS_346945_2_L_REML.func.gii
+ + GLSQ regression done: total CPU=0.00 Elapsed=25.25
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/346945/RESULTS/Cuedts/baseline_CongruencySwitch_EVENTS_censored_shifted_noblock_2/stats_var_346945_2_R_REML.func.gii
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/346945/RESULTS/Cuedts/baseline_CongruencySwitch_EVENTS_censored_shifted_noblock_2/errts_346945_2_R_REML.func.gii
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/346945/RESULTS/Cuedts/baseline_CongruencySwitch_EVENTS_censored_shifted_noblock_2/wherr_346945_2_R_REML.func.gii
+++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/346945/RESULTS/Cuedts/baseline_CongruencySwitch_EVENTS_censored_shifted_noblock_2/STATS_346945_2_R_REML.func.gii
  + unloading input dataset and REML matrices
-++ 3dREMLfit is all done! total CPU=0.00 Elapsed=32.19
+++ 3dREMLfit is all done! total CPU=0.00 Elapsed=28.98

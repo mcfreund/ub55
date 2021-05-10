@@ -44,16 +44,16 @@
  +                   ==> Check results carefully!
 ++ Loading input dataset into memory
  + masked off 881 voxels for being all zero; 9361 left in mask
-++ starting REML setup calculations; total CPU=0.00 Elapsed=4.69
+++ starting REML setup calculations; total CPU=0.00 Elapsed=3.56
  + X matrix: 10.181% of elements are nonzero
 [7m*+ WARNING:[0m -----
 [7m*+ WARNING:[0m QR decomposition of [R]^(-1/2) [X] had 1 collinearity problem
 [7m*+ WARNING:[0m -----
  + starting 15 OpenMP threads for REML setup
- + REML setup finished: matrix rows=590 cols=151; 109*1 cases; total CPU=0.00 Elapsed=25.90
+ + REML setup finished: matrix rows=590 cols=151; 109*1 cases; total CPU=0.00 Elapsed=13.23
  +  average case bandwidth = 12.94
 ++ REML voxel loop: [15 threads]0123456789.0123456789.0123456789.0123456789.01234567
- + ARMA voxel parameters estimated: total CPU=0.00 Elapsed=40.15
+ + ARMA voxel parameters estimated: total CPU=0.00 Elapsed=21.45
 ++ GLSQ loop:
 [7m*+ WARNING:[0m QR decomposition of GLT setup 151x139 matrix had 1 collinearity problem
 
@@ -63,10 +63,14 @@
 
 [7m*+ WARNING:[0m QR decomposition of GLT setup 151x139 matrix had 52 collinearity problems
 0123456789.0123456789.0123456789.0123456789.0123456789.
- + GLSQ regression done: total CPU=0.00 Elapsed=51.10
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/DMCC7297690/RESULTS/Stern/baseline_ListLength_EVENTS_censored_shifted_noblock_1/stats_var_DMCC7297690_1_R_REML.func.gii
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/DMCC7297690/RESULTS/Stern/baseline_ListLength_EVENTS_censored_shifted_noblock_1/errts_DMCC7297690_1_R_REML.func.gii
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/DMCC7297690/RESULTS/Stern/baseline_ListLength_EVENTS_censored_shifted_noblock_1/wherr_DMCC7297690_1_R_REML.func.gii
-++ Output dataset /data/nil-external/ccp/freund/ub55/out/glms/DMCC7297690/RESULTS/Stern/baseline_ListLength_EVENTS_censored_shifted_noblock_1/STATS_DMCC7297690_1_R_REML.func.gii
+ + GLSQ regression done: total CPU=0.00 Elapsed=34.29
+[7m** ERROR:[0m output dataset name 'stats_var_DMCC7297690_1_R_REML.func.gii' conflicts with existing file
+[7m** ERROR:[0m dataset NOT written to disk!
+[7m** ERROR:[0m output dataset name 'errts_DMCC7297690_1_R_REML.func.gii' conflicts with existing file
+[7m** ERROR:[0m dataset NOT written to disk!
+[7m** ERROR:[0m output dataset name 'wherr_DMCC7297690_1_R_REML.func.gii' conflicts with existing file
+[7m** ERROR:[0m dataset NOT written to disk!
+[7m** ERROR:[0m output dataset name 'STATS_DMCC7297690_1_R_REML.func.gii' conflicts with existing file
+[7m** ERROR:[0m dataset NOT written to disk!
  + unloading input dataset and REML matrices
-++ 3dREMLfit is all done! total CPU=0.00 Elapsed=54.73
+++ 3dREMLfit is all done! total CPU=0.00 Elapsed=34.43

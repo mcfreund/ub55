@@ -1,0 +1,83 @@
+*+ WARNING: '-stim_times 6' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC1328342/INPUT_DATA/Axcpt/baseline/DMCC1328342_Axcpt_baseline_F_ng_shifted.txt'
+*+ WARNING: '-stim_times 8' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC1328342/INPUT_DATA/Axcpt/baseline/DMCC1328342_Axcpt_baseline_M_ng_shifted.txt'
+*+ WARNING: '-stim_times 12' didn't read any good times from file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC1328342/INPUT_DATA/Axcpt/baseline/DMCC1328342_Axcpt_baseline_U_ng_shifted.txt'
+*+ WARNING: -stim_times 6 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 6' file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC1328342/INPUT_DATA/Axcpt/baseline/DMCC1328342_Axcpt_baseline_F_ng_shifted.txt' has no good stimulus time values
+*+ WARNING: -stim_times 8 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 8' file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC1328342/INPUT_DATA/Axcpt/baseline/DMCC1328342_Axcpt_baseline_M_ng_shifted.txt' has no good stimulus time values
+*+ WARNING: -stim_times 12 has all times equal to '*' ?!?!
+*+ WARNING: !! '-stim_times 12' file '/data/nil-external/ccp/freund/ub55/out/glms/DMCC1328342/INPUT_DATA/Axcpt/baseline/DMCC1328342_Axcpt_baseline_U_ng_shifted.txt' has no good stimulus time values
+*+ WARNING: -------------------------------------------------
+*+ WARNING: Problems with the X matrix columns, listed below:
+*+ WARNING: !! * Column 77 [F_ng#0] is all zeros
+*+ WARNING: !! * Column 78 [F_ng#1] is all zeros
+*+ WARNING: !! * Column 79 [F_ng#2] is all zeros
+*+ WARNING: !! * Column 80 [F_ng#3] is all zeros
+*+ WARNING: !! * Column 81 [F_ng#4] is all zeros
+*+ WARNING: !! * Column 82 [F_ng#5] is all zeros
+*+ WARNING: !! * Column 83 [F_ng#6] is all zeros
+*+ WARNING: !! * Column 84 [F_ng#7] is all zeros
+*+ WARNING: !! * Column 85 [F_ng#8] is all zeros
+*+ WARNING: !! * Column 86 [F_ng#9] is all zeros
+*+ WARNING: !! * Column 87 [F_ng#10] is all zeros
+*+ WARNING: !! * Column 88 [F_ng#11] is all zeros
+*+ WARNING: !! * Column 89 [F_ng#12] is all zeros
+*+ WARNING: !! * Column 90 [F_ng#13] is all zeros
+*+ WARNING: !! * Column 91 [F_ng#14] is all zeros
+*+ WARNING: !! * Column 92 [F_ng#15] is all zeros
+*+ WARNING: !! * Column 93 [F_ng#16] is all zeros
+*+ WARNING: !! * Column 111 [M_ng#0] is all zeros
+*+ WARNING: !! * Column 112 [M_ng#1] is all zeros
+*+ WARNING: !! * Column 113 [M_ng#2] is all zeros
+*+ WARNING: !! * Column 114 [M_ng#3] is all zeros
+*+ WARNING: !! * Column 115 [M_ng#4] is all zeros
+*+ WARNING: !! * Column 116 [M_ng#5] is all zeros
+*+ WARNING: !! * Column 117 [M_ng#6] is all zeros
+*+ WARNING: !! * Column 118 [M_ng#7] is all zeros
+*+ WARNING: !! * Column 119 [M_ng#8] is all zeros
+*+ WARNING: !! * Column 120 [M_ng#9] is all zeros
+*+ WARNING: !! * Column 121 [M_ng#10] is all zeros
+*+ WARNING: !! * Column 122 [M_ng#11] is all zeros
+*+ WARNING: !! * Column 123 [M_ng#12] is all zeros
+*+ WARNING: !! * Column 124 [M_ng#13] is all zeros
+*+ WARNING: !! * Column 125 [M_ng#14] is all zeros
+*+ WARNING: !! * Column 126 [M_ng#15] is all zeros
+*+ WARNING: !! * Column 127 [M_ng#16] is all zeros
+*+ WARNING: !! * Column 179 [U_ng#0] is all zeros
+*+ WARNING: !! * Column 180 [U_ng#1] is all zeros
+*+ WARNING: !! * Column 181 [U_ng#2] is all zeros
+*+ WARNING: !! * Column 182 [U_ng#3] is all zeros
+*+ WARNING: !! * Column 183 [U_ng#4] is all zeros
+*+ WARNING: !! * Column 184 [U_ng#5] is all zeros
+*+ WARNING: !! * Column 185 [U_ng#6] is all zeros
+*+ WARNING: !! * Column 186 [U_ng#7] is all zeros
+*+ WARNING: !! * Column 187 [U_ng#8] is all zeros
+*+ WARNING: !! * Column 188 [U_ng#9] is all zeros
+*+ WARNING: !! * Column 189 [U_ng#10] is all zeros
+*+ WARNING: !! * Column 190 [U_ng#11] is all zeros
+*+ WARNING: !! * Column 191 [U_ng#12] is all zeros
+*+ WARNING: !! * Column 192 [U_ng#13] is all zeros
+*+ WARNING: !! * Column 193 [U_ng#14] is all zeros
+*+ WARNING: !! * Column 194 [U_ng#15] is all zeros
+*+ WARNING: !! * Column 195 [U_ng#16] is all zeros
+*+ WARNING: !! * Columns 213 [C_X#0] and 323 [P_X#8] are (nearly?) collinear!
+*+ WARNING: !! * Columns 214 [C_X#1] and 324 [P_X#9] are (nearly?) collinear!
+*+ WARNING: !! * Columns 215 [C_X#2] and 325 [P_X#10] are (nearly?) collinear!
+*+ WARNING: !! * Columns 216 [C_X#3] and 326 [P_X#11] are (nearly?) collinear!
+*+ WARNING: !! * Columns 217 [C_X#4] and 327 [P_X#12] are (nearly?) collinear!
+*+ WARNING: !! * Columns 218 [C_X#5] and 328 [P_X#13] are (nearly?) collinear!
+*+ WARNING: !! * Columns 219 [C_X#6] and 329 [P_X#14] are (nearly?) collinear!
+*+ WARNING: !! * Columns 220 [C_X#7] and 330 [P_X#15] are (nearly?) collinear!
+*+ WARNING: !! * Columns 221 [C_X#8] and 331 [P_X#16] are (nearly?) collinear!
+*+ WARNING: !! * Column 236 [D_X#6] is all zeros
+*+ WARNING: !! * Column 237 [D_X#7] is all zeros
+*+ WARNING: !! * Column 342 [T_X#10] is all zeros
+*+ WARNING: -------------------------------------------------
+*+ WARNING: !! in Signal+Baseline matrix:
+ * Largest singular value=2.30925
+ * 63 singular values are less than cutoff=2.30925e-07
+ * Implies strong collinearity in the matrix columns! 
+*+ WARNING: !! in Signal-only matrix:
+ * Largest singular value=1.87691
+ * 63 singular values are less than cutoff=1.87691e-07
+ * Implies strong collinearity in the matrix columns! 

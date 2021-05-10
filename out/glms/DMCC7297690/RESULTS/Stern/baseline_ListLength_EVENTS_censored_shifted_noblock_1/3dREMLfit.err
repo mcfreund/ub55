@@ -10,3 +10,11 @@
 *+ WARNING: QR decomposition of GLT setup 151x139 matrix had 19 collinearity problems
 *+ WARNING: QR decomposition of GLT setup 151x139 matrix had 41 collinearity problems
 *+ WARNING: QR decomposition of GLT setup 151x139 matrix had 52 collinearity problems
+** ERROR: output dataset name 'stats_var_DMCC7297690_1_R_REML.func.gii' conflicts with existing file
+** ERROR: dataset NOT written to disk!
+** ERROR: output dataset name 'errts_DMCC7297690_1_R_REML.func.gii' conflicts with existing file
+** ERROR: dataset NOT written to disk!
+** ERROR: output dataset name 'wherr_DMCC7297690_1_R_REML.func.gii' conflicts with existing file
+** ERROR: dataset NOT written to disk!
+** ERROR: output dataset name 'STATS_DMCC7297690_1_R_REML.func.gii' conflicts with existing file
+** ERROR: dataset NOT written to disk!

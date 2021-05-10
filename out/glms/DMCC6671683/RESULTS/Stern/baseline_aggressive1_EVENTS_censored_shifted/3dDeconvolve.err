@@ -1,0 +1,14 @@
+*+ WARNING: -------------------------------------------------
+*+ WARNING: Problems with the X matrix columns, listed below:
+*+ WARNING: !! * Columns 225 [load7_RN#10] and 226 [load7_RN#11] are (nearly?) collinear!
+*+ WARNING: !! * Column 227 [load7_RN#12] is all zeros
+*+ WARNING: !! * Column 228 [load7_RN#13] is all zeros
+*+ WARNING: -------------------------------------------------
+*+ WARNING: !! in Signal+Baseline matrix:
+ * Largest singular value=2.05316
+ * 3 singular values are less than cutoff=2.05316e-07
+ * Implies strong collinearity in the matrix columns! 
+*+ WARNING: !! in Signal-only matrix:
+ * Largest singular value=1.71122
+ * 3 singular values are less than cutoff=1.71122e-07
+ * Implies strong collinearity in the matrix columns! 

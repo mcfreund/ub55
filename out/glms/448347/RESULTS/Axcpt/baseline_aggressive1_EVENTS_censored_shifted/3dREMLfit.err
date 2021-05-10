@@ -1,0 +1,54 @@
+** ERROR: matrix column #99 is all zero!?
+** ERROR: matrix column #104 is all zero!?
+** ERROR: matrix column #128 is all zero!?
+** ERROR: matrix column #129 is all zero!?
+** ERROR: matrix column #130 is all zero!?
+** ERROR: matrix column #131 is all zero!?
+** ERROR: matrix column #132 is all zero!?
+** ERROR: matrix column #133 is all zero!?
+** ERROR: matrix column #134 is all zero!?
+** ERROR: matrix column #135 is all zero!?
+** ERROR: matrix column #136 is all zero!?
+** ERROR: matrix column #137 is all zero!?
+** ERROR: matrix column #138 is all zero!?
+** ERROR: matrix column #139 is all zero!?
+** ERROR: matrix column #140 is all zero!?
+** ERROR: matrix column #141 is all zero!?
+** ERROR: matrix column #142 is all zero!?
+** ERROR: matrix column #143 is all zero!?
+** ERROR: matrix column #144 is all zero!?
+** ERROR: matrix column #162 is all zero!?
+** ERROR: matrix column #163 is all zero!?
+** ERROR: matrix column #164 is all zero!?
+** ERROR: matrix column #165 is all zero!?
+** ERROR: matrix column #166 is all zero!?
+** ERROR: matrix column #167 is all zero!?
+** ERROR: matrix column #168 is all zero!?
+** ERROR: matrix column #169 is all zero!?
+** ERROR: matrix column #170 is all zero!?
+** ERROR: matrix column #171 is all zero!?
+** ERROR: matrix column #172 is all zero!?
+** ERROR: matrix column #173 is all zero!?
+** ERROR: matrix column #174 is all zero!?
+** ERROR: matrix column #175 is all zero!?
+** ERROR: matrix column #176 is all zero!?
+** ERROR: matrix column #177 is all zero!?
+** ERROR: matrix column #178 is all zero!?
+** ERROR: matrix column #264 is all zero!?
+** ERROR: matrix column #276 is all zero!?
+** ERROR: matrix column #362 is all zero!?
+** ERROR: matrix column #363 is all zero!?
+** ERROR: matrix column #364 is all zero!?
+*+ WARNING: You said to GOFORIT, so here we GO!
+*+ WARNING: !! in  matrix:
+ * Largest singular value=2.12829
+ * 56 singular values are less than cutoff=2.12829e-07
+ * Implies strong collinearity in the matrix columns! 
+*+ WARNING: -GOFORIT ==> Charging ahead into battle!
+*+ WARNING: -----
+*+ WARNING: QR decomposition of [R]^(-1/2) [X] had 57 collinearity problems
+*+ WARNING: -----
+*+ WARNING: QR decomposition of GLT setup 542x483 matrix had 7 collinearity problems
+*+ WARNING: QR decomposition of GLT setup 542x483 matrix had 13 collinearity problems
+*+ WARNING: QR decomposition of GLT setup 542x483 matrix had 15 collinearity problems
+*+ WARNING: QR decomposition of GLT setup 542x17 matrix had 17 collinearity problems

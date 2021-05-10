@@ -1,0 +1,37 @@
+*+ WARNING: -------------------------------------------------
+*+ WARNING: Problems with the X matrix columns, listed below:
+*+ WARNING: !! * Columns 83 [F_ng#6] and 230 [D_X#0] are (nearly?) collinear!
+*+ WARNING: !! * Columns 84 [F_ng#7] and 231 [D_X#1] are (nearly?) collinear!
+*+ WARNING: !! * Columns 85 [F_ng#8] and 232 [D_X#2] are (nearly?) collinear!
+*+ WARNING: !! * Columns 86 [F_ng#9] and 233 [D_X#3] are (nearly?) collinear!
+*+ WARNING: !! * Columns 87 [F_ng#10] and 234 [D_X#4] are (nearly?) collinear!
+*+ WARNING: !! * Columns 88 [F_ng#11] and 235 [D_X#5] are (nearly?) collinear!
+*+ WARNING: !! * Columns 89 [F_ng#12] and 236 [D_X#6] are (nearly?) collinear!
+*+ WARNING: !! * Columns 90 [F_ng#13] and 237 [D_X#7] are (nearly?) collinear!
+*+ WARNING: !! * Columns 91 [F_ng#14] and 238 [D_X#8] are (nearly?) collinear!
+*+ WARNING: !! * Columns 92 [F_ng#15] and 239 [D_X#9] are (nearly?) collinear!
+*+ WARNING: !! * Columns 93 [F_ng#16] and 240 [D_X#10] are (nearly?) collinear!
+*+ WARNING: !! * Columns 111 [M_ng#0] and 135 [N_ng#7] are (nearly?) collinear!
+*+ WARNING: !! * Columns 112 [M_ng#1] and 136 [N_ng#8] are (nearly?) collinear!
+*+ WARNING: !! * Columns 113 [M_ng#2] and 137 [N_ng#9] are (nearly?) collinear!
+*+ WARNING: !! * Columns 114 [M_ng#3] and 138 [N_ng#10] are (nearly?) collinear!
+*+ WARNING: !! * Columns 115 [M_ng#4] and 139 [N_ng#11] are (nearly?) collinear!
+*+ WARNING: !! * Columns 116 [M_ng#5] and 140 [N_ng#12] are (nearly?) collinear!
+*+ WARNING: !! * Columns 117 [M_ng#6] and 141 [N_ng#13] are (nearly?) collinear!
+*+ WARNING: !! * Columns 118 [M_ng#7] and 142 [N_ng#14] are (nearly?) collinear!
+*+ WARNING: !! * Columns 119 [M_ng#8] and 143 [N_ng#15] are (nearly?) collinear!
+*+ WARNING: !! * Columns 120 [M_ng#9] and 144 [N_ng#16] are (nearly?) collinear!
+*+ WARNING: !! * Columns 128 [N_ng#0] and 225 [C_X#12] are (nearly?) collinear!
+*+ WARNING: !! * Columns 129 [N_ng#1] and 226 [C_X#13] are (nearly?) collinear!
+*+ WARNING: !! * Columns 130 [N_ng#2] and 227 [C_X#14] are (nearly?) collinear!
+*+ WARNING: !! * Columns 131 [N_ng#3] and 228 [C_X#15] are (nearly?) collinear!
+*+ WARNING: !! * Columns 132 [N_ng#4] and 229 [C_X#16] are (nearly?) collinear!
+*+ WARNING: -------------------------------------------------
+*+ WARNING: !! in Signal+Baseline matrix:
+ * Largest singular value=2.11154
+ * 26 singular values are less than cutoff=2.11154e-07
+ * Implies strong collinearity in the matrix columns! 
+*+ WARNING: !! in Signal-only matrix:
+ * Largest singular value=1.88015
+ * 26 singular values are less than cutoff=1.88015e-07
+ * Implies strong collinearity in the matrix columns! 

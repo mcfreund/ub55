@@ -1,0 +1,44 @@
+** ERROR: matrix column #43 is all zero!?
+** ERROR: matrix column #44 is all zero!?
+** ERROR: matrix column #45 is all zero!?
+** ERROR: matrix column #46 is all zero!?
+** ERROR: matrix column #47 is all zero!?
+** ERROR: matrix column #48 is all zero!?
+** ERROR: matrix column #49 is all zero!?
+** ERROR: matrix column #50 is all zero!?
+** ERROR: matrix column #51 is all zero!?
+** ERROR: matrix column #52 is all zero!?
+** ERROR: matrix column #53 is all zero!?
+** ERROR: matrix column #54 is all zero!?
+** ERROR: matrix column #55 is all zero!?
+** ERROR: matrix column #56 is all zero!?
+** ERROR: matrix column #57 is all zero!?
+** ERROR: matrix column #58 is all zero!?
+** ERROR: matrix column #59 is all zero!?
+** ERROR: matrix column #128 is all zero!?
+** ERROR: matrix column #129 is all zero!?
+** ERROR: matrix column #130 is all zero!?
+** ERROR: matrix column #131 is all zero!?
+** ERROR: matrix column #132 is all zero!?
+** ERROR: matrix column #133 is all zero!?
+** ERROR: matrix column #134 is all zero!?
+** ERROR: matrix column #135 is all zero!?
+** ERROR: matrix column #136 is all zero!?
+** ERROR: matrix column #137 is all zero!?
+** ERROR: matrix column #138 is all zero!?
+** ERROR: matrix column #139 is all zero!?
+** ERROR: matrix column #140 is all zero!?
+** ERROR: matrix column #141 is all zero!?
+** ERROR: matrix column #142 is all zero!?
+** ERROR: matrix column #143 is all zero!?
+** ERROR: matrix column #144 is all zero!?
+*+ WARNING: You said to GOFORIT, so here we GO!
+*+ WARNING: !! in  matrix:
+ * Largest singular value=2.39232
+ * 34 singular values are less than cutoff=2.39232e-07
+ * Implies strong collinearity in the matrix columns! 
+*+ WARNING: -GOFORIT ==> Charging ahead into battle!
+*+ WARNING: -----
+*+ WARNING: QR decomposition of [R]^(-1/2) [X] had 34 collinearity problems
+*+ WARNING: -----
+*+ WARNING: QR decomposition of GLT setup 542x17 matrix had 17 collinearity problems

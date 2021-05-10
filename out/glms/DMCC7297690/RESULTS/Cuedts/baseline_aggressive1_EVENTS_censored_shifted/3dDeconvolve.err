@@ -1,0 +1,24 @@
+*+ WARNING: -------------------------------------------------
+*+ WARNING: Problems with the X matrix columns, listed below:
+*+ WARNING: !! * Columns 247 [l_1A#10] and 484 [n_B2#0] are (nearly?) collinear!
+*+ WARNING: !! * Columns 248 [l_1A#11] and 485 [n_B2#1] are (nearly?) collinear!
+*+ WARNING: !! * Columns 249 [l_1A#12] and 486 [n_B2#2] are (nearly?) collinear!
+*+ WARNING: !! * Columns 250 [l_1A#13] and 487 [n_B2#3] are (nearly?) collinear!
+*+ WARNING: !! * Columns 251 [l_1A#14] and 488 [n_B2#4] are (nearly?) collinear!
+*+ WARNING: !! * Columns 252 [l_1A#15] and 489 [n_B2#5] are (nearly?) collinear!
+*+ WARNING: !! * Column 253 [l_1A#16] is all zeros
+*+ WARNING: !! * Column 254 [l_1A#17] is all zeros
+*+ WARNING: !! * Column 255 [l_1A#18] is all zeros
+*+ WARNING: !! * Column 490 [n_B2#6] is all zeros
+*+ WARNING: !! * Column 491 [n_B2#7] is all zeros
+*+ WARNING: !! * Column 492 [n_B2#8] is all zeros
+*+ WARNING: !! * Columns 567 [n_A1#7] and 568 [n_A1#8] are (nearly?) collinear!
+*+ WARNING: -------------------------------------------------
+*+ WARNING: !! in Signal+Baseline matrix:
+ * Largest singular value=2.19744
+ * 13 singular values are less than cutoff=2.19744e-07
+ * Implies strong collinearity in the matrix columns! 
+*+ WARNING: !! in Signal-only matrix:
+ * Largest singular value=1.7136
+ * 13 singular values are less than cutoff=1.7136e-07
+ * Implies strong collinearity in the matrix columns! 
