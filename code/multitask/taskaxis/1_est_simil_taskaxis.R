@@ -111,10 +111,16 @@ for (subj.i in seq_along(subjs))  {
     if (sum(has.signal.all.conds) <= 8) stop(paste0("bad parcel: ", subj.i, " ", parcel.i))
     
     U <- contrs.subj.parcel.i[has.signal.all.conds, , ]  ## get verts with signal
+    
+    U <- sweep(U, 2:3, colMeans(U))  ## center
     U <- apply(U, c("task", "run"), function(x) x / sqrt(sum(x^2)))  ## scale patterns to unit length
+    
     dim(U) <- c(nrow(U), length(tasks)*2)  ## concatenate runs column-wise (tasks vary faster)
-
-    d <- colMeans((U %*% M_test) * (U %*% M_train))  ## means to scale by num verts
+    
+    U_train <- apply((U %*% M_train), 2, function(x) x / sqrt(sum(x^2)))  ## ave across folds and rescale
+    U_test <- (U %*% M_test)
+    
+    d <- colSums(U_test * U_train)  ## correlate
     
     dim(d) <- c(4, 4)  ## tasks by comparison (run11, run22, run12, run21)
     
@@ -131,7 +137,7 @@ for (subj.i in seq_along(subjs))  {
 ## save ----
 
 if (!dir.exists(here("out", "multitask"))) dir.create(here("out", "multitask"))
-saveRDS(simil, here("out", "multitask", paste0("taskaxis_euclidean-unbiased_unpre.RDS")))
+saveRDS(simil, here("out", "multitask", paste0("taskaxis_correlation-unbiased_unpre.RDS")))
 
 
 (time.run <- Sys.time() - time.start)
