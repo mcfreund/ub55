@@ -6,11 +6,12 @@
 
 ## get vars
 
-glm_names=(Axcpt_Cues Cuedts_CongruencySwitch Stern_ListLength Stroop_Congruency Stroop_fix-item)
-#glm_names=(Axcpt_Cues_noblock Cuedts_CongruencySwitch_noblock Stern_ListLength_noblock Stroop_Congruency_noblock)
+#glm_names=(Axcpt_Cues Cuedts_CongruencySwitch Stern_ListLength Stroop_Congruency Stroop_fix-item)
+glm_names=(Axcpt_Cues_noblock Cuedts_CongruencySwitch_noblock Stern_ListLength_noblock Stroop_Congruency_noblock)
 sessions=baseline
-filename="/data/nil-external/ccp/freund/ub55/in/ub55_subjects.txt"
-mapfile -t subjects < $filename
+#filename="/data/nil-external/ccp/freund/ub55/in/ub55_subjects.txt"
+#mapfile -t subjects < $filename
+subjects=432332
 runs=(1 2)
 encoding_dir=(AP PA)
 
