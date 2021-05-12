@@ -28,16 +28,29 @@ pb <- progress_bar$new(
   total = n.iter, clear = FALSE, width = 120
 )
 
+## train on separate runs:
+# M_train_sub <- matrix(1/3, 4, 4)
+# diag(M_train_sub) <- 0
+# M_train <- cbind(
+#   rbind(M_train_sub, matrix(0, 4, 4)),
+#   rbind(matrix(0, 4, 4), M_train_sub),
+#   rbind(M_train_sub, matrix(0, 4, 4)),
+#   rbind(matrix(0, 4, 4), M_train_sub)
+# )
+# M_test <- cbind(diag(8), diag(8)[c(5:8, 1:4), ])
 
+## train on both runs:
 M_train_sub <- matrix(1/3, 4, 4)
 diag(M_train_sub) <- 0
 M_train <- cbind(
-  rbind(M_train_sub, matrix(0, 4, 4)),
-  rbind(matrix(0, 4, 4), M_train_sub),
-  rbind(M_train_sub, matrix(0, 4, 4)),
-  rbind(matrix(0, 4, 4), M_train_sub)
+  rbind(M_train_sub, M_train_sub),  ## tasks vary faster
+  rbind(M_train_sub, M_train_sub)
 )
-M_test <- cbind(diag(8), diag(8)[c(5:8, 1:4), ])
+M_test <- diag(8)  ## just for consistency with above.
+
+
+
+
 
 
 ## wrangle betas ----
@@ -79,12 +92,14 @@ gc()
 simil <- 
   array(
     NA,
-    dim = c(length(tasks), length(parcellation$key), length(subjs), 4),
+    dim = c(length(tasks), length(parcellation$key), length(subjs), 2),
+    # dim = c(length(tasks), length(parcellation$key), length(subjs), 4),
     dimnames = list(
       task = tasks, 
       parcel = parcellation$key, 
       subj = subjs, 
-      comparison = c("run11", "run22", "run12", "run21")
+      # comparison = c("run11", "run22", "run12", "run21")
+      comparison = c("run1", "run2")
       )
   )
 
@@ -122,7 +137,8 @@ for (subj.i in seq_along(subjs))  {
     
     d <- colSums(U_test * U_train)  ## correlate
     
-    dim(d) <- c(4, 4)  ## tasks by comparison (run11, run22, run12, run21)
+    # dim(d) <- c(4, 4)  ## tasks by comparison (run11, run22, run12, run21)
+    dim(d) <- c(4, 2)  ## tasks by comparison (run11, run22, run12, run21)
     
     simil[, parcel.i, subj.i, ] <- d
     
@@ -137,7 +153,9 @@ for (subj.i in seq_along(subjs))  {
 ## save ----
 
 if (!dir.exists(here("out", "multitask"))) dir.create(here("out", "multitask"))
-saveRDS(simil, here("out", "multitask", paste0("taskaxis_correlation-unbiased_unpre.RDS")))
+# saveRDS(simil, here("out", "multitask", paste0("taskaxis_correlation-unbiased_unpre.RDS")))
+saveRDS(simil, here("out", "multitask", paste0("taskaxis_euclidean-unbiased_unpre_train-bothrun.RDS")))
+
 
 
 (time.run <- Sys.time() - time.start)
