@@ -26,7 +26,7 @@ if (nodename == "ccp-freund") {
 
 
 
-parcellation <- mikeutils::read_atlas("schaefer400", path.atlas = dir.schaefer)
+parcellation <- suppressWarnings(mikeutils::read_atlas("schaefer400", path.atlas = dir.schaefer))
 
 if (nodename %in% c("ccplinux1", "PUTER")) {
   
