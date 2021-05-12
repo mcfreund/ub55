@@ -1,5 +1,5 @@
 ---
-title: 'multitask pattern similarity: sustained versus rest, cross-validated cosine similarity'
+title: 'multitask pattern similarity: sustained versus rest, cross-validated correlation'
 author: "michael freund"
 date: "`r Sys.Date()`"
 output:
@@ -14,7 +14,7 @@ output:
 
 # intro
 
-* cross-validated cosine similarity on sustained regressor (task versus rest)
+* cross-validated correlation on sustained regressor (task versus rest)
 * cross-task: leave one task out
 
 ## Purpose
@@ -34,7 +34,7 @@ library(colorspace)
 
 subjs <- subjs[!subjs %in% "432332"]
 
-rsarray <- readRDS(here("out", "multitask", paste0("taskaxis_euclidean-unbiased_unpre.RDS")))
+rsarray <- readRDS(here("out", "multitask", paste0("taskaxis_correlation-unbiased_unpre.RDS")))
 
 
 group.target.trs <- fread(here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
@@ -76,7 +76,7 @@ p.allcor.density <- stats.subjs %>%
   facet_grid(vars(comparison)) +
   
   theme(legend.position = "none") +
-  labs(x = "cv-cosinesim")
+  labs(x = "cv-correlation")
 
 
 p.allcor.box <- stats.subjs %>%
@@ -88,7 +88,7 @@ p.allcor.box <- stats.subjs %>%
   scale_fill_brewer(type = "qual", palette = 5) +
   
   theme(legend.position = "none") +
-  labs(y = "cv-cosinesim") 
+  labs(y = "cv-correlation") 
 
 
 
@@ -106,7 +106,7 @@ p.allcor.network <- stats.subjs %>%
     ) +
   
   theme(legend.position = "none") +
-  labs(y = "cv-cosinesim")
+  labs(y = "cv-correlation")
 
 
 plot_grid(
@@ -123,7 +123,7 @@ plot_grid(
 # Parcel-wise stats
 
 
-```{r fig.width = 10, fig.height = 7}
+```{r fig.width = 7, fig.height = 10}
 
 group.contrasts <- stats.subjs %>%
   
@@ -132,7 +132,7 @@ group.contrasts <- stats.subjs %>%
   summarize(
     p = wilcox.test(value)$p.value,
     statistic = wilcox.test(value)$statistic,
-    b = mean(value),
+    b = tanh(mean(atanh(value))),
     .groups = "drop_last"
     ) %>%
   
@@ -141,16 +141,11 @@ group.contrasts <- stats.subjs %>%
   group_by(p.fdr = p.adjust(p, "fdr"))
 
 
-# group.contrasts %>% filter(p < 0.05, comparison == "run11")
-
-# group.contrasts %>% arrange(statistic)
-
-
 stats.subjs %>%
   
   mutate(network = get.network(parcel)) %>% 
   group_by(task, comparison, network, subj) %>%
-  summarize(value = mean(value)) %>%
+  summarize(value = tanh(mean(atanh(value)))) %>%
   
   ggplot(aes(task, value)) +
   
@@ -158,7 +153,10 @@ stats.subjs %>%
   stat_summary(fun.data = "mean_cl_boot", geom = "errorbar", position = position_dodge(width = 1), width = 0) +
   facet_grid(vars(network), vars(comparison)) +
   
-  labs(y = "group-mean cross-task task-rest discriminability\n(cross-validated cosine simil)", title = "discriminability by train/test split (e.g., run12 == train1test2)")
+  labs(
+    y = "group-mean cross-task task-rest discriminability\n(cross-validated correlation)", 
+    title = "discriminability by train/test split (e.g., run12 == train1test2)"
+    )
 
 
 ```
@@ -173,9 +171,9 @@ stats.subjs %>%
 contrasts.subjs <- stats.subjs %>%
   
   group_by(task, parcel, subj) %>%
-  summarize(value = mean(value))
+  summarize(value = tanh(mean(atanh(value))))
 
-
+    
 group.contrasts <- contrasts.subjs %>%
   
   group_by(task, parcel) %>%
@@ -183,7 +181,7 @@ group.contrasts <- contrasts.subjs %>%
   summarize(
     p = wilcox.test(value)$p.value,
     statistic = wilcox.test(value)$statistic,
-    b = mean(value),
+    b = tanh(mean(atanh(value))),
     .groups = "drop_last"
     ) %>%
   
@@ -234,7 +232,7 @@ group.contrasts %>%
   group_by(parcel, num.roi, hemi) %>%
   summarize(
     ntasks = sum(p.fdr < 0.05),
-    b = mean(b)
+    b = tanh(mean(atanh(b)))
     ) %>%
 
   mutate(statistic = ifelse(ntasks == 4 & b > 0, b, 0)) %>%
@@ -256,7 +254,7 @@ group.contrasts %>%
 contrasts.subjs <- stats.subjs %>%
   
   group_by(task, parcel, subj) %>%
-  summarize(value = mean(value))
+  summarize(value = tanh(mean(atanh(value))))
 
 
 contrasts.subjs.35 <-
@@ -268,15 +266,15 @@ contrasts.subjs.35 <-
   ) %>%
   
   group_by(subj, task, parcelset) %>%
-  summarize(value = mean(value))
+  summarize(value = tanh(mean(atanh(value))))
 
 
 contrasts.subjs.35 %>%    
   group_by(task, parcelset) %>%
   summarize(
-    p = t.test(value)$p.value,
-    statistic = t.test(value)$statistic,
-    b = mean(value),
+    p = t.test(atanh(value))$p.value,
+    statistic = t.test(atanh(value))$statistic,
+    b = tanh(mean(atanh(value))),
     .groups = "drop_last"
     )
 
@@ -285,9 +283,9 @@ contrasts.subjs.35 %>%
   pivot_wider(names_from = "parcelset", values_from = "value") %>%
   group_by(task) %>%
   summarize(
-    p = t.test(dmcc35, null35, paired = TRUE)$p.value,
-    statistic = t.test(dmcc35, null35, paired = TRUE)$statistic,
-    b = mean(dmcc35) - mean(null35),
+    p = t.test(atanh(dmcc35), atanh(null35), paired = TRUE)$p.value,
+    statistic = t.test(atanh(dmcc35), atanh(null35), paired = TRUE)$statistic,
+    b = tanh(atanh(mean(dmcc35)) - atanh(mean(null35))),
     .groups = "drop_last"
     )
 
@@ -299,7 +297,7 @@ contrasts.subjs.35 %>%
   stat_summary(fun = mean, geom = "bar", position = position_dodge(width = 1)) +
   stat_summary(fun.data = "mean_cl_boot", geom = "errorbar", position = position_dodge(width = 1), width = 0, size = 1) +
   scale_fill_discrete_qualitative() +
-  labs(y = "mean cross-validated cosine similarity")
+  labs(y = "mean cross-validated correlation")
 
 ```
 
@@ -337,12 +335,14 @@ contrast.subjs %>%
   
   group_by(task, parcel) %>%
   summarize(z = atanh(cor(taskrest, hilo))) %>%
-  # mutate(network = get.network(parcel)) %>%
+  mutate(network = get.network(parcel)) %>%
   
   ggplot(aes(x = task, y = z)) +
   geom_boxplot() +
-  labs(y = "btw-subj correlation per parcel (z)", title = "subject-level relationship between taskrest and hilo contrast values")
-  # facet_grid(vars(network))
+  labs(
+    y = "btw-subj correlation per parcel (z)", 
+    title = "subject-level relationship between taskrest and hilo contrast values"
+    )
   
 
 

@@ -169,6 +169,109 @@ read_coefs <- function(
 
 
 
+
+read_coefs_2runpm <- function(
+  .subjs,
+  .task,
+  .glm,
+  .dir,
+  .getregs = function(x) !grepl("Full|block|Tstat|Fstat", x)
+) {
+  ## slightly more general function than read_betas: takes argument for pulling regressors, and works even if only
+  ## one regressor is pulled (hence the , drop = FALSE call)
+  ## works only for 2runpm glms
+  ## .getregs now optionally takes a string; this will ensure that the col labels are pulled for each subj individually
+  ## (useful if they have potentially different regressors?)
+  
+  # .subjs = subjs; .task = "Cuedts"; .glm = "baseline_aggressive1_EVENTS_censored_shifted"; .dir = dir.analysis
+  
+  
+  if (is.character(.getregs)) {
+    
+    regs <- .getregs
+    
+  } else if (is.function(.getregs)) {
+    
+    ## initialize array
+    
+  pick.a.file <- 
+    file.path(.dir, .subjs[1], "RESULTS",  .task, .glm, paste0("STATS_", subjs[1], "_L_REML.func.gii"))
+    labs <- afni("3dinfo", paste0("-label ", pick.a.file))
+    labs <- unlist(strsplit(labs, "\\|"))
+    is.reg <- .getregs(labs)
+    regs <- labs[is.reg]
+    
+  }
+
+  n.vertex <- 10242
+  n.reg <- length(regs)
+  n.subj <- length(subjs)
+  
+  betas <- array(
+    NA,
+    dim = c(n.vertex*2, n.reg, n.subj),
+    dimnames = list(vertex = NULL, reg = regs, subj = subjs)
+  )
+  
+  vertex.inds <- cbind(L = 1:n.vertex, R = (n.vertex + 1):(n.vertex * 2))
+  
+  for (subj.i in seq_along(subjs)) {
+    # subj.i = 1; hemi.i = "L"
+    
+    if (is.character(.getregs)) {
+      
+      pick.a.file <- 
+        file.path(.dir, .subjs[subj.i], "RESULTS",  .task, .glm, paste0("STATS_", subjs[subj.i], "_L_REML.func.gii"))
+      labs <- afni("3dinfo", paste0("-label ", pick.a.file))
+      labs <- unlist(strsplit(labs, "\\|"))
+      is.reg <- labs == .getregs
+      
+      if (sum(is.reg) != length(.getregs)) stop("pulled more regressors than aksed for!")
+      
+    }
+    
+    for (hemi.i in c("L", "R")) {
+      # hemi.i = "L"
+      
+      inds <- vertex.inds[, hemi.i]
+      
+      fname <- file.path(
+        .dir, .subjs[subj.i], "RESULTS",  .task, .glm,  
+        paste0("STATS_", subjs[subj.i], "_", hemi.i, "_REML.func.gii")
+      )
+      
+      if (!file.exists(fname)) next
+      
+      B <- mikeutils::read_gifti2matrix(fname)[is.reg, , drop = FALSE]  ## keep as matrix if only one reg pulled
+      
+      is.ok.i <- isTRUE(all.equal(dim(B), c(n.reg, n.vertex)))
+      if (!is.ok.i) stop("mismatched beta array")
+      
+      
+      for (reg.i in seq_len(n.reg)) {
+        # reg.i = 1
+        
+        is.reg.i <- grepl(paste0("^", regs[reg.i]), labs[is.reg])
+        B.reg.i <- t(B[is.reg.i, , drop = FALSE])
+        
+        is.ok.ii <- isTRUE(all.equal(prod(dim(betas[inds, reg.i, subj.i, drop = FALSE])), prod(dim(B.reg.i))))
+        if (!is.ok.ii) stop("mismatched regressor array")
+        
+        betas[inds, reg.i, subj.i] <- B.reg.i
+        
+      }
+      
+    }
+      
+  }
+  
+  betas
+  
+}
+
+
+
+
 symmat4ggplot <- function(R, var.names = c("v1", "v2"), val.name = "value") {
   
   ## make factors for row and column labels
