@@ -1,0 +1,491 @@
+---
+title: 'task axis projection: cross-task, TR-wise'
+author: "michael freund"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    highlight: zenburn
+    number_sections: true
+    theme: spacelab
+params:
+  prew: vanilla
+  glmt: 'null'
+  resi: errts
+
+---
+
+
+# intro
+
+* projections etc:
+  * cross task, train both runs
+  * network-level (schaefer 400 surfaces)
+* spatial prewhitening: `r params$prew`
+* GLM for residuals: `r params$glm`
+* residual types: `r params$resi`
+
+
+## Purpose
+
+
+```{r setup, include = FALSE}
+
+## for rendering
+if (FALSE) {
+  
+  render_report <- function(prew, glmt, resi) {
+    
+    # https://stackoverflow.com/questions/28500096/r-markdown-variable-output-name
+
+    rmarkdown::render(
+      "2_projection_withintask.Rmd",
+      params = list(
+        prew = prew,
+        glmt = glmt,
+        resi = resi
+      ),
+      output_file = paste0(
+        "2_projection_withintask_parc-network_",
+        "prew-", prew, "_glm-", glmt, "_resi-", resi,
+        ".html"
+        )
+    )
+  }
+  
+  # render_report(prew = "vanilla", glmt = "null", resi = "errts")
+  # params <- list(prew = "vanilla", glmt = "null", resi = "errts")
+  
+}
+
+
+source(here::here("code", "_packages.R"))
+source(here("code", "read-behav.R"))
+source(here("code", "_vars.R"))
+source(here("code", "_atlases.R"))
+source(here("code", "_settings.R"))
+source(here("code", "_funs.R"))
+
+
+subjs <- subjs[!subjs %in% c("432332", "DMCC5820265")]
+
+
+## design matrices:
+
+X <- enlist(tasks)
+X$Axcpt  <- readRDS(here("out", "glms", "xmats_Axcpt_baseline_Cues_EVENTS_censored_shifted.RDS"))
+X$Cuedts <- readRDS(here("out", "glms", "xmats_Cuedts_baseline_CongruencySwitch_EVENTS_censored_shifted.RDS"))
+X$Stern  <- readRDS(here("out", "glms", "xmats_Stern_baseline_ListLength_EVENTS_censored_shifted.RDS"))
+X$Stroop <- readRDS(here("out", "glms", "xmats_Stroop_baseline_Congruency_EVENTS_censored_shifted.RDS"))
+
+X <- map(X, ~.[, , subjs, ])  ## get good subjs
+
+x <- lapply(X, reshape2::melt)
+
+
+## projection time-series:
+
+A <- enlist(tasks)
+for (name.task.i in tasks) {
+  
+  A[[name.task.i]] <- readRDS( 
+    here(
+      "out", "taskaxis", 
+      paste0(
+        "projections_crosst_task-", name.task.i, 
+        "_parc-network_", 
+        "prew-", params$prew, "_glm-", params$glmt, "_resi-", params$resi, ".RDS"
+        )
+      )
+    )[, , , subjs]
+  
+}
+
+a <- lapply(A, reshape2::melt)
+# a <- lapply(A[1], reshape2::melt)
+
+## combine:
+
+for (name.task.i in tasks) {
+  
+    x_i <- dcast(as.data.table(x[[name.task.i]]), tr + subj + run ~ regressor)
+    a_i <- a[[name.task.i]]
+    
+    # a_i$run <- paste0("run", substr(a_i$fold, 3, 3))  ## make run col to bind with
+    a_i %<>% rename(run = fold)
+    
+    a[[name.task.i]] <- as.data.table(full_join(a_i, x_i, by = c("tr", "subj", "run")))
+    
+}
+
+
+## misc:
+
+group.target.trs <- fread(here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
+dmcc55b.parcels <- group.target.trs %>% filter(estimate > 0, p.fdr < 0.05) %>% pull(parcel) %>% table
+dmcc55b.parcels <- names(dmcc55b.parcels)[dmcc55b.parcels == 4]
+
+
+n.subj <- length(subjs)
+set.seed(0)
+rsubj <- sample.int(n.subj, 10)
+
+
+
+```
+
+
+## time-series
+
+
+```{r, fig.height = 8, fig.width = 12, results = "asis"}
+
+
+for (name.task.i in tasks) {
+  # name.task.i = "Axcpt"
+  
+  cat("\n")
+  cat(sprintf("\n### %s", name.task.i))
+  cat("\n")
+  
+  
+  ## group level
+  
+  a_i <- a[[name.task.i]][
+    , .(value = mean(value, na.rm = TRUE), block = mean(`block#0`)), 
+    by = c("tr", "roi", "run")
+    ]
+  
+  ## get TRs of block onset and offset
+  
+  block.reg <- a_i[, .(block = mean(block)), by = "tr"]$block
+  is.block.change <- abs(diff(abs(diff(block.reg)) > 0.05)) != 0  ## large change in 2nd deriv (onset of ON and OFF)
+  tr.block.change <- which(c(FALSE, is.block.change))
+  
+  
+  ## carpet plots
+  
+  p.c <- a_i %>%
+  
+    ggplot(aes(tr, roi)) +
+    
+    geom_tile(aes(fill = value)) +
+    geom_vline(xintercept = tr.block.change, color = "white", size = 1) +
+    
+    scale_fill_viridis_c(option = "inferno") +
+    facet_grid(rows = vars(run)) +
+    
+    labs(title = name.task.i) +
+    theme(legend.position = "top")
+  
+  print(p.c)
+  
+  
+  ## line plots
+
+  p.mu <- a_i %>%
+  
+    ggplot(aes(tr, value)) +
+    
+    geom_vline(xintercept = tr.block.change, color = "grey70") +
+    geom_hline(yintercept = 0, color = "grey70") +
+    geom_line(aes(color = roi, group = run), size = 1) +
+    
+    facet_grid(rows = vars(roi)) +
+    
+    labs(title = paste0(name.task.i), caption = "line per run") +
+    theme(legend.position = "none")
+  
+  print(p.mu)
+  
+  
+  p.ci <- a[[name.task.i]] %>%
+    
+    ggplot(aes(tr, value)) +
+    
+    geom_vline(xintercept = tr.block.change, color = "grey70") +
+    geom_hline(yintercept = 0, color = "grey70") +
+    stat_summary(aes(fill = roi, group = run), fun.data = mean_cl_boot, geom = "ribbon", alpha = 0.5) +
+
+    facet_grid(rows = vars(roi)) +
+    
+    labs(title = paste0(name.task.i, " 95%CI"), caption = "ribbon per run") +
+    theme(legend.position = "none")
+  
+  print(p.ci)
+  
+  
+  p.t <- a[[name.task.i]] %>%
+    
+    ggplot(aes(tr, value)) +
+    
+    geom_vline(xintercept = tr.block.change, color = "grey70") +
+    geom_hline(yintercept = 0, color = "grey70") +
+    stat_summary(aes(color = roi, group = run), fun = ~t.test(.)$statistic, geom = "line", size = 1) +
+    
+    facet_grid(rows = vars(roi)) +
+    
+    labs(title = paste0(name.task.i, " t stat"), caption = "ribbon per run") +
+    theme(legend.position = "none")
+  
+  print(p.t)
+  
+  
+  
+  for (roi.i in unique(get.network(parcellation$key))) {
+    
+    
+    p.roi <- a[[name.task.i]] %>%
+    
+      filter(roi == roi.i) %>%
+    
+      ggplot(aes(tr, value)) +
+      
+      geom_vline(xintercept = tr.block.change, color = "grey70") +
+      geom_hline(yintercept = 0, color = "grey70") +
+      geom_line(aes(group = subj), alpha = 0.25) +
+      stat_summary(fun = mean, geom = "line", size = 1, color = "white") +
+      
+      facet_grid(rows = vars(run)) +
+      
+      labs(title = paste0(roi.i, " ", name.task.i, " subjects"))
+    
+    print(p.roi)
+    
+    
+  }
+  
+  ## subj-level
+  
+  p.subj <-
+    a[[name.task.i]] %>%
+      
+      filter(subj %in% subjs[rsubj], roi == "DorsAttn") %>%
+  
+      ggplot(aes(tr, value)) +
+      
+      geom_hline(yintercept = 0, color = "grey70") +
+      geom_line(aes(group = subj, color = subj), size = 1) +
+    
+      facet_grid(rows = vars(subj), cols = vars(run))
+  
+  print(p.subj)
+    
+    
+}
+
+
+
+```
+
+
+## time-aggregated
+
+
+```{r, fig.height = 8, fig.width = 12, results = "asis"}
+
+
+lmfit <- function(.) {
+  
+  i <- which(.$is.included > 0)
+  j <- -grep("movregs|Run|included|tr|roi|subj|fold|value|run", names(.))
+
+  .x <- as.matrix(cbind(1, .[i, j]))
+  .y <- .$value[i]
+
+  b <- coef(.lm.fit(x = .x, y = .y))
+
+  data.frame(b, term = c("b0", names(.)[j]))
+  
+}
+
+
+
+for (name.task.i in tasks) {
+  # name.task.i = "Axcpt"
+  
+  cat("\n")
+  cat(sprintf("\n### %s", name.task.i))
+  cat("\n")
+  
+  
+  a_cross <- a[[name.task.i]]  ## cros-run only
+  
+  
+  ## fit model on projections
+  
+  a_i <- a_cross %>%
+    
+    group_by(subj, roi, run) %>%
+    
+    nest %>%
+    
+    mutate(new = map(data, lmfit)) %>% 
+    
+    select(-data) %>% unnest(cols = c(new))
+  
+  a_i$event.type <- gsub("#[0-9]*", "", a_i$term)
+  a_i$knot <- gsub("b0|block#0|.*#([0-9]*)", "\\1", a_i$term)
+  
+  
+  ## plot coefficients
+  
+  p.block <- a_i %>%
+    
+    filter(event.type %in% c("block", "b0")) %>%
+    group_by(subj, roi, term, event.type, knot) %>%
+    summarize(b = mean(b)) %>%
+  
+    ggplot(aes(roi, b)) +
+    
+    geom_hline(yintercept = 0) +
+    stat_summary(
+      aes(color = event.type), fun.data = mean_cl_boot, position = position_dodge(width = 0.25),
+      size = 1
+      ) +
+    
+    scale_color_discrete_qualitative() +
+    
+    labs(title = paste0(name.task.i, " block coefs"))
+
+  
+  print(p.block)
+  
+  
+  p.event <-  a_i %>%
+    
+    filter(!event.type %in% c("b0", "block")) %>%
+    group_by(subj, roi, term, event.type, knot) %>%
+    summarize(b = mean(b)) %>%
+  
+    ggplot(aes(as.numeric(knot), b)) +
+    
+    geom_hline(yintercept = 0) +
+    stat_summary(aes(color = roi), fun.data = mean_cl_boot) +
+    
+    facet_grid(rows = vars(event.type), cols = vars(roi)) +
+    
+    labs(title = paste0(name.task.i, " event coefs"))
+  
+  
+  print(p.event)
+  
+  ## by num. 'active' TRs
+  
+  j <- -grep("movregs|Run|included|tr|roi|subj|fold|value|run|block#0", names(a_cross))
+  a_cross$n.active.tr <- round(rowSums(a_cross[, ..j]))
+  
+  a_active <- a_cross[, .(value = mean(value)), by = c("subj", "roi", "run", "n.active.tr")]
+  
+  p.active <- a_active %>%
+    
+    ggplot(aes(n.active.tr, value)) +
+    
+    geom_hline(yintercept = 0) +
+    stat_summary(aes(color = roi), fun.data = mean_cl_boot) +
+    
+    facet_grid(cols = vars(roi)) +
+    
+    labs(title = paste0(name.task.i), x = "number of concurrently 'active' regressors") +
+    theme(legend.position = "none")
+  
+  print(p.active)
+  
+  t.active <- kable(
+    table(a_cross$n.active.tr, a_cross$`block#0` > 0) / nrow(a_cross) * 100,
+    col.names = c("block<=0", "block>0"),
+    caption = "percentage of TRs by number of concurrently 'active' event regressors in rest (block<=0) and task (block>0)"
+    )
+  
+  print(t.active)
+  
+}
+
+
+```
+
+
+## decoding analysis
+
+* cutpoints (not implemented yet!)
+* exclusion of run and block on/off boundaries
+
+```{r}
+
+## estimate cutpoints
+
+for (name.task.i in tasks) {
+  # name.task.i = "Axcpt"
+  
+  a_i <- a[[name.task.i]]
+  
+  ## exclude TRs
+  
+  from <- unique(a_i[`blockONandOFF#0` > 0.99]$tr)
+  to <- unique(a_i[`blockONandOFF#12` > 0.99]$tr)
+  if (length(from) != length(to)) stop("bad blockONandOFF.")
+  exclude <- vector("list", length(from))
+  for (ii in seq_along(from)) exclude[[ii]] <- from[ii]:to[ii]  ## block boundaries
+  exclude <- c(unlist(exclude), c(1:6, ((n.trs[name.task.i]/2)-6):(n.trs[name.task.i] / 2)))  ## run boundaries
+  
+  a_i <- a_i[!tr %in% exclude & is.included == 1, ]
+  
+  a_i$block <- ifelse(a_i$`block#0` > 0.5, "task", "rest")    ## get task versus rest: not a great way to do this
+  
+  # plot(a_i$tr, a_i$block == "task")
+  # n.tr.task <- sum(rowMeans(X[[name.task.i]], dim = 2)[, "block#0"] > 0.5)
+  ## assume equal cutpoint, shift according to proportion
+  ## need info from task axis: axis/2.
+  
+  p.cutp.means <- a_i %>%
+    
+    group_by(subj, roi, block) %>%
+    summarize(proj = mean(value)) %>%
+    
+    ggplot(aes(roi, proj, color = block)) +
+    
+    geom_hline(yintercept = 0) +
+    stat_summary(fun.data = mean_cl_boot, position = position_dodge(width = 0.25)) +
+    
+    labs(
+      title = paste0(name.task.i, " cross-run projection, w/ est. cutpoint"), 
+      x = "schaefer network"
+      )
+  
+  print(p.cutp.means)  
+  
+  
+  p.cutp.t <- a_i %>%
+
+    ggplot(aes(tr, value)) +
+    
+    geom_hline(yintercept = 0, color = "grey70") +
+    stat_summary(aes(color = roi), fun = ~t.test(.)$statistic, geom = "point", size = 1) +
+    
+    facet_grid(rows = vars(roi)) +
+    
+    labs(title = paste0(name.task.i, " t stat, cross-run, w/ est. cutpoint")) +
+    theme(legend.position = "none")
+  
+  print(p.cutp.t)
+  
+  p.cutp.subj <- a_i %>%
+        
+    filter(subj %in% subjs[rsubj], roi == "DorsAttn") %>%
+
+    ggplot(aes(tr, value)) +
+    
+    geom_hline(yintercept = 0, color = "grey70") +
+    geom_point(aes(group = subj, color = subj), size = 1) +
+  
+    facet_grid(rows = vars(subj), cols = vars(run), scales = "free_y") +
+    theme(legend.position = "none")
+  
+  print(p.cutp.subj)
+  
+  
+}
+
+
+```

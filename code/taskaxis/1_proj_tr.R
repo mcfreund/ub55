@@ -2,7 +2,7 @@
 source(here::here("code", "_packages.R"))
 source(here("code", "read-behav.R"))
 source(here("code", "_vars.R"))
-suppressWarnings(source(here("code", "_atlases.R")))
+source(here("code", "_atlases.R"))
 source(here("code", "_settings.R"))
 source(here("code", "_funs.R"))
 
@@ -22,6 +22,10 @@ glminfo <- data.frame(
     "baseline_Congruency_EVENTS_censored_shifted"
   ),
   name.glm.noblock = c(
+    # "baseline_null",
+    # "baseline_null",
+    # "baseline_null",
+    # "baseline_null"
     "baseline_Cues_EVENTS_censored_shifted_noblock",
     "baseline_CongruencySwitch_EVENTS_censored_shifted_noblock",
     "baseline_ListLength_EVENTS_censored_shifted_noblock",
@@ -88,7 +92,8 @@ for (task.i in seq_along(tasks)) {
   # task.i = 4
   
   name.task.i <- glminfo[task.i]$task
-  contrs.task.i <- contrs[, , name.task.i, ]
+  # contrs.task.i <- contrs[, , name.task.i, ]  ## for within-task
+  contrs.task.i <- rowMeans(contrs[, , -task.i, ], dims = 2)  ## for cross-task
   
   ## get n.tr:
   
@@ -97,10 +102,11 @@ for (task.i in seq_along(tasks)) {
   proj <-
     array(
       NA,
-      dim = c(n.tr, 4, length(rois), length(subjs)),
+      dim = c(n.tr, 2, length(rois), length(subjs)),
       dimnames = list(
         tr = NULL,
-        fold = c("1_1", "2_1", "1_2", "2_2"),  ## train, test
+        # fold = c("1_1", "2_1", "1_2", "2_2"),  ## train, test
+        fold = c("run1", "run2"),  ## for cross-task (test)
         roi = rois,
         subj = subjs
       )
@@ -115,8 +121,9 @@ for (task.i in seq_along(tasks)) {
     if (subjs[subj.i] == "DMCC5820265") next
     
     name.subj.i <- subjs[subj.i]
-    U <- contrs.task.i[, name.subj.i, ]
-
+    # U <- contrs.task.i[, name.subj.i, ]
+    U <- contrs.task.i[, name.subj.i, drop = FALSE]  ## for cross-task
+    
     
     for (run.i in 1:2) {  ## test run
       # run.i = 1
@@ -139,22 +146,26 @@ for (task.i in seq_along(tasks)) {
         
         ## exclude verts with no signal:
         
-        has.signal.all.runs <- !rowSums(abs(U_roi) < .Machine$double.eps) > 0
+        # has.signal.all.runs <- !rowSums(abs(U_roi) < .Machine$double.eps) > 0  ## for within-task
+        has.signal.all.runs <- (abs(U_roi) > .Machine$double.eps)
         good.vert <- apply(x, 2, var) > .Machine$double.eps
         j <- good.vert & has.signal.all.runs  ## subset by
         
         x_j <- x[, j]
-        U_roi_j <- U_roi[j, ]
+        # U_roi_j <- U_roi[j, ]  ## within-task
+        U_roi_j <- U_roi[j]  ## cross-task
         
         # good.tr <- apply(x, 1, var) > .Machine$double.eps  ## TRs that weren't censored
-
+        
         ## project:
         
-        U_roi_j <- apply(U_roi_j, 2, function(x) x / sqrt(sum(x^2)))  ## scale vectors to unit length
+        # U_roi_j <- apply(U_roi_j, 2, function(x) x / sqrt(sum(x^2)))  ## scale vectors to unit length (withintask)
+        U_roi_j <- U_roi_j / sqrt(sum(U_roi_j^2))  ## scale vectors to unit length (crosstask)
         p_j <- x_j %*% U_roi_j
         
         
-        proj[, paste0(1:2, "_", run.i), mask.i, subj.i] <- p_j
+        # proj[, paste0(1:2, "_", run.i), mask.i, subj.i] <- p_j  ## within-task
+        proj[, paste0("run", run.i), mask.i, subj.i] <- p_j  ## cros-task
         
         
       }
@@ -169,9 +180,12 @@ for (task.i in seq_along(tasks)) {
     proj, 
     here(
       "out", "taskaxis", 
-      paste0("projections_task-", name.task.i, "_parc-network_prew-vanilla_glm-noblock_resi-errts.RDS")
-      )
+      # paste0("projections_task-", name.task.i, "_parc-network_prew-vanilla_glm-null_resi-errts.RDS")
+      # paste0("projections_task-", name.task.i, "_parc-network_prew-vanilla_glm-noblock_resi-errts.RDS")
+      # paste0("projections_crosst_task-", name.task.i, "_parc-network_prew-vanilla_glm-null_resi-errts.RDS")
+      paste0("projections_crosst_task-", name.task.i, "_parc-network_prew-vanilla_glm-noblock_resi-errts.RDS")
     )
+  )
   
   print(paste0(name.task.i, " done."))
   
@@ -222,3 +236,4 @@ for (task.i in seq_along(tasks)) {
 # 
 # d[n.missing > 0]
 # 
+# here::here("out", "glms", name.subj.i, "RESULTS", name.task.i, paste0(glminfo[task.i]$name.glm.noblock, "_", run.i))
