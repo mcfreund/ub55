@@ -8,7 +8,7 @@ source(here("code", "_funs.R"))
 
 
 do.network <- TRUE
-do.prew <- FALSE
+do.prew <- TRUE
 name.glm <- "baseline_cueletnum_EVENTS_censored_shifted"
 
 
@@ -43,7 +43,10 @@ n.tr <- dim(simil)[4]
 
 is.lower.tri <- lower.tri(diag(n.reg))
 
-## TODO: add code for reading/writing models
+
+ctsmods <- readRDS(here::here("out", "cuedts", "rsmods_full.RDS"))
+X <- as.matrix(data.table::fread(here::here("out", "cuedts", "rsmods_lt.csv")))
+
 
 ## prepare similarity matrices for regression ----
 
@@ -117,29 +120,4 @@ fwrite(
 
 
 ## ---
-
-
-
-stats.subjs %>%
-  
-  # filter(parcel == "Vis") %>%
-  
-  ggplot(aes(tr, beta)) +
-  
-  geom_hline(yintercept = 0, color = "black") +
-  stat_summary(fun.data = mean_cl_boot, geom = "ribbon", alpha = 0.5) +
-  
-  facet_grid(rows = vars(parcel), cols = vars(term))
-
-
-stats.subjs %>%
-  
-  # filter(parcel == "Vis") %>%
-  
-  ggplot(aes(tr, beta)) +
-  
-  geom_hline(yintercept = 0, color = "black") +
-  stat_summary(fun = ~t.test(.)$statistic, geom = "line") +
-  
-  facet_grid(rows = vars(parcel), cols = vars(term))
 

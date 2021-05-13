@@ -1,0 +1,187 @@
+---
+title: 'cuedts RSA: cross-validated'
+author: "michael freund"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    highlight: zenburn
+    number_sections: true
+    theme: spacelab
+params:
+  prew: vanilla
+---
+
+
+# intro
+
+* cross-validated across runs:
+* network-level (schaefer 400 surfaces)
+* spatial prewhitening: `r params$prew`
+
+
+## Purpose
+
+
+```{r setup, include = FALSE}
+
+## for rendering
+if (FALSE) {
+  
+  render_report <- function(prew, glmt, resi) {
+    
+    # https://stackoverflow.com/questions/28500096/r-markdown-variable-output-name
+
+    rmarkdown::render(
+      "cuedts_rsa.Rmd",
+      params = list(
+        prew = prew
+      ),
+      output_file = paste0(
+        "cuedts_rsa_parc-network_",
+        "_est-cval", "_prew-", prew,
+        ".html"
+        )
+    )
+  }
+  
+  # render_report(prew = "vanilla", glmt = "noblock", resi = "errts")
+  # params <- list(prew = "vanilla")
+  
+}
+
+source(here::here("code", "_packages.R"))
+source(here("code", "read-behav.R"))
+source(here("code", "_vars.R"))
+source(here("code", "_atlases.R"))
+source(here("code", "_settings.R"))
+source(here("code", "_funs.R"))
+
+
+subjs <- subjs[!subjs %in% c("432332", "DMCC5820265")]
+
+
+stats.subjs <- fread(
+  here(
+    "out", "cuedts",  
+    paste0(
+      "stats-subjs",
+      "_est-cval", 
+      "_prew-", params$prew, 
+      ".RDS"
+      )
+    )
+)
+
+
+
+## misc:
+
+group.target.trs <- fread(here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
+dmcc55b.parcels <- group.target.trs %>% filter(estimate > 0, p.fdr < 0.05) %>% pull(parcel) %>% table
+dmcc55b.parcels <- names(dmcc55b.parcels)[dmcc55b.parcels == 4]
+
+
+n.subj <- length(subjs)
+set.seed(0)
+rsubj <- sample.int(n.subj, 10)
+
+
+
+```
+
+
+## all data
+
+
+```{r, fig.height = 8, fig.width = 12, results = "asis"}
+
+
+p.allcor.density <- stats.subjs %>%
+  
+  ggplot(aes(value, y = task, fill = task)) +
+  geom_density_ridges() +
+  
+  scale_fill_brewer(type = "qual", palette = 5) +
+  
+  facet_grid(vars(comparison)) +
+  
+  theme(legend.position = "none") +
+  labs(x = "cv-euclidean")
+
+
+p.allcor.box <- stats.subjs %>%
+  
+  ggplot(aes(task, value, fill = task)) +
+  geom_hline(yintercept = 0) +
+  geom_boxplot(width = 0.1, notch = TRUE) +
+  
+  scale_fill_brewer(type = "qual", palette = 5) +
+  
+  theme(legend.position = "none") +
+  labs(y = "cv-euclidean") 
+
+
+
+p.allcor.network <- stats.subjs %>%
+  
+  ggplot(aes(value, y = task, fill = task)) +
+  geom_density_ridges() +
+  
+  scale_fill_brewer(type = "qual", palette = 5) +
+  
+  facet_grid(
+    rows = vars(get.network(parcel)), 
+    labeller = labeller(run = c(bt = "between-run", wn = "within-run")),
+    scales = "free_x"
+    ) +
+  
+  theme(legend.position = "none") +
+  labs(y = "cv-euclidean")
+
+
+plot_grid(
+  cowplot.title("Pattern correlations by components of RSA model"),
+  plot_grid(plot_grid(p.allcor.density, p.allcor.box, ncol = 1), p.allcor.network, nrow = 1),
+  ncol = 1, 
+  rel_heights = c(0.1, 1)
+)
+
+
+```
+
+
+
+
+```{r}
+
+
+stats.subjs %>%
+  
+  # filter(parcel == "Vis") %>%
+  
+  ggplot(aes(tr, beta)) +
+  
+  geom_hline(yintercept = 0, color = "black") +
+  stat_summary(fun.data = mean_cl_boot, geom = "ribbon", alpha = 0.5) +
+  
+  facet_grid(rows = vars(parcel), cols = vars(term))
+
+
+stats.subjs %>%
+  
+  # filter(parcel == "Vis") %>%
+  
+  ggplot(aes(tr, beta)) +
+  
+  geom_hline(yintercept = 0, color = "black") +
+  stat_summary(fun = ~t.test(.)$statistic, geom = "line") +
+  
+  facet_grid(rows = vars(parcel), cols = vars(term))
+
+
+
+
+```
+
