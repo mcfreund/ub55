@@ -47,7 +47,6 @@ is.lower.tri <- lower.tri(diag(n.reg))
 ctsmods <- readRDS(here::here("out", "cuedts", "rsmods_full.RDS"))
 X <- as.matrix(data.table::fread(here::here("out", "cuedts", "rsmods_lt.csv")))
 
-
 ## prepare similarity matrices for regression ----
 
 

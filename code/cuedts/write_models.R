@@ -11,8 +11,8 @@ x_let <- model.matrix(~as.factor(substr(regs, 9, 11)) + 0)
 x_stim <- model.matrix(~as.factor(substr(regs, 5, 11)) + 0)
 
 x_resp <- cbind(
-  l = grepl("let_eve|num.*vow", regs),
-  r = grepl("let_odd|num.*con", regs)
+  l = grepl("let.*vow|num_eve", regs),
+  r = grepl("let.*con|num_odd", regs)
 )
 
 x_tt <- cbind(
@@ -35,17 +35,21 @@ resp <- tcrossprod(x_resp, x_resp)
 
 incon <- tcrossprod(x_tt[, "incon"], x_tt[, "incon"])
 congr <- tcrossprod(x_tt[, "congr"], x_tt[, "congr"])
-
+iicc <- tcrossprod(x_tt, x_tt)
 
 X <- cbind(
   cue = cue[lower.tri(cue)],
-  # stim = stim[is.lower.tri],
+  # stim = stim[lower.tri(cue)],
+  # num = num[lower.tri(cue)],
+  # let = let[lower.tri(cue)],
   tar = tar[lower.tri(cue)],
   dis = dis[lower.tri(cue)],
   resp = resp[lower.tri(cue)],
+  # iicc = incon[lower.tri(cue)]
   incon = incon[lower.tri(cue)]
   # congr = congr[is.lower.tri]
 )
+X <- 1 - X  ## convert to dissim
 
 vifs <- car::vif(lm(1:nrow(X) ~ ., as.data.frame(X)))
 
@@ -57,7 +61,7 @@ dimnames(resp) <- list(regs, regs)
 dimnames(incon) <- list(regs, regs)
 
 
-ctsmods <- list(cue, stim, tar, dis, resp, incon, congr)
+ctsmods <- list(cue = 1 - cue, tar = 1 - tar, dis = 1 - dis, resp = 1 - resp, incon = 1 - incon)  ## convert to dissim
 
 ## ----
 
