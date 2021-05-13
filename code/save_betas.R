@@ -9,15 +9,18 @@ source(here("code", "_funs.R"))
 
 ## input: subjs, task, glmname
 ## output: RDS files
+# https://www.r-bloggers.com/2015/09/passing-arguments-to-an-r-script-from-command-lines/
+
 
 dirs <- expand.grid(subj = subjs, task = tasks, session = "baseline", stringsAsFactors = FALSE)
 glminfo <- data.frame(
-  task = c("Axcpt", "Cuedts", "Stern", "Stroop"),#, "Stroop"),
+  task = "Cuedts",
+  # task = c("Axcpt", "Cuedts", "Stern", "Stroop"),#, "Stroop"),
   name.glm = c(
-    "baseline_Cues_EVENTS_censored_shifted",
-    "baseline_CongruencySwitch_EVENTS_censored_shifted",
-    "baseline_ListLength_EVENTS_censored_shifted",
-    "baseline_Congruency_EVENTS_censored_shifted"
+    "baseline_cueletnum_EVENTS_censored_shifted"
+    # "baseline_CongruencySwitch_EVENTS_censored_shifted",
+    # "baseline_ListLength_EVENTS_censored_shifted",
+    # "baseline_Congruency_EVENTS_censored_shifted"
     # "baseline_fix-item_EVENTS_censored"
   )
 )

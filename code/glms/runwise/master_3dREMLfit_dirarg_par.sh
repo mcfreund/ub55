@@ -3,9 +3,9 @@
 
 ## get vars
 
-glms=(null null null null)
-tasks=(Axcpt Cuedts Stern Stroop)
-suffices=("" "" "" "")
+glms=(cueletnum)
+tasks=(Cuedts)
+suffices=("_shifted")
 sessions=baseline
 filename="/data/nil-external/ccp/freund/ub55/in/ub55_subjects.txt"
 #filename="/data/nil-external/ccp/freund/ub55/code/glms/runwise/missing_subjs.txt"
@@ -13,7 +13,7 @@ mapfile -t subjects < $filename
 runs=(1 2)
 encoding_dir=(AP PA)
 hemis=(L R)
-dirname=""  ## e.g., _EVENTS_censored; in-between glm and suffix name
+dirname="_EVENTS_censored"  ## e.g., _EVENTS_censored; in-between glm and suffix name
 
 ## directories
 

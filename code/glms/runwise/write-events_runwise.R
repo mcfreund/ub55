@@ -127,9 +127,31 @@ results.axcpt.events <- bind_rows(results.axcpt.events, .id = "subj.session")
 
 ## CUEDTS ----
 
+# args.cuedts.events <- expand.grid(
+#   var.level    = c("ConRepeat", "ConSwitch", "InConRepeat", "InConSwitch", "trial1"),
+#   name.var     = "trial.type.switch",
+#   dir.analysis = dir.analysis,
+#   name.onset   = "time.cue.onset.shifted",
+#   by.run       = TRUE,
+#   fname.suffix = "_shifted",
+#   stringsAsFactors = FALSE
+# )
+# 
+# args.cuedts.events <- bind_rows(
+#   args.cuedts.events,
+#   args.cuedts.events %>% mutate(name.onset = gsub(".shifted", "", name.onset), fname.suffix = "")
+# )
+# 
+# args.cuedts.events
+# 
+# results.cuedts.events <- lapply(cuedts.l, write.events, .args = args.cuedts.events)
+# results.cuedts.events <- bind_rows(results.cuedts.events, .id = "subj.session")
+
+cuedts.l %<>% purrr::map(~ dplyr::mutate(.,  cue_num_let = paste0(cue, "_", number, "_", letter)))
+
 args.cuedts.events <- expand.grid(
-  var.level    = c("ConRepeat", "ConSwitch", "InConRepeat", "InConSwitch", "trial1"),
-  name.var     = "trial.type.switch",
+  var.level    = unique(cuedts.l[[1]]$cue_num_let),
+  name.var     = "cue_num_let",
   dir.analysis = dir.analysis,
   name.onset   = "time.cue.onset.shifted",
   by.run       = TRUE,
@@ -146,6 +168,7 @@ args.cuedts.events
 
 results.cuedts.events <- lapply(cuedts.l, write.events, .args = args.cuedts.events)
 results.cuedts.events <- bind_rows(results.cuedts.events, .id = "subj.session")
+
 
 
 
