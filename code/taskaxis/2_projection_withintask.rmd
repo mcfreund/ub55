@@ -574,7 +574,7 @@ for (name.task.i in tasks) {
     ggplot(aes(tr, value.c)) +
     
     geom_hline(yintercept = 0, color = "grey70") +
-    stat_summary(aes(color = roi), fun = ~t.test(.)$statistic, geom = "line", size = 1) +
+    stat_summary(aes(color = roi), fun = ~t.test(.)$statistic, geom = "point", size = 1) +
     
     facet_grid(rows = vars(roi)) +
     
@@ -590,14 +590,14 @@ for (name.task.i in tasks) {
     ggplot(aes(tr, value.c)) +
     
     geom_hline(yintercept = 0, color = "grey70") +
-    geom_line(aes(group = subj, color = subj), size = 1) +
+    geom_point(aes(group = subj, color = subj), size = 1) +
   
     facet_grid(rows = vars(subj), cols = vars(run), scales = "free_y") +
     theme(legend.position = "none")
   
   print(p.cutp.subj)
   
-  
+
 }
 
 

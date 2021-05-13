@@ -40,21 +40,21 @@ if (FALSE) {
     # https://stackoverflow.com/questions/28500096/r-markdown-variable-output-name
 
     rmarkdown::render(
-      "2_projection_withintask.Rmd",
+      "2_projection_crosstask.Rmd",
       params = list(
         prew = prew,
         glmt = glmt,
         resi = resi
       ),
       output_file = paste0(
-        "2_projection_withintask_parc-network_",
+        "2_projection_crosstask_parc-network_",
         "prew-", prew, "_glm-", glmt, "_resi-", resi,
         ".html"
         )
     )
   }
   
-  # render_report(prew = "vanilla", glmt = "null", resi = "errts")
+  # render_report(prew = "vanilla", glmt = "noblock", resi = "errts")
   # params <- list(prew = "vanilla", glmt = "null", resi = "errts")
   
 }
@@ -411,7 +411,7 @@ for (name.task.i in tasks) {
 * cutpoints (not implemented yet!)
 * exclusion of run and block on/off boundaries
 
-```{r}
+```{r, fig.height = 8, fig.width = 12, results = "asis"}
 
 ## estimate cutpoints
 
@@ -489,3 +489,40 @@ for (name.task.i in tasks) {
 
 
 ```
+
+
+
+
+```{r}
+## shift factor 4 TR for HRF lag
+
+## axcpt
+
+4.1/1.2  ## early epoch ~3.5 TR
+(0.8)/1.2  ## late epoch ~2/3 TR
+c(1.3, 2.5, 3.7) / 1.2  ## ITI ~ 1, 2, or 3 TR
+
+#### early: knot#4 thru knot#8, include knot3 for ITI
+
+
+## cuedts
+
+(.8+.3+.5+4)/1.2  ## early ~4.66 TR
+(3.2+.8)/1.2  ## late ~3.33 TR
+c(1.2, 2.4, 3.6) / 1.2  ## ITI 1, 2, 3 TR
+
+#### early: knot4 thru knot 9, include knot 3 for ITI
+
+
+## cuedts
+
+(.5+.3+2.4+2.4+4)/1.2  ## early 8 TR
+(1.6)/1.2  ## late ~1.33 TR
+c(.8, 2, 3.2) / 1.2  ## ITI 0.66, 1.66, 2.66 TR
+
+#### early: knot4 thru knot 12, include knot 3 for ITI
+#### late: knot13 thru 14
+
+
+```
+

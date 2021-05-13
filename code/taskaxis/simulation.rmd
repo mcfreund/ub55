@@ -390,13 +390,89 @@ for (name.task.i in tasks) {
 
 
 
+## design matrix analysis
+
 ```{r}
 
-# image(X$Axcpt[, , "580650", "run2"])
-# 
-# 
-# plot(X$Axcpt[, "is.included", "580650", "run2"], A_signal$Axcpt[, "580650", 2])
 
+pinv <- enlist(tasks)
+for (name.task.i in tasks) {
+  # name.task.i = "Axcpt"
+  
+  X_i <- X[[name.task.i]]
+  
+  
+  pinv_i <- enlist(subjs)
+  
+  
+  for (subj.i in seq_along(subjs)) {
+    # subj.i = 1
+    
+    
+    ## subset
+    
+    is.i <- X_i[, "is.included", subj.i, ] == 1
+    j <- -grep("is.included", colnames(X_i))
+    # j <- grep("block#0|blockONandOFF", colnames(X_i))
+    
+    xi <- X_i[, j, subj.i, ]
+    
+    
+    p1 <- data.frame(
+      tr = which(is.i[, 1]),
+      run1 = MASS::ginv(xi[is.i[, 1], , 1])[colnames(xi) == "block#0"]
+    )
+    p2 <- data.frame(
+      tr = which(is.i[, 2]),
+      run2 = MASS::ginv(xi[is.i[, 2], , 2])[colnames(xi) == "block#0"]
+    )
+    
+    pinv_i[[subj.i]] <- full_join(p1, p2, by = "tr")
+    
+  }
+  
+  
+  pinv[[name.task.i]] <- bind_rows(pinv_i, .id = "subj")
+  
+  
+}
+
+res <- bind_rows(pinv, .id = "task")
+
+
+res %>%
+  
+  pivot_longer(cols = c("run1", "run2"), names_to = "run", values_to = "value") %>%
+  
+  ggplot(aes(tr, value)) +
+  
+  geom_line(aes(group = subj), alpha = 0.2) +
+  stat_summary(fun = mean, geom = "line", color = "firebrick") +
+  
+  facet_grid(vars(task), vars(run))
+
+x$Stern %>%
+  
+  filter(regressor == "block#0") %>%
+  
+  ggplot(aes(tr, value)) +
+  
+  # geom_line(aes(group = subj), alpha = 0.2) +
+  stat_summary(fun = mean, geom = "line", color = "firebrick") +
+  
+  facet_grid(cols = vars(run))
+
+
+weird.trs <- res %>%
+  
+  filter(task == "Stern", !is.na(run1)) %>%
+  group_by(tr) %>%
+  summarize(v = var(run1)) %>%
+  filter(v < .Machine$double.eps) %>% pull(tr)
+  
+
+
+# image(X$Stern[weird.trs, , 49, 1])
 
 
 ```
