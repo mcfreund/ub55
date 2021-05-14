@@ -6,8 +6,8 @@ source(here("code", "_atlases.R"))
 source(here("code", "_settings.R"))
 source(here("code", "_funs.R"))
 
-do.network <- TRUE
-do.prew <- FALSE
+do.network <- FALSE
+do.prew <- TRUE
 name.glm <- "baseline_cueletnum_EVENTS_censored_shifted"
 
 
@@ -233,6 +233,7 @@ saveRDS(
        paste0(
          "rsamat_cossimil",
          "_est-cval", 
+         "_parc-", switch(do.network + 1, "parcels400", "network7"), 
          "_prew-", switch(do.prew + 1, "vanilla", "catwherr"), 
          ".RDS"
          )
