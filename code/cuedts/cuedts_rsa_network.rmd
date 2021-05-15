@@ -1,0 +1,492 @@
+---
+title: 'cuedts RSA: cross-validated'
+author: "michael freund"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    highlight: zenburn
+    number_sections: true
+    theme: spacelab
+params:
+    prew: vanilla
+---
+
+
+```{r setup, include = FALSE}
+
+## for rendering
+
+render_report <- function(prew, glmt, resi) {
+  
+  # https://stackoverflow.com/questions/28500096/r-markdown-variable-output-name
+
+  rmarkdown::render(
+    "cuedts_rsa_network.Rmd",
+    params = list(
+      prew = prew
+    ),
+    output_file = paste0(
+      "cuedts_rsa_parc-network_",
+      "_est-cval", "_prew-", prew,
+      ".html"
+      )
+  )
+}
+
+
+if (FALSE) {  ## DON'T RUN ME!!! ->  for interactive use.
+  params <- list(prew = "catwherr")
+  render_report(prew = "vanilla")
+}
+
+
+
+source(here::here("code", "_packages.R"))
+source(here("code", "read-behav.R"))
+source(here("code", "_vars.R"))
+source(here("code", "_atlases.R"))
+source(here("code", "_settings.R"))
+source(here("code", "_funs.R"))
+
+
+subjs <- subjs[!subjs %in% c("432332", "DMCC5820265")]
+
+
+stats.subjs <- fread(
+  here(
+    "out", "cuedts",  
+    paste0(
+      "stats-subjs",
+      "_est-cval", 
+      "_prew-", params$prew, 
+      ".RDS"
+      )
+    )
+)
+
+
+simil <- readRDS(
+  here("out", "cuedts", paste0(
+      "rsamat_cossimil",
+      "_est-cval", 
+      "_prew-", params$prew, 
+      ".RDS"
+      )
+    )
+  )
+
+
+ctsmods <- readRDS(here("out", "cuedts", "rsmods_full.RDS"))
+
+## misc:
+
+group.target.trs <- fread(here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
+dmcc55b.parcels <- group.target.trs %>% filter(estimate > 0, p.fdr < 0.05) %>% pull(parcel) %>% table
+dmcc55b.parcels <- names(dmcc55b.parcels)[dmcc55b.parcels == 4]
+
+
+n.subj <- length(subjs)
+set.seed(0)
+rsubj <- sample.int(n.subj, 10)
+
+cue.trs <- 4:8
+target.trs <- 9:10
+
+stats.subjs$epoch <- ifelse(stats.subjs$tr %in% cue.trs, "cue", ifelse(stats.subjs$tr %in% target.trs, "target", NA))
+
+models <- c("tar" = "Target", "cue" = "Cue", "dis" = "Distractor", "incon" = "Incongruency", "resp" = "Response")
+
+```
+
+
+
+
+# intro
+
+* similarity measure: "cross-validated mahalanobis" (Walther, 2016)
+* cross-validated across runs
+* network-level (schaefer 400 surfaces)
+* spatial prewhitening: `r params$prew`
+* 
+
+
+
+## RSA models
+
+
+```{r, fig.height = 3.5, fig.width = 12, results = "asis"}
+
+ctsmods_d <- map_dfr(ctsmods, symmat4ggplot, .id = "model")
+
+ctsmods_d %>%
+  
+  ggplot(aes(v1, v2, fill = value)) +
+  geom_raster() +
+  scale_fill_viridis_c(option = "inferno") +
+  
+  facet_grid(
+    cols = vars(model),
+    labeller = labeller(
+      model = c("tar" = "Target", "cue" = "Cue", "dis" = "Distractor", "incon" = "Incongruency", "resp" = "Response")
+      )
+    ) +
+  
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0),
+    axis.title = element_blank(),
+    panel.border = element_blank(), 
+    panel.grid = element_blank(),
+    axis.line =  element_blank(),
+    strip.background = element_blank()
+  ) +
+  
+  labs(title = "RSA models", fill = "value")
+  
+
+```
+
+
+
+## all data
+
+
+```{r, fig.height = 6, fig.width = 12, results = "asis"}
+
+
+p.allcor.density <- stats.subjs %>%
+  
+  ggplot(aes(beta, y = parcel, fill = parcel)) +
+  geom_density_ridges() +
+  
+  scale_fill_discrete_qualitative("Harmonic") +
+  
+  theme(legend.position = "none") +
+  labs(x = "cv distance")
+
+
+p.allcor.box <- stats.subjs %>%
+  
+  ggplot(aes(parcel, beta, fill = parcel)) +
+  geom_hline(yintercept = 0) +
+  geom_boxplot(width = 0.1, notch = TRUE) +
+  
+  scale_fill_discrete_qualitative("Harmonic") +
+  
+  theme(legend.position = "none") +
+  labs(x = "cv distance") +
+  coord_flip()
+
+
+plot_grid(
+  cowplot.title("Cross-validated distances by network"),
+  plot_grid(p.allcor.density, p.allcor.box, nrow = 1),
+  ncol = 1, 
+  rel_heights = c(0.1, 1)
+)
+
+
+```
+
+
+
+# knot-wise results
+
+### group-level
+
+```{r, fig.height = 8, fig.width = 12, results = "asis"}
+
+
+stats.subjs %>%
+  
+  ggplot(aes(tr, beta, fill = parcel)) +
+  
+  geom_hline(yintercept = 0, color = "black") +
+  stat_summary(fun.data = mean_cl_boot, geom = "ribbon", alpha = 0.7) +
+  
+  scale_fill_discrete_qualitative("Harmonic") +
+
+  facet_grid(rows = vars(parcel), cols = vars(term), labeller = labeller(term = models)) +
+  theme(legend.position = "none", strip.background = element_blank()) +
+  labs(x = "Knot", y = "Mean RSA model fit (95% CI)")
+
+
+
+
+stats.subjs %>%
+  
+  ggplot(aes(tr, beta, color = parcel)) +
+  
+  geom_hline(yintercept = 0, color = "black") +
+  stat_summary(fun = ~t.test(.)$statistic, geom = "line", size = 2) +
+  
+  scale_color_discrete_qualitative("Harmonic") +
+  
+  facet_grid(rows = vars(parcel), cols = vars(term), labeller = labeller(term = models)) +
+  theme(legend.position = "none", strip.background = element_blank()) +
+  labs(x = "Knot", y = "t-stat RSA model fit")
+
+
+
+```
+
+
+## subject-level
+
+
+```{r, fig.height = 8, fig.width = 12, results = "asis"}
+
+
+stats.subjs %>%
+  
+  ggplot(aes(tr, beta, color = parcel)) +
+  
+  geom_hline(yintercept = 0, color = "black") +
+  geom_line(aes(group = subj), alpha = 0.4) +
+  
+  scale_color_discrete_qualitative("Harmonic") +
+  
+  facet_grid(rows = vars(parcel), cols = vars(term), labeller = labeller(term = models)) +
+  theme(legend.position = "none", strip.background = element_blank()) +
+  labs(x = "Knot", y = "Mean RSA model fit")
+
+
+```
+
+
+```{r, fig.height = 8, fig.width = 12, results = "asis", include = FALSE}
+
+for (roi.i in unique(stats.subjs$parcel)) {
+  
+  
+  p.singlesubj <- stats.subjs %>%
+    
+    filter(subj %in% subjs[rsubj], parcel == roi.i) %>%
+    
+    ggplot(aes(tr, beta)) +
+    
+    geom_hline(yintercept = 0, color = "black") +
+    geom_line(aes(group = subj), size = 2) +
+    
+    facet_grid(rows = vars(subj), cols = vars(term), labeller = labeller(term = models)) +
+    theme(legend.position = "none", strip.background = element_blank()) +
+    labs(x = "Knot", y = "Mean RSA model fit", title = paste0("10 random subjs ", roi.i, " network"))
+  
+  
+  print(p.singlesubj)
+  
+}
+
+```
+
+
+# time-aggregated results
+
+## model fit stats
+
+```{r, fig.height = 7, fig.width = 10, results = "asis"}
+
+stats.subjs %>%
+  
+  filter(epoch %in% c("cue", "target")) %>%
+  group_by(subj, parcel, term, epoch) %>%
+  summarize(beta = mean(beta)) %>%
+  
+  ggplot(aes(epoch, beta, fill = epoch)) +
+  
+  geom_hline(yintercept = 0, color = "black") +
+  stat_summary(fun = mean, geom = "col", width = 0.5) +
+  stat_summary(fun.data = mean_cl_boot, geom = "errorbar", width = 0, size = 1) +
+  
+  scale_fill_discrete_qualitative("Cold") +
+  
+  facet_grid(cols = vars(parcel), rows = vars(term), labeller = labeller(term = models)) +
+  theme(legend.position = "none", strip.background = element_blank()) +
+  labs(x = "Knot", y = "Mean RSA model fit")
+
+
+```
+
+
+## RDMs
+
+```{r, fig.height = 3.25, fig.width = 12, results = "asis"}
+
+simil_cue <- apply(simil[, , , cue.trs, ], 1:3, mean)
+simil_target <- apply(simil[, , , target.trs, ], 1:3, mean)
+
+simil_cue_t <- apply(simil[, , , cue.trs, ], 1:3, function(x) t.test(x)$statistic)
+simil_target_t <- apply(simil[, , , target.trs, ], 1:3, function(x) t.test(x)$statistic)
+
+
+
+simil_cue %>%
+  
+  symmat4ggplot(var.names = c("v1", "v2", "roi")) %>%
+  
+  ggplot(aes(v1, v2, fill = value)) +
+  geom_raster() +
+  scale_fill_viridis_c(option = "inferno") +
+  
+  facet_grid(cols = vars(roi)) +
+  
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0),
+    axis.title = element_blank(),
+    panel.border = element_blank(), 
+    panel.grid = element_blank(),
+    axis.line =  element_blank(),
+    strip.background = element_blank()
+  ) +
+  
+  labs(title = "Cue epoch (early), mean", fill = "mean")
+
+
+simil_target %>%
+  
+  symmat4ggplot(var.names = c("v1", "v2", "roi")) %>%
+  
+  ggplot(aes(v1, v2, fill = value)) +
+  geom_raster() +
+  scale_fill_viridis_c(option = "inferno") +
+  
+  facet_grid(cols = vars(roi)) +
+  
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0),
+    axis.title = element_blank(),
+    panel.border = element_blank(), 
+    panel.grid = element_blank(),
+    axis.line =  element_blank(),
+    strip.background = element_blank()
+  ) +
+  
+  labs(title = "Target epoch (late), mean", fill = "mean")
+
+
+
+simil_cue_t %>%
+  
+  symmat4ggplot(var.names = c("v1", "v2", "roi")) %>%
+  
+  ggplot(aes(v1, v2, fill = value)) +
+  geom_raster() +
+  scale_fill_viridis_c(option = "inferno") +
+  
+  facet_grid(cols = vars(roi)) +
+  
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0),
+    axis.title = element_blank(),
+    panel.border = element_blank(), 
+    panel.grid = element_blank(),
+    axis.line =  element_blank(),
+    strip.background = element_blank()
+  ) +
+  
+  labs(title = "Cue epoch (early), t", fill = "t stat")
+  
+
+
+simil_target_t %>%
+  
+  symmat4ggplot(var.names = c("v1", "v2", "roi")) %>%
+  
+  ggplot(aes(v1, v2, fill = value)) +
+  geom_raster() +
+  scale_fill_viridis_c(option = "inferno") +
+  
+  facet_grid(cols = vars(roi)) +
+  
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0),
+    axis.title = element_blank(),
+    panel.border = element_blank(), 
+    panel.grid = element_blank(),
+    axis.line =  element_blank(),
+    strip.background = element_blank()
+  ) +
+  
+  labs(title = "Target epoch (late), t", fill = "t stat")
+  
+
+
+
+```
+
+## MDS
+
+Plots display non-metric MDS solutions to group-level RDMs.
+
+Color indicates the task cue (categorize letter, categorize number).
+Letters indicate the stimulus category: e = even, o = odd, v = vowel, c = consonant.
+
+```{r, fig.height = 8, fig.width = 8, results = "asis", results = FALSE}
+
+
+metaMDS2df <- function(x) {
+  x <- as.data.frame(x$points)
+  x <- tibble::rownames_to_column(x, "condition")
+  separate(x, condition, c("cue", "num", "let"), remove = FALSE)
+}
+
+
+
+mds_cue <- apply(simil_cue, 3, vegan::metaMDS) %>% lapply(metaMDS2df) %>% bind_rows(.id = "roi")
+mds_target <- apply(simil_target, 3, vegan::metaMDS) %>% lapply(metaMDS2df) %>% bind_rows(.id = "roi")
+
+
+mds_cue %>% 
+  ggplot(aes(MDS1, MDS2)) +
+  geom_text(
+    aes(label = paste0(substr(num, 1, 1), substr(let, 1, 1)), color = cue),
+    fontface = "bold", size = 7
+  ) +
+    
+  facet_wrap(vars(roi)) +
+  
+  scale_color_discrete_qualitative("Dark 2") +
+  
+  theme(
+    axis.text  = element_blank(),
+    axis.ticks = element_blank(),
+    axis.title = element_blank(),
+    panel.background = element_blank(),
+    legend.position = c(0.6, 0.2),
+    axis.line = element_blank(),
+    strip.background = element_blank()
+  ) +
+  
+  labs(title = "Cue epoch (early)", color = "task cue")
+
+
+
+
+mds_target %>% 
+  ggplot(aes(MDS1, MDS2)) +
+  geom_text(
+    aes(label = paste0(substr(num, 1, 1), substr(let, 1, 1)), color = cue),
+    fontface = "bold", size = 7
+  ) +
+    
+  facet_wrap(vars(roi)) +
+  
+  scale_color_discrete_qualitative("Dark 2") +
+  
+  theme(
+    axis.text  = element_blank(),
+    axis.ticks = element_blank(),
+    axis.title = element_blank(),
+    panel.background = element_blank(),
+    legend.position = c(0.6, 0.2),
+    axis.line = element_blank(),
+    strip.background = element_blank()
+  ) +
+  
+  labs(title = "Target epoch (late)", color = "task cue")
+
+
+
+```
+

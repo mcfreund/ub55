@@ -7,23 +7,26 @@ source(here("code", "_funs.R"))
 
 
 
-do.network <- TRUE
+do.network <- FALSE
 do.prew <- TRUE
 name.glm <- "baseline_cueletnum_EVENTS_censored_shifted"
 
 
 if (do.network) {
   rois <- unique(get.network(parcellation$key))
+  fname.parc <- ""
 } else {
   rois <- parcellation$key
+  fname.parc <- "_parc-parcels400"
 }
 
 
 simil <- readRDS(
   here("out", "cuedts", 
        paste0(
-         "rsamat_cossimil",
+         "rsamat_cossimil" ,
          "_est-cval", 
+         fname.parc,
          "_prew-", switch(do.prew + 1, "vanilla", "catwherr"), 
          ".RDS"
        )
@@ -47,59 +50,32 @@ is.lower.tri <- lower.tri(diag(n.reg))
 ctsmods <- readRDS(here::here("out", "cuedts", "rsmods_full.RDS"))
 X <- as.matrix(data.table::fread(here::here("out", "cuedts", "rsmods_lt.csv")))
 
-## prepare similarity matrices for regression ----
+
+## fit models ----
 
 
-## get indices and values
+## prep:
 
-rois <- dimnames(simil)$roi
-n.mods <- length(subjs) * length(rois) * n.tr
+vecs <- apply(simil, 3:5, function(x) scale(x[is.lower.tri]))  ## vectorize and scale
+vecs <- as.data.table(vecs)
 
-## unwrap into lower-triangle vector
 
-rsvectors <- vector("list", n.mods)
-names(rsvectors) <- combo_paste(subjs, rois, paste0("tr", 1:n.tr))
+## regress:
 
-for (subj.i in seq_along(subjs)) {
-  for (roi.i in seq_along(rois)) {
-    for (tr.i in seq_len(n.tr)) {
-      # subj.i = 1; roi.i = 1; tr.i = 1
-    
-      name.i <- paste0(subjs[subj.i], "_", rois[roi.i], paste0("_tr", tr.i))  ## to match name
-      rsvectors[[name.i]] <- scale(simil[, , rois[roi.i], tr.i, subj.i][is.lower.tri])
-      
-      
-    }
-  }
+lmfit <- function(x, y, nms = colnames(X)) {
+  
+  b <- coef(.lm.fit(x = X, y = y))
+  
+  data.frame(b = b, term = nms)
+  
 }
 
+stats.subjs <- vecs %>%
+  group_by(roi, tr, subj) %>%
+  nest %>%
+  mutate(data = map(data, ~lmfit(X, .$value))) %>%
+  unnest(cols = data)
 
-
-## fit glms ----
-
-
-betas <- rsvectors %>% map(~ coef(.lm.fit( x = X, y = .)))
-betas <- do.call(rbind, betas)
-colnames(betas) <- colnames(X)
-betas <- as.data.table(betas, keep.rownames = TRUE)
-betas <- rename(betas, id = rn)
-betas <- melt(betas, id.vars = "id", value.name = "beta", variable.name = "term")
-
-
-## format ----
-
-## create subj, parcel, and hemi cols from id col
-
-stats.subjs <- bind_cols(
-  betas,
-  reshape2::colsplit(betas$id, pattern = "_", names = c("subj", "parcel", "tr"))
-)
-
-stats.subjs$tr <- as.numeric(gsub("tr", "", stats.subjs$tr))
-
-## rearrange cols (and drop id col)
-
-stats.subjs %<>% select(subj, parcel, term, tr, beta)
 
 ## write ----
 
@@ -109,14 +85,11 @@ fwrite(
     "out", "cuedts",  
     paste0(
       "stats-subjs",
-      "_est-cval", 
+      "_est-cval",
+      fname.parc,
       "_prew-", switch(do.prew + 1, "vanilla", "catwherr"), 
       ".RDS"
       )
     )
 )
-
-
-
-## ---
 

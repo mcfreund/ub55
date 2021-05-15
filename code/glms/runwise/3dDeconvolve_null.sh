@@ -22,7 +22,7 @@ for task_i in ${!tasks[@]}; do
 			cd ${dir_out}
 		
 			## build xmat
-				/usr/local/pkg/afni_18/3dDeconvolve \
+			/usr/local/pkg/afni_18/3dDeconvolve \
 			-local_times \
 			-force_TR 1.2 \
 			-x1D_stop \
