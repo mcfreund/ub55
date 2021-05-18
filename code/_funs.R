@@ -91,7 +91,8 @@ read_betas_dmcc <- function(
   .glm,
   .dir
 ) {
-  # glm.i = 4; .subjs = subjs; .task = glminfo$task[glm.i]; .glm = glminfo$name.glm[glm.i]; .dir = dir.analysis
+  # glm.i = 1; .subjs = subjs; .task = glminfo$task[glm.i]; 
+  # .glm = glminfo$name.glm[glm.i]; .dir = dir.analysis
   
   ## initialize array
   
@@ -118,7 +119,7 @@ read_betas_dmcc <- function(
   vertex.inds <- cbind(L = 1:n.vertex, R = (n.vertex + 1):(n.vertex * 2))
   
   for (subj.i in seq_along(subjs)) {
-    # subj.i = 1; hemi.i = "L"
+    # subj.i = 41; hemi.i = "L"
     
     for (hemi.i in c("L", "R")) {
       # hemi.i = "R"

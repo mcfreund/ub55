@@ -28,6 +28,7 @@ glminfo <- as.data.table(glminfo)
 
 dir.analysis <- "/data/nil-bluearc/ccp-hcp/DMCC_ALL_BACKUPS/HCP_SUBJECTS_BACKUPS/fMRIPrep_AFNI_ANALYSIS"
 
+subjs[subjs == "DMCC5820265"] <- "DMCC5820265_old-delete when rerun"
 
 for (glm.i in seq_len(nrow(glminfo))) {
   
@@ -38,3 +39,5 @@ for (glm.i in seq_len(nrow(glminfo))) {
     )
   
 }
+# glm.i = 1; .subjs = subjs; .task = glminfo$task[glm.i]; 
+# .glm = glminfo$name.glm[glm.i]; .dir = dir.analysis
