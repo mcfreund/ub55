@@ -25,7 +25,7 @@ if (nodename == "ccplinux1") {
 }
 
 
-n.cores <- detectCores()
+n.cores <- parallel::detectCores()
 
 
 tasks <- c("Axcpt", "Cuedts", "Stern", "Stroop")
