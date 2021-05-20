@@ -51,7 +51,7 @@ for (glm.i in seq_len(nrow(glminfo))) {
     subj.i = seq_along(subjs),
     .final = function(x) setNames(x, subjs)
     ) %dopar% {
-    # subj.i = 1
+    # subj.i = 41
     
     name.subj.i <- subjs[subj.i]
     
@@ -62,7 +62,7 @@ for (glm.i in seq_len(nrow(glminfo))) {
       paste0("wherr_", name.subj.i, "_", c("L", "R"), "_REML.func.gii")
     )  ## LEFT then RIGHT
     
-    if (any(!file.exists(eps.name))) next
+    if (any(!file.exists(eps.name))) return(NA)
     
     E <- cbind(
       mikeutils::read_gifti2matrix(eps.name[1]),
