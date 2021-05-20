@@ -2,10 +2,10 @@
 ## atlases ----
 
 hcp <- list(
-  L  = readGIfTI(
+  L  = gifti::readGIfTI(
     file.path(dir.atlas, "surf", "HCP_S1200_GroupAvg_v1", "S1200.L.midthickness_MSMAll.32k_fs_LR.surf.gii")
   ),
-  R = readGIfTI(
+  R = gifti::readGIfTI(
     file.path(dir.atlas, "surf", "HCP_S1200_GroupAvg_v1", "S1200.R.midthickness_MSMAll.32k_fs_LR.surf.gii")
   )
 )
@@ -14,10 +14,10 @@ hcp <- list(
 if (nodename == "ccp-freund") {
   
   hcp.vinf <- list(
-    L  = readGIfTI(
+    L  = gifti::readGIfTI(
       file.path(dir.atlas, "surf", "HCP_S1200_GroupAvg_v1", "S1200.L.very_inflated_MSMAll.32k_fs_LR.surf.gii")
     ),
-    R = readGIfTI(
+    R = gifti::readGIfTI(
       file.path(dir.atlas, "surf", "HCP_S1200_GroupAvg_v1", "S1200.R.very_inflated_MSMAll.32k_fs_LR.surf.gii")
     )
   )

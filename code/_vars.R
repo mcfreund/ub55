@@ -27,9 +27,11 @@ if (nodename == "ccplinux1") {
 
 n.cores <- parallel::detectCores()
 
+n.vert <- 20484  ## surface hcp mesh
+
 
 tasks <- c("Axcpt", "Cuedts", "Stern", "Stroop")
-dir.analysis <- here("out", "glms")
+dir.analysis <- here::here("out", "glms")
 
 n.trs <- c(
   Axcpt   = 1220,
