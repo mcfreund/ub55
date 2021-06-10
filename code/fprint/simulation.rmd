@@ -1,0 +1,198 @@
+---
+title: "simulation"
+output: html_document
+---
+
+```{r setup}
+
+library(knitr)
+library(MASS)
+library(RColorBrewer)
+
+euclidean2 <- function(x, y) sum((x - y)^2)  ## squared euclidean distance
+
+n_sim <- 1E5  ## number replicates
+V <- 100  ## numer voxels
+
+rf <- colorRampPalette(rev(brewer.pal(11, 'Spectral')))  ## for palette
+r <- rf(32)
+
+```
+
+
+Let $x$ be a pattern vector of length $v \in 1, \ldots, V$ vertices. 
+Denote subject $i$'s pattern vector with superscript $x^{(i)}$.
+
+**Multivariate distance measure**: the squared Euclidean distance between vectors $x^{(i)}$ and $x^{(j)}$.
+
+$$\text{multivariate d}^2 = \frac{\Sigma_{v=1}^{V} (x_v^{(i)} - x_v^{(j)})^2}{2V}$$
+
+
+**Univariate distance measure**: the squared Euclidean distance (i.e., squared difference) between the sum of the elements of  $x^{(i)}$ and of $x^{(j)}$.
+
+$$\text{univariate d}^2 = \frac{(\Sigma_{v=1}^{V}x_v^{(i)} - \Sigma_{v=1}^{V}x_v^{(j)})^2}{2V}$$
+
+
+# false positive simulation
+
+```{r simulate}
+
+d <- as.data.frame(matrix(NA, ncol = 2, nrow = n_sim))
+names(d) <- c("m", "u")
+
+for (ii in 1:n_sim) {
+
+  x1 <- rnorm(V)
+  x2 <- rnorm(V)
+  
+  d$m[ii] <- euclidean2(x1, x2) / (V*2)
+  d$u[ii] <- euclidean2(sum(x1), sum(x2)) / (V*2)
+  
+}
+
+```
+
+
+## results
+
+Expected values seem to be equivalent.
+However, variance (and PDF) differs depending on V.
+
+```{r}
+
+colMeans(d)
+apply(d, 2, var)
+t.test(d$m, d$u, paired = TRUE)$statistic
+
+hist(d$m)
+hist(d$u)
+
+
+kernel_d2 <- kde2d(d$m, d$u)
+image(kernel_d2, col = r, main = "euclidean^2")
+
+```
+
+### square-root transform
+
+Taking square root breaks equivalence of expected values.
+
+```{r}
+
+colMeans(sqrt(d))
+t.test(sqrt(d$m), sqrt(d$u), paired = TRUE)$statistic
+
+hist(sqrt(d$m))
+hist(sqrt(d$u))
+apply(sqrt(d), 2, var)
+
+kernel_d <- kde2d(sqrt(d$m), sqrt(d$u))
+image(kernel_d, col = r, main = "euclidean")
+
+```
+
+### comparison to Chi-square
+
+These simulated distributions are well-matched by the Chi-square distributions, with *df* of either 1 (for univariate measure) or V (for multivariate measure).
+
+```{r}
+
+qqplot(
+  qchisq(ppoints(n_sim), df = 1), 
+  d$u, 
+  main = expression("Q-Q plot for" ~~ {chi^2}[k == 1]),
+  xlab = "theoretical",
+  ylab = "univariate distances"
+  )
+
+qqplot(
+  qchisq(ppoints(n_sim), df = V), 
+  d$m, 
+  main = expression("Q-Q plot for" ~~ {chi^2}[k == V]),
+  xlab = "theoretical",
+  ylab = "multivariate distances"
+  )
+
+
+```
+
+
+# strong univariate effect, no multivariate effect
+
+```{r}
+
+d_univ <- as.data.frame(matrix(NA, ncol = 2, nrow = n_sim))
+names(d_univ) <- c("m", "u")
+
+for (ii in 1:n_sim) {
+
+  x1 <- rnorm(V)
+  x2 <- rnorm(V, mean = 10)
+  
+  d_univ$m[ii] <- euclidean2(x1, x2) / (V*2)
+  d_univ$u[ii] <- euclidean2(sum(x1), sum(x2)) / (V*2)
+  
+}
+
+```
+
+## results
+
+
+Now the univariate distance is much larger.
+
+```{r}
+
+colMeans(d_univ)
+apply(d_univ, 2, var)
+t.test(d_univ$m, d_univ$u, paired = TRUE)$statistic
+
+hist(d_univ$m)
+hist(d_univ$u)
+
+kernel_d2_univ <- kde2d(d_univ$m, d_univ$u)
+image(kernel_d2_univ, col = r, main = "euclidean^2")
+
+```
+
+
+
+# strong multivariate effect, no univariate effect
+
+```{r}
+
+d_multiv <- as.data.frame(matrix(NA, ncol = 2, nrow = n_sim))
+names(d_multiv) <- c("m", "u")
+
+for (ii in 1:n_sim) {
+
+  x1 <- rnorm(V) + (V:1 - mean(1:V))/10  ## pattern across vertices, but across-voxel mean of 0
+  x2 <- rnorm(V) + (1:V - mean(1:V))/10  ## opposite pattern
+  
+  d_multiv$m[ii] <- euclidean2(x1, x2) / (V*2)
+  d_multiv$u[ii] <- euclidean2(sum(x1), sum(x2)) / (V*2)
+  
+}
+
+```
+
+## results
+
+
+Now the multivariate distance is much larger.
+
+```{r}
+
+colMeans(d_multiv)
+apply(d_multiv, 2, var)
+t.test(d_multiv$m, d_multiv$u, paired = TRUE)$statistic
+
+hist(d_multiv$m)
+hist(d_multiv$u)
+
+kernel_d2_multiv <- kde2d(d_multiv$m, d_multiv$u)
+image(kernel_d2_multiv, col = r, main = "euclidean^2")
+
+```
+
+
