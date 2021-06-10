@@ -4,6 +4,7 @@ output: html_document
 ---
 
 ```{r setup}
+knitr::opts_chunk$set(cache = TRUE)
 
 library(knitr)
 library(MASS)
@@ -12,25 +13,59 @@ library(RColorBrewer)
 euclidean2 <- function(x, y) sum((x - y)^2)  ## squared euclidean distance
 
 n_sim <- 1E5  ## number replicates
-V <- 100  ## numer voxels
+V <- 100  ## number voxels
 
 rf <- colorRampPalette(rev(brewer.pal(11, 'Spectral')))  ## for palette
 r <- rf(32)
 
 ```
 
+# definitions
 
-Let $x$ be a pattern vector of length $v \in 1, \ldots, V$ vertices. 
-Denote subject $i$'s pattern vector with superscript $x^{(i)}$.
+## mutivariate and univariate distance measures
 
-**Multivariate distance measure**: the squared Euclidean distance between vectors $x^{(i)}$ and $x^{(j)}$.
+Let $x_{vs}$ be the b-coefficient estimate for vertex $v \in 1, \ldots, V$ vertices and for subject $s \in 1, \ldots, S$, from run 1 of the experiment. 
+Let $y_{vt}$ be an analogous estimate from run 2 of the experiment, for a not-necessarily-different subject $t \in 1, \ldots, S$.
+These estimates are elements of matrices $\mathbf{X}$ and $\mathbf{Y}$, both of size $V\times S$.
 
-$$\text{multivariate d}^2 = \frac{\Sigma_{v=1}^{V} (x_v^{(i)} - x_v^{(j)})^2}{2V}$$
+**Multivariate distance measure**: the squared Euclidean distance between vectors $x_s$ and $y_t$.
+
+\[\mathit{m}_{st} = \frac{1}{V}\sum_{v=1}^{V} (x_{vs} - y_{vt})^2\]
+
+We scale by the number of vertices $V$ to aid comparability across regions of interest.
+
+**Univariate distance measure**: the squared Euclidean distance between the sum of the elements of $x_s$ and of $y_t$.
+
+\[\mathit{u}_{st} = \frac{1}{V}(\sum_{v=1}^{V}x_{vs} - \sum_{v=1}^{V}y_{vt})^2\]
+
+Because the sum of the elements of a vector is a scalar, here, the Euclidean distance simplifies to the squared difference between the terms.
 
 
-**Univariate distance measure**: the squared Euclidean distance (i.e., squared difference) between the sum of the elements of  $x^{(i)}$ and of $x^{(j)}$.
+## intersubject discrimination index (IDI)
 
-$$\text{univariate d}^2 = \frac{(\Sigma_{v=1}^{V}x_v^{(i)} - \Sigma_{v=1}^{V}x_v^{(j)})^2}{2V}$$
+These across-run multivariate distances, $\mathit{m}_{st}$, can be collated into the $S\times S$ cross-run distance matrix $\mathbf{M}$.
+This matrix is asymmetric, with rows corresponding to run 1, and columns corresponding to run 2. 
+The diagonal elements contain within-subject distances, while the off-diagonal elements contain between-subject distances.
+
+Analogously, these cross-run univariate distances, $\mathit{u}_{st}$ can be collated into an $S\times S$ matrix $\mathbf{U}$.
+
+
+The IDI is computed via a contrast on these cross-run distance matrices.
+The IDI is defined as the mean of the off-diagonal elements minus the mean of the diagonal elements.
+Formally, for an arbitrary $S\times S$ cross-run distance matrix $\mathbf{D}$,
+
+
+\[\mathit{idi}(\mathbf{D}_{S\times S}) = 
+\frac{\sum_{s=1,t>s}^{S}d_{st} + \sum_{s>t,t=1}^{S}d_{st}}{S^2-S} - \frac{tr(\mathbf{D})}{S}\]
+
+
+The multivariate and univariate IDI statistics can now be defined:
+
+\[\mathit{mIDI} = \mathit{idi}(\mathbf{M})\]
+
+and
+
+\[\mathit{uIDI} = \mathit{idi}(\mathbf{U})\]
 
 
 # false positive simulation
@@ -45,8 +80,8 @@ for (ii in 1:n_sim) {
   x1 <- rnorm(V)
   x2 <- rnorm(V)
   
-  d$m[ii] <- euclidean2(x1, x2) / (V*2)
-  d$u[ii] <- euclidean2(sum(x1), sum(x2)) / (V*2)
+  d$m[ii] <- euclidean2(x1, x2) / V
+  d$u[ii] <- euclidean2(sum(x1), sum(x2)) / V
   
 }
 
@@ -129,8 +164,8 @@ for (ii in 1:n_sim) {
   x1 <- rnorm(V)
   x2 <- rnorm(V, mean = 10)
   
-  d_univ$m[ii] <- euclidean2(x1, x2) / (V*2)
-  d_univ$u[ii] <- euclidean2(sum(x1), sum(x2)) / (V*2)
+  d_univ$m[ii] <- euclidean2(x1, x2) / V
+  d_univ$u[ii] <- euclidean2(sum(x1), sum(x2)) / V
   
 }
 
@@ -169,8 +204,8 @@ for (ii in 1:n_sim) {
   x1 <- rnorm(V) + (V:1 - mean(1:V))/10  ## pattern across vertices, but across-voxel mean of 0
   x2 <- rnorm(V) + (1:V - mean(1:V))/10  ## opposite pattern
   
-  d_multiv$m[ii] <- euclidean2(x1, x2) / (V*2)
-  d_multiv$u[ii] <- euclidean2(sum(x1), sum(x2)) / (V*2)
+  d_multiv$m[ii] <- euclidean2(x1, x2) / V
+  d_multiv$u[ii] <- euclidean2(sum(x1), sum(x2)) / V
   
 }
 
