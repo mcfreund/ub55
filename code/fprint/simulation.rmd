@@ -14,7 +14,7 @@ output:
 
 Let $x_{sv}$ be the b-coefficient estimate for subject $s \in 1, \ldots, S$ and for vertex $v \in 1, \ldots, V$ vertices, from fold 1 of the experiment.
 Fold 1 could be, e.g., run 1, or could be the "test" phase.
-Let $y_{vt}$ be an analogous estimate from fold 2 of the experiment (e.g., run 2 or "retest" phase), for a not-necessarily-different subject $t \in 1, \ldots, S$.
+Let $y_{tv}$ be an analogous estimate from fold 2 of the experiment (e.g., run 2 or "retest" phase), for a not-necessarily-different subject $t \in 1, \ldots, S$.
 These estimates are elements of matrices $\mathbf{X}$ and $\mathbf{Y}$, both of size $S\times V$.
 
 **Multivariate distance measure**: the squared Euclidean distance between vectors $x_s$ and $y_t$.
@@ -303,8 +303,10 @@ for (ii in 1:n_sim) {
 
   X <- matrix(rnorm(V*S), nrow = S)
   Y <- matrix(rnorm(V*S), nrow = S)
+  ## X is a matrix of b-coefficients. subjects as rows, vertices as columns. from fold 1 (e.g., "test").
+  ## Y is also a b-coefficient matrix. organized identically to X, but from a different "fold" (e.g., "retest").
   
-  X_bar <- cbind(rowSums(X))  ## across-vertex sum
+  X_bar <- cbind(rowSums(X))  ## across-vertex sum of b-coefficients. one per subj.
   Y_bar <- cbind(rowSums(Y))
   
   M <- pdist2(X, Y)  ## multivariate distance
@@ -333,7 +335,7 @@ hist(d$m)
 hist(d$u)
 
 kernel_d2 <- kde2d(d$m, d$u)
-image(kernel_d2, col = r, main = "euclidean^2", xlab = "multivariate", ylab = "univariate")
+image(kernel_d2, col = r, main = "intersubject discrimination index", xlab = "multivariate", ylab = "univariate")
 
 ```
 
