@@ -253,11 +253,10 @@ idi &lt;- function(x) {
   ## this function works on square distance matrices, and computes the &quot;intersubject discrimination index&quot;.
   ## it subtracts the mean diagonal from the mean of the off diagonals.
   
-  lower &lt;- x[lower.tri(x)]
-  upper &lt;- x[upper.tri(x)]
+  offdiag &lt;- x[row(x) != col(x)]
   diagonal &lt;- diag(x)
   
-  mean(c(lower, upper)) - mean(diagonal)
+  mean(offdiag) - mean(diagonal)
   
 }
 

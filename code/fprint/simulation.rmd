@@ -103,11 +103,10 @@ idi <- function(x) {
   ## this function works on square distance matrices, and computes the "intersubject discrimination index".
   ## it subtracts the mean diagonal from the mean of the off diagonals.
   
-  lower <- x[lower.tri(x)]
-  upper <- x[upper.tri(x)]
+  offdiag <- x[row(x) != col(x)]
   diagonal <- diag(x)
   
-  mean(c(lower, upper)) - mean(diagonal)
+  mean(offdiag) - mean(diagonal)
   
 }
 
