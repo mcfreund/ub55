@@ -116,7 +116,7 @@ models:
   * atanh transformed
 
 
-```{r fig.width = 16}
+```{r fig.width = 16, echo = FALSE}
 
 ## build models
 
@@ -307,21 +307,7 @@ contrasts.subjs.35 <-
   
   filter(
     parcel %in% parcellation$key[c(dmcc35, null34)], 
-    contrast %in% c("hihi_lolo", "hihi_hilo")
-    ) %>%
-  mutate(
-    parcelset = ifelse(parcel %in% parcellation$key[dmcc35], "dmcc35", "null34")
-  ) %>%
-  
-  group_by(subj, contrast, parcelset) %>%
-  summarize(b = mean(b))
-
-
-contrasts.subjs %>%
-  
-  filter(
-    parcel %in% parcellation$key[c(dmcc35, null34)], 
-    contrast %in% c("hihi_lolo", "hihi_hilo")
+    contrast %in% c("hihi_lolo", "hihi_hilo", "lolo_hilo")
     ) %>%
   mutate(
     parcelset = ifelse(parcel %in% parcellation$key[dmcc35], "dmcc35", "null34")
@@ -357,6 +343,8 @@ library(lemon)
 
 p <-
   contrasts.subjs.35 %>%
+  
+  filter(contrast %in% c("hihi_lolo", "hihi_hilo")) %>%
   
   ggplot(aes(contrast, b, fill = parcelset)) +
   
@@ -411,8 +399,73 @@ ggsave(
   p, device = "tiff", dpi = 1200, width = 8, height = 6, unit = "cm")
 
 
+```
+
+
+## dmcc 35 condition-wise means
+
+```{r}
+
+p.conditional <- contrasts.subjs %>%
+  
+  filter(
+    parcel %in% parcellation$key[dmcc35], 
+    contrast %in% c("hihi", "hilo", "lolo")
+  ) %>%
+
+  group_by(subj, contrast) %>%
+  summarize(b = mean(b)) %>%
+  
+
+  ggplot(aes(contrast, b)) +
+  
+  geom_hline(yintercept = 0) +
+  
+  # geom_line(aes(group = subj), alpha = 0.25) +
+  
+  stat_summary(
+    fun = mean, geom = "bar", fill = "grey60",
+    width = 0.5
+    ) +
+  stat_summary(
+    fun.data = "mean_cl_boot", 
+    geom = "errorbar", width = 0, size = 1
+    ) +
+  
+  labs(y = "Mean correlation (z)", x = "Condition pair") +
+  scale_x_discrete(labels = c("Cor(Hi, Hi)", "Cor(Hi, Lo)", "Cor(Lo, Lo)")) +
+  
+  theme_minimal(base_size = 14) +
+  
+  theme(
+   legend.position = "none", 
+   panel.grid      = element_blank(), 
+   panel.border    = element_blank(),
+   axis.line.y     = element_line(),
+   axis.ticks.y    = element_line(),
+   axis.text.x = element_text(size = rel(0.75))
+  ) +
+  
+  coord_capped_cart(left = "both") +
+  
+  annotate(geom = "segment", x = 1, xend = 2, y = -0.04, yend = -0.04, size = 0.75) +
+  annotate(geom = "segment", x = 1, xend = 3, y = -0.06, yend = -0.06, size = 0.75) +
+  annotate(geom = "segment", x = 2, xend = 3, y = -0.08, yend = -0.08, size = 0.75)
+
+  
+
+p.conditional
+
+ggsave(
+  here("code", "cross-task-simil_jocn2021", "fig_crosstasksimil_conditoinal.tiff"),
+  p.conditional, device = "tiff", dpi = 1200, width = 8, height = 6, unit = "cm")
+
+
+
 
 ```
+
+
 
 
 

@@ -1,0 +1,298 @@
+---
+title: 'multitask pattern similarity: high versus low, cross-validated euclidean -- cross-task'
+author: "michael freund"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 3
+    highlight: zenburn
+    number_sections: true
+    theme: spacelab
+---
+
+
+# intro
+
+* cross-validated euclidean distance on hi-lo contrast
+* cross-task: leave one task out
+
+
+## Purpose
+
+supplementary analysis for jocn 
+
+
+```{r setup, include = FALSE}
+
+source(here::here("code", "_packages.R"))
+source(here("code", "read-behav.R"))
+source(here("code", "_vars.R"))
+suppressWarnings(source(here("code", "_atlases.R")))
+source(here("code", "_settings.R"))
+source(here("code", "_funs.R"))
+
+library(ggridges)
+library(colorspace)
+
+subjs <- subjs[!subjs %in% "432332"]
+conditions <- combo_paste(tasks, c("hi", "lo"))
+n.dim <- length(conditions)
+is.lower.tri <- lower.tri(diag(n.dim))
+tris <- fread(here("out", "multitask", "rsa-model-tris_cross-run.csv")) %>% 
+  filter(grepl("run1", .row), grepl("run1", .col))
+X <- tris %>% select(where(is.numeric)) %>% as.matrix
+
+rsarray <- readRDS(here("out", "multitask", paste0("euclidean-unbiased_unpre.RDS")))
+
+
+group.target.trs <- fread(here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
+dmcc55b.parcels <- group.target.trs %>% filter(estimate > 0, p.fdr < 0.05) %>% pull(parcel) %>% table
+dmcc55b.parcels <- names(dmcc55b.parcels)[dmcc55b.parcels == 4]
+ 
+stats.subjs <- reshape2::melt(rsarray)
+
+
+theme_mat <- list(theme(axis.text.y = element_text(), axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)))
+
+
+dmcc35 <- c(
+  77,78,86,87,88,90,91,99, 101, 103, 105, 110, 127, 130, 132, 139, 140, 141, 148, 172, 175, 185, 189, 290, 306, 311, 
+  314, 337, 340, 346, 347, 349, 350
+  )
+null35 <- c(
+  4,5,51,72,97,100,121,122,123,125,150,153,174,211,221,235,244,245,
+  266,268,270,272,279,302,304,307,321,323,325,326,330,369,376,381
+)
+
+
+```
+
+
+
+
+# quick look: all correlations
+
+```{r fig.width = 10, fig.height = 7}
+
+
+
+p.allcor.density <- stats.subjs %>%
+  
+  ggplot(aes(value, y = task, fill = task)) +
+  geom_density_ridges() +
+  
+  scale_fill_brewer(type = "qual", palette = 5) +
+  
+  facet_grid(vars(comparison)) +
+  
+  theme(legend.position = "none") +
+  labs(x = "cv-euclidean")
+
+
+p.allcor.box <- stats.subjs %>%
+  
+  ggplot(aes(task, value, fill = task)) +
+  geom_hline(yintercept = 0) +
+  geom_boxplot(width = 0.1, notch = TRUE) +
+  
+  scale_fill_brewer(type = "qual", palette = 5) +
+  
+  theme(legend.position = "none") +
+  labs(y = "cv-euclidean") 
+
+
+
+p.allcor.network <- stats.subjs %>%
+  
+  ggplot(aes(value, y = task, fill = task)) +
+  geom_density_ridges() +
+  
+  scale_fill_brewer(type = "qual", palette = 5) +
+  
+  facet_grid(
+    rows = vars(get.network(parcel)), 
+    labeller = labeller(run = c(bt = "between-run", wn = "within-run")),
+    scales = "free_x"
+    ) +
+  
+  theme(legend.position = "none") +
+  labs(y = "cv-euclidean")
+
+
+plot_grid(
+  cowplot.title("Pattern correlations by components of RSA model"),
+  plot_grid(plot_grid(p.allcor.density, p.allcor.box, ncol = 1), p.allcor.network, nrow = 1),
+  ncol = 1, 
+  rel_heights = c(0.1, 1)
+)
+
+
+```
+
+
+# Parcel-wise stats
+
+* parcel average cross-task HiLo discrim
+* error bars show 95% CI
+
+
+```{r}
+
+stats.subjs %>%
+  
+  mutate(network = get.network(parcel)) %>% 
+  group_by(task, comparison, network, subj) %>%
+  summarize(value = mean(value)) %>%
+  
+  ggplot(aes(task, value)) +
+  
+  stat_summary(fun = "mean", geom = "bar", position = position_dodge(width = 1)) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "errorbar", position = position_dodge(width = 1), width = 0) +
+  facet_grid(vars(network), vars(comparison)) +
+  
+  labs(y = "group-mean cross-task hi-lo discriminability\n(cross-validated euclidean)", title = "discriminability by train/test split (e.g., run12 == train1test2)")
+
+
+```
+
+
+* values displayed are group-mean distance d
+* images are thesholded at d > 0 and p < 0.05 FDR (sign-rank test) corrected across all 400 parcels
+
+```{r, fig.width = 15, results = "asis"}
+
+
+contrasts.subjs <- stats.subjs %>%
+  
+  group_by(task, parcel, subj) %>%
+  summarize(value = mean(value))
+
+
+group.contrasts <- contrasts.subjs %>%
+  
+  group_by(task, parcel) %>%
+  
+  summarize(
+    p = wilcox.test(value)$p.value,
+    statistic = wilcox.test(value)$statistic,
+    b = mean(value),
+    .groups = "drop_last"
+    ) %>%
+  
+  group_by(task) %>%
+  
+  group_by(p.fdr = p.adjust(p, "fdr"))
+
+
+
+group.contrasts %<>%
+  
+  mutate(
+    hemi = substr(parcel, 1, 1),
+    num.roi = match(parcel, parcellation$key)
+  ) %>%
+  
+  arrange(task, num.roi)
+
+
+
+for (task.i in tasks) {
+  
+  cat("\n ")
+  cat(sprintf("\n### %s ", task.i))
+  cat("\n ")
+  
+  group.contrasts %>%
+
+    filter(task == task.i) %>%
+    mutate(statistic = ifelse(p.fdr < 0.05 & b > 0, b, 0)) %>%
+
+    build_overlay("statistic", template = schaefer) %>%
+    plot_surface(underlay = hcp, hues = viridis::inferno(500))
+
+  
+}
+
+## all tasks
+ 
+cat("\n ")
+cat("\n### all tasks: conjunction analysis")
+cat("\n ")
+cat("* parcels with pFDR < 0.05 in all tasks")
+
+
+group.contrasts %>%
+  
+  group_by(parcel, num.roi, hemi) %>%
+  summarize(
+    ntasks = sum(p.fdr < 0.05),
+    b = mean(b)
+    ) %>%
+
+  mutate(statistic = ifelse(ntasks == 4 & b > 0, b, 0)) %>%
+
+  build_overlay("statistic", template = schaefer) %>%
+  plot_surface(underlay = hcp, hues = viridis::inferno(500))
+
+
+```
+
+
+# DMCC 35 versus null 35
+
+
+```{r}
+
+contrasts.subjs <- stats.subjs %>%
+  
+  group_by(task, parcel, subj) %>%
+  summarize(value = mean(value))
+
+
+contrasts.subjs.35 <-
+  contrasts.subjs %>%
+  
+  filter(parcel %in% parcellation$key[c(dmcc35, null35)]) %>%
+  mutate(
+    parcelset = ifelse(parcel %in% parcellation$key[dmcc35], "dmcc35", "null35")
+  ) %>%
+  
+  group_by(subj, task, parcelset) %>%
+  summarize(value = mean(value))
+
+
+contrasts.subjs.35 %>%    
+  group_by(task, parcelset) %>%
+  summarize(
+    p = t.test(value)$p.value,
+    statistic = t.test(value)$statistic,
+    b = mean(value),
+    .groups = "drop_last"
+    )
+
+contrasts.subjs.35 %>%
+  
+  pivot_wider(names_from = "parcelset", values_from = "value") %>%
+  group_by(task) %>%
+  summarize(
+    p = t.test(dmcc35, null35, paired = TRUE)$p.value,
+    statistic = t.test(dmcc35, null35, paired = TRUE)$statistic,
+    b = mean(dmcc35) - mean(null35),
+    .groups = "drop_last"
+    )
+
+
+contrasts.subjs.35 %>%
+  
+  ggplot(aes(task, value, fill = parcelset)) +
+  
+  stat_summary(fun = mean, geom = "bar", position = position_dodge(width = 1)) +
+  stat_summary(fun.data = "mean_cl_boot", geom = "errorbar", position = position_dodge(width = 1), width = 0, size = 1) +
+  scale_fill_discrete_qualitative() +
+  labs(y = "mean cross-task-validated euclidean distance")
+
+```
+
+
+
