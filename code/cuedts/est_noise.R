@@ -44,7 +44,7 @@ for (glm.i in seq_len(nrow(glminfo))) {
   
   ## loop over subjs in parallel ----
   
-  cl <- makeCluster(n.cores / 2)
+  cl <- makeCluster(n.core / 2)
   registerDoParallel(cl)
   
   res <- foreach(
@@ -117,28 +117,35 @@ for (glm.i in seq_len(nrow(glminfo))) {
   ## wrangle:
   
   d <- 
-    tibble(subj = names(res), data = res) %>%  ## to data.frame
-    unnest_longer(data, values_to = "invcov", indices_to = "roi") %>%  ## pull out ROIs
-    select(subj, roi, invcov)  ## rearrange
+    tibble(subj = names(res), data = res) %>%
+    unnest_longer(data, values_to = "invcov") %>%  ## pull out ROIs
+    select(subj, roi = data_id, invcov)  ## rearrange
   
   
   ## save:
   
-  if (!dir.exists(here("out", "invcov"))) dir.create(here("out", "invcov"))
-  saveRDS(
-    d, 
-    here("out", "invcov", 
+  for (name.subj.i in subjs) {
+    
+    if (!dir.exists(here("out", "invcov", name.subj.i))) dir.create(here("out", "invcov", name.subj.i))
+    
+    saveRDS(
+      d %>% filter(subj == name.subj.i), 
+      here(
+        "out", "invcov", name.subj.i,
          paste0(
            "invcov_", name.task.i, "_", name.glm.i, 
            "_est-concat", 
            "_parc-", switch(do.network + 1, "parcels400", "network7"), 
            ".RDS"
          )
+      )
     )
-  )
+    
+  }
+  
   
   
 }
 
 
-
+(time.stop <- Sys.time() - time.start)

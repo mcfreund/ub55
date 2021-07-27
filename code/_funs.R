@@ -458,6 +458,8 @@ matplot <- function(x) {
 
 
 pdist2 <- function(A,B) {
+  ## https://www.r-bloggers.com/2013/05/pairwise-distances-in-r/
+  ## https://blog.smola.org/post/969195661/in-praise-of-the-second-binomial-formula
   
   an = apply(A, 1, function(rvec) crossprod(rvec,rvec))
   bn = apply(B, 1, function(rvec) crossprod(rvec,rvec))

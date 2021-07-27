@@ -1,0 +1,771 @@
+---
+title: 'UB55 trialwise univariate analysis: Stroop hi-lo contrast, group-level'
+author: "michael freund"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    highlight: zenburn
+    number_sections: true
+    theme: spacelab
+---
+
+
+# intro
+
+## Purpose
+
+1. Validate trialwise ub55 Stroop GLM high-vs-low contrast.
+2. Explore methods of modeling trial-wise parcel-mean beta estimates.
+    
+
+
+```{r setup, include = FALSE}
+
+
+source(here::here("code", "_packages.R"))
+source(here("code", "read-behav.R"))
+source(here("code", "_vars.R"))
+source(here("code", "_atlases.R"))
+source(here("code", "_settings.R"))
+source(here("code", "_funs.R"))
+
+## data ----
+
+glminfo <- data.frame(
+  task = c("Stroop"),
+  name.glm = c(
+    "baseline_fix-LSA_EVENTS_censored"
+  )
+)
+glminfo <- as.data.table(glminfo)
+
+d <- setNames(vector("list", nrow(glminfo)), glminfo$task)
+for (glm.i in seq_len(nrow(glminfo))) {
+  # glm.i = 1
+  
+  a <- readRDS(here("out", "glms", paste0("roistats_", glminfo[glm.i]$task, "_", glminfo[glm.i]$name.glm, ".RDS")))
+  a <- a[, , subjs[!subjs %in% "432332"], ]
+  a <- as.data.table(reshape2::melt(a))
+  
+  a <- separate(a, term, c("term", "stat"), "_")
+  a <- a[!grepl("Full|block", term) & stat == "Coef"]
+  a <- separate(a, term, c("term", "n"), "#")
+  
+  a$network <- a$parcel %>% gsub("LH_|RH_", "", .) %>% gsub("_.*", "", .)
+  a$hemi <- substr(a$parcel, 1, 1)
+  
+  if (!identical(unique(a$stat), "Coef")) stop("more stats than coef in there")
+
+  a$stat <- NULL
+  a <- rename(a, b = value)
+  
+  d[[glm.i]] <- a
+  
+}
+rm(glm.i, a)
+gc()
+
+
+
+## bind and create data.tables suitable for looping
+
+d <- bind_rows(d, .id = "task")
+
+
+```
+
+
+
+
+## Notes on analyses
+
+**GLMs**
+
+  * DMCC55B
+  * trialwise LS-A, fix-shaped BLOCK(1,1), Stroop
+
+
+**Contrasts (on regional means):**
+
+  * Stroop: $(\text{PC50InCon} + \text{biasInCon} - \text{PC50Con} - \text{biasCon})/2$
+
+
+**Plotting and statistical details:**
+
+
+
+
+# quick look
+
+## raw data
+
+```{r fig.width = 16, fig.height = 8}
+
+p.density <- d %>%
+  
+  ggplot(aes(b, term, fill = term)) +
+  geom_density_ridges() +
+  
+  scale_fill_brewer(type = "qual", palette = 5) +
+  
+  facet_grid(vars(run)) +
+  
+  theme(legend.position = "none") 
+
+
+
+p.box <-  d %>%
+  
+  ggplot(aes(term, b, fill = term)) +
+  geom_hline(yintercept = 0) +
+  geom_boxplot(width = 0.5, outlier.size = 0.5) +
+  
+  scale_fill_brewer(type = "qual", palette = 5) +
+  
+  facet_grid(vars(run))  +
+  
+  theme(legend.position = "none") +
+  coord_flip()
+
+
+
+
+p.network <- d %>%
+  
+  ggplot(aes(term, b, fill = term)) +
+  geom_hline(yintercept = 0) +
+  geom_boxplot(width = 0.5, outlier.size = 0.5) +
+
+  
+  scale_fill_brewer(type = "qual", palette = 5) +
+  
+  facet_grid(
+    rows = vars(get.network(parcel)), 
+    cols = vars(run), 
+    scales = "free_x"
+    ) +
+  
+  theme(legend.position = "none") +
+  coord_flip()
+
+
+
+plot_grid(
+  
+  cowplot.title("Beta estimates by trialtype"),
+  
+  plot_grid(plot_grid(p.density, p.box, ncol = 1), p.network, nrow = 1),
+  
+  ncol = 1, rel_heights = c(0.1, 1)
+  
+)
+
+
+
+```
+
+
+# prelim models
+
+
+
+```{r}
+
+## contrast matrix:
+
+A <- rbind(
+  bias_stroop = c(-1, 1, 0, 0),
+  pc50_stroop = c(0, 0, -1, 1),
+  stroop      = c(-1, 1, 0, 0),
+  pc50_bias   = c(1, 1, -1, -1) / 2
+)
+# detectCores()/2
+
+
+## fit models
+
+l <- split(d, d$parcel)
+m0 <- mclapply(l, function(x) lmer(b ~ 0 + term + (0 + term  | subj), x), mc.cores = n.cores / 2)
+
+
+## contrast coefficients
+
+h0 <- mclapply(m0, function(x) multcomp::glht(x, A), mc.cores = n.cores / 2)
+h0 <- mclapply(
+  h0, 
+  function(x) {
+    
+    a <- summary(x, test = adjusted("none"))$test
+    
+    data.table(
+      estimate = a$coefficients,
+      se = a$sigma,
+      statistic = a$tstat,
+      p.value = a$pvalue,
+      term = names(a$coefficients)
+    )
+
+    },
+  
+  mc.cores = n.cores / 2
+  
+)
+
+stats.group.m0 <- rbindlist(h0, idcol = "parcel")
+
+stats.group.m0 %<>%
+  group_by(term) %>%
+  mutate(
+    p.fdr = p.adjust(p.value, "fdr"),
+    hemi = substr(parcel, 1, 1),
+    num.roi = row_number()
+    )
+
+```
+
+
+
+
+## Brains: group-level t-statistics
+
+* t-values displayed; from HLM fitted to trial-level data (see intro)
+* colors are reversed (black = high, yellow = low) so large positive effects can be seen on white underlay.
+
+
+```{r brains, fig.width = 15, results = "asis"}
+
+
+
+for (term.i in rownames(A)) {
+  # term.i = "stroop"
+  
+  heading.i <- switch(
+    which(rownames(A) %in% term.i), 
+    "Stroop effect: bias stimuli", "Stroop effect: PC50 stimuli", 
+    "Stroop effect: bias+PC50", "bias effect: bias - PC50"
+    )
+  
+  cat("\n ")
+  cat(sprintf("\n### %s ", heading.i))
+  cat("\n ")
+
+  
+  stats.group.m0 %>%
+    
+    filter(term == term.i) %>%
+    arrange(num.roi) %>%
+    
+    build_overlay("statistic", template = schaefer) %>%
+    plot_surface(underlay = hcp, hues = rev(viridis::inferno(500)))
+  
+  
+  stats.group.m0 %>%
+    
+    filter(term == term.i) %>%
+    arrange(num.roi) %>%
+    
+    mutate(statistic = ifelse(p.fdr < 0.05, statistic, 0)) %>%
+    
+    build_overlay("statistic", template = schaefer) %>%
+    plot_surface(underlay = hcp, hues = rev(viridis::inferno(500)))
+
+    
+}
+
+
+
+```
+
+
+
+# trimmed models
+
+
+## model QC: outliers
+
+```{r fig.width = 13, fig.height = 10, results = "asis"}
+
+## extract residuals
+
+m0.resid <- lapply(m0, function(x) data.table(resid = resid(x)))
+d.resid <- cbind(d, rbindlist(m0.resid))
+d.resid$trial <- paste0(d.resid$term, "_", d.resid$n, "_", d.resid$run)
+
+
+## count and plot outliers
+
+counts.farout.subj <- d.resid[, .(perc = sum(farout(resid)) / .N * 100), by = c("subj")]
+counts.farout.parcel <- d.resid[, .(perc = sum(farout(resid)) / .N * 100), by = c("parcel")]
+counts.farout.subj.trial <- d.resid[, .(n.parc = sum(farout(resid))), by = c("subj", "trial")]
+
+
+p.farout.subj <- counts.farout.subj %>%
+  
+  ggplot(aes(subj, perc)) +
+  
+  geom_point(size = 2) +
+  geom_segment(aes(y = 0, yend = perc, x = subj, xend = subj)) +
+  
+  labs(
+    y = "% outliers",
+    title = "percentage of outliers per subject (across trials and parcels)"
+  ) +
+  
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+  
+subchunkify(p.farout.subj, fig_height = 5, fig_width = 12)
+
+
+p.farout.parcel <- counts.farout.parcel %>%
+  
+  ggplot(aes(parcel, perc)) +
+  
+  geom_point(size = 2) +
+  geom_segment(aes(y = 0, yend = perc, x = parcel, xend = parcel)) +
+
+  facet_grid(cols = vars(get.network(parcel)), scales = "free_x") +
+  theme(axis.text.x = element_blank()) +
+  labs(
+    y = "% outliers",
+    title = "percentage of outliers per parcel (across trials and subjects)"
+  )
+
+subchunkify(p.farout.parcel, fig_height = 5, fig_width = 12)
+
+counts.farout.subj.trial %>%
+  
+  filter(n.parc > 0) %>%
+  
+  ggplot(aes(n.parc)) +
+  geom_histogram(fill = "black") +
+
+  facet_wrap(vars(subj)) +
+  labs(
+    title = "number of parcels with outliers on single trials",
+    x = "number of trials",
+    y = "number of parcels with outlying beta"
+    )
+  
+
+
+## refit
+
+d.trim <- d.resid[farout(resid) == FALSE]
+l.trim <- split(d.trim, d.trim$parcel)
+m1 <- mclapply(l.trim, function(x) lmer(b ~ 0 + term + (0 + term  | subj), x), mc.cores = n.cores / 2)
+
+
+## contrast coefficients
+
+h1 <- mclapply(m1, function(x) multcomp::glht(x, A), mc.cores = n.cores / 2)
+h1 <- mclapply(
+  h1, 
+  function(x) {
+    
+    a <- summary(x, test = adjusted("none"))$test
+    
+    data.table(
+      estimate = a$coefficients,
+      se = a$sigma,
+      statistic = a$tstat,
+      p.value = a$pvalue,
+      term = names(a$coefficients)
+    )
+
+    },
+  
+  mc.cores = n.cores / 2
+  
+)
+
+stats.group.m1 <- rbindlist(h1, idcol = "parcel")
+
+stats.group.m1 %<>%
+  group_by(term) %>%
+  mutate(
+    p.fdr = p.adjust(p.value, "fdr"),
+    hemi = substr(parcel, 1, 1),
+    num.roi = row_number()
+    )
+
+parcels.m1 <- stats.group.m1 %>% filter(p.fdr < 0.05, term == "stroop") %>% pull(parcel)
+
+```
+
+
+## comparison of effect sizes to untrimmed model
+
+```{r, fig.height = 6, fig.width = 6}
+
+stats.group.m1v0 <- full_join(
+  
+  stats.group.m1 %>% 
+    ungroup %>%
+    filter(term == "stroop") %>% 
+    dplyr::select(parcel, statistic_trim = statistic, p.fdr_trim = p.fdr),
+  
+  stats.group.m0 %>% ungroup %>% filter(term == "stroop") %>% dplyr::select(parcel, statistic, p.fdr),
+  
+  by = "parcel"
+  
+)
+
+stats.group.m1v0 %>%
+  
+  ggplot(aes(statistic, statistic_trim, fill = p.fdr < 0.05 | p.fdr_trim < 0.05)) +
+  geom_abline() +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  geom_point(color = "white", shape = 21, size = 2) +
+  
+  scale_fill_manual(values = c("TRUE" = "firebrick1", "FALSE" = "black")) +
+  theme(legend.position = "none")
+  
+
+```
+
+## Examining between-subject variance in stroop (hi/lo) contrast
+
+```{r, fig.height = 6, fig.width = 6}
+
+A_stroop <- A["stroop", ]
+m1.var <- lapply(m1, function(x) data.table(sddev = c(sqrt(A_stroop %*% VarCorr(x)$subj %*% A_stroop))))
+m1.var <- rbindlist(m1.var, idcol = "parcel")
+
+m1.var %<>%  
+  
+  mutate(
+    hemi = substr(parcel, 1, 1),
+    num.roi = row_number()
+    )
+
+
+stats.group.fixvran <- full_join(
+  
+  stats.group.m1 %>% 
+    ungroup %>%
+    filter(term == "stroop") %>% 
+    dplyr::select(parcel, estimate, se, statistic, p.fdr),
+  
+  m1.var,
+  
+  by = "parcel"
+  
+)
+
+
+
+stats.group.fixvran %>%
+  
+  ggplot(aes(sddev, estimate, fill = get.network(parcel))) +
+  geom_point(color = "white", shape = 21, size = 3) +
+  
+  scale_fill_brewer(type = "qual", palette = 2, name = NULL) +
+  theme(legend.position = "top") +
+  labs(
+    title = "Stroop effect: btw-subject SD vs group-level coef by parcel",
+    y = "Stroop coefficient",
+    x = "between-subject SD(Stroop)"
+  )
+  
+
+  
+stats.group.fixvran %>%
+  
+  ggplot(aes(sddev, se, fill = p.fdr < 0.05)) +
+  geom_point(color = "white", shape = 21, size = 3) +
+  
+  scale_fill_manual(values = c("TRUE" = "firebrick1", "FALSE" = "black"), name = "coef pFDR<0.05") +
+  theme(legend.position = "top") +
+  
+  labs(
+    title = "Stroop effect: btw-subject SD vs group-level SE by parcel",
+    y = "Stroop coefficient SE",
+    x = "between-subject SD(Stroop)"
+  )
+
+
+
+
+stats.group.fixvran %>%
+  
+  ggplot(aes(sddev, statistic, fill = p.fdr < 0.05)) +
+  geom_point(color = "white", shape = 21, size = 3) +
+  
+  scale_fill_manual(values = c("TRUE" = "firebrick1", "FALSE" = "black"), name = "coef pFDR<0.05") +
+  theme(legend.position = "top") +
+  
+  labs(
+    title = "Stroop effect: btw-subject SD vs group-level t-statistic by parcel",
+    y = "Stroop t-statistic",
+    x = "between-subject SD(Stroop)"
+  )
+
+```
+
+
+Top 20 parcels with most btw-subj variance in Stroop effect:
+
+```{r}
+m1.var %>% slice_max(sddev, n = 20) %>% arrange(-sddev)
+```
+
+Of parcels with significant group-level effect, top 20 parcels with most variance in Stroop effect:
+
+```{r}
+
+m1.var %>% 
+  filter(parcel %in% parcels.m1) %>% 
+  slice_max(sddev, n = 20) %>% 
+  arrange(-sddev)
+
+```
+
+
+
+
+## Brains: between-subject variance in stroop (hi/lo) contrast
+
+* standard deviations of level-two stroop contrasts displayed; from HLM fitted to trial-level data (see intro)
+* colors are reversed (black = high, yellow = low) so large positive effects can be seen on white underlay.
+
+
+```{r brains_trimmed, fig.width = 15, results = "asis"}
+
+term.i <- "stroop"
+
+# for (term.i in rownames(A)) {
+  # term.i = "stroop"
+  
+  heading.i <- switch(
+    which(rownames(A) %in% term.i), 
+    "Stroop effect: bias stimuli", "Stroop effect: PC50 stimuli", 
+    "Stroop effect: bias+PC50", "bias effect: bias - PC50"
+    )
+
+  
+  cat("\n ")
+  cat(sprintf("\n### %s ", heading.i))
+  cat("\n ")
+
+  
+  m1.var %>%
+    
+    # filter(term == term.i) %>%
+    arrange(num.roi) %>%
+    
+    build_overlay("sddev", template = schaefer) %>%
+    plot_surface(underlay = hcp, hues = rev(viridis::inferno(500)))
+  
+  
+  cat("\n ")
+    
+# }
+
+
+
+```
+
+
+
+# crossed random effects: subject\*item
+
+
+
+```{r fig.width = 13, fig.height = 10, results = "asis"}
+
+## fit
+# 
+# m1 <- mclapply(l.trim, function(x) lmer(b ~ 0 + term + (0 + term  | subj), x), mc.cores = n.cores / 2)
+# 
+# 
+# ## contrast coefficients
+# 
+# h1 <- mclapply(m1, function(x) multcomp::glht(x, A), mc.cores = n.cores / 2)
+# h1 <- mclapply(
+#   h1, 
+#   function(x) {
+#     
+#     a <- summary(x, test = adjusted("none"))$test
+#     
+#     data.table(
+#       estimate = a$coefficients,
+#       se = a$sigma,
+#       statistic = a$tstat,
+#       p.value = a$pvalue,
+#       term = names(a$coefficients)
+#     )
+# 
+#     },
+#   
+#   mc.cores = n.cores / 2
+#   
+# )
+# 
+# stats.group.m1 <- rbindlist(h1, idcol = "parcel")
+# 
+# stats.group.m1 %<>%
+#   group_by(term) %>%
+#   mutate(
+#     p.fdr = p.adjust(p.value, "fdr"),
+#     hemi = substr(parcel, 1, 1),
+#     num.roi = row_number()
+#     )
+# 
+# parcels.m1 <- stats.group.m1 %>% filter(p.fdr < 0.05, term == "stroop") %>% pull(parcel)
+
+```
+
+
+
+# comparison to runwise 1trpk models
+
+## random subject model
+
+### scatterplot of parcel-wise estimates
+
+```{r, fig.height = 12, fig.width = 12}
+
+group.target.trs <- fread(here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
+group.target.trs <- group.target.trs[task == "Stroop"]
+
+stats.group.m1vsrw <- full_join(
+  stats.group.m1 %>% filter(term == "stroop"),
+  group.target.trs,
+  by = c("parcel", "hemi", "num.roi"),
+  suffix = c("_t", "_r")
+)
+
+
+
+stats.group.m1vsrw$sig <- ""
+stats.group.m1vsrw <- setDT(stats.group.m1vsrw)
+stats.group.m1vsrw[p.fdr_t < 0.05 & p.fdr_r < 0.05]$sig <- "both"
+stats.group.m1vsrw[p.fdr_t < 0.05 & p.fdr_r >= 0.05]$sig <- "trial"
+stats.group.m1vsrw[p.fdr_t >= 0.05 & p.fdr_r < 0.05]$sig <- "run"
+stats.group.m1vsrw[p.fdr_t >= 0.05 & p.fdr_r >= 0.05]$sig <- "none"
+
+
+
+p.rvt.b.sig <- stats.group.m1vsrw %>%
+  
+  ggplot(aes(estimate_r, estimate_t, fill = sig)) +
+  
+  geom_abline() +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  geom_point(color = "white", shape = 21, size = 2) +
+  
+  scale_fill_manual(
+    values = c(both = "black", none = "grey50", trial = "firebrick1", run = "dodgerblue1"),
+    name = "pFDR<0.05"
+    ) +
+  theme(legend.position = "top") +
+  
+  labs(
+    title = "coefs, signif. highlighted",
+    x = "run-wise b (run-wise 1trpk shifted)",
+    y = "trial-wise b (trial-wise fixed-shape)"
+  )
+
+p.rvt.b.net <- stats.group.m1vsrw %>%
+  
+  ggplot(aes(estimate_r, estimate_t, fill = get.network(parcel))) +
+  
+  geom_abline() +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  geom_point(color = "white", shape = 21, size = 3) +
+  
+  scale_fill_brewer(type = "qual", palette = 2, name = NULL) +
+  theme(legend.position = "top") +
+  
+  labs(
+    title = "coefs, networks highlighted",
+    x = "run-wise b (run-wise 1trpk shifted)",
+    y = "trial-wise b (trial-wise fixed-shape)"
+  )
+
+
+
+p.rvt.t.sig <- stats.group.m1vsrw %>%
+  
+  ggplot(aes(statistic_r, statistic_t, fill = sig)) +
+  
+  geom_abline() +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  geom_point(color = "white", shape = 21, size = 2) +
+  
+  scale_fill_manual(
+    values = c(both = "black", none = "grey50", trial = "firebrick1", run = "dodgerblue1"),
+    name = "pFDR<0.05"
+    ) +
+  theme(legend.position = "top") +
+  
+  labs(
+    title = "t-stats, signif. highlighted",
+    x = "run-wise t (run-wise 1trpk shifted)",
+    y = "trial-wise t (trial-wise fixed-shape)"
+  )
+
+
+p.rvt.t.net <- stats.group.m1vsrw %>%
+  
+  ggplot(aes(statistic_r, statistic_t, fill = get.network(parcel))) +
+  
+  geom_abline() +
+  geom_hline(yintercept = 0) +
+  geom_vline(xintercept = 0) +
+  geom_point(color = "white", shape = 21, size = 3) +
+  
+  scale_fill_brewer(type = "qual", palette = 2, name = NULL) +
+  theme(legend.position = "top") +
+  
+  labs(
+    title = "t-stats, networks highlighted",
+    x = "run-wise t (run-wise 1trpk shifted)",
+    y = "trial-wise t (trial-wise fixed-shape)"
+  )
+
+
+plot_grid(
+  cowplot.title("Run-wise (1trpk shifted) versus trial-wise (fix-shape LS-A estimates)"),
+  plot_grid(p.rvt.b.sig, p.rvt.t.sig), 
+  plot_grid(p.rvt.b.net, p.rvt.t.net), 
+  nrow = 3, rel_heights = c(0.1, 1, 1)
+)
+
+
+```
+
+
+### difference maps
+
+## random subject*item model
+
+### scatterplot of parcel-wise estimates
+
+### difference maps
+
+```{r}
+
+```
+
+
+
+```{r}
+
+# fwrite(group.target.trs, here("out", "stats_univ_hilo_target_schaefer400-07.csv"))
+
+```
+
+
+
+
+
+
+
+
+

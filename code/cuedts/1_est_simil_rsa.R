@@ -79,7 +79,11 @@ if (argv$network) {
 }
 
 
+<<<<<<< HEAD
 subjs <- subjs[!subjs %in% c("432332", "DMCC5820265")]  ## exclude some subjs
+=======
+B <- readRDS(here("out", "glms", paste0("betas_Cuedts_", name.glm,  ".RDS")))
+>>>>>>> a254b73a1259023929990fb6a4cd247026a30ca0
 
 
 ## load data and get info from it
@@ -104,7 +108,10 @@ cat(unlist(argv), "\n")
 
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> a254b73a1259023929990fb6a4cd247026a30ca0
 ## est simil ----
 
 
