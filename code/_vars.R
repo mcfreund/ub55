@@ -24,8 +24,10 @@ if (nodename == "ccplinux1") {
   
 }
 
+subjs <- data.table::fread(here::here("in", "ub55_subjects.txt"))[[1]]
+n.subj <- length(subjs)
 
-n.cores <- parallel::detectCores()
+n.core <- parallel::detectCores()
 
 n.vert <- 20484  ## surface hcp mesh
 
@@ -66,3 +68,4 @@ cue.trs <- list(
   Stern = 7:8,
   Stroop = 2:4
 )
+

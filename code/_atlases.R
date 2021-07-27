@@ -45,10 +45,10 @@ over <- list(
 )
 
 schaefer <- list(
-  L = read_gifti2matrix(
+  L = mikeutils::read_gifti2matrix(
     file.path(dir.schaefer, "Schaefer2018_400Parcels_7Networks_order_L.label.gii")
   ) %>% c,
-  R = read_gifti2matrix(
+  R = mikeutils::read_gifti2matrix(
     file.path(dir.schaefer, "Schaefer2018_400Parcels_7Networks_order_R.label.gii")
   ) %>% c
 )
