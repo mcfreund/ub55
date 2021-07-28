@@ -9,6 +9,29 @@ output:
 ---
 
 
+# intro
+
+Analysis to help guide use of noise models in pattern analysis.
+
+Questions this analysis might help inform:
+
+a. Is noise structure stable across runs within a task? across tasks?
+   - For a given run (or task), can noise estimates from different runs (or tasks) be used to normalize patterns?
+      - Does filtering higher-motion frames boost stability?
+   - Are there 'bad' tasks or glms whose noise models should be scrutinized further?
+b. What aspects of noise structure are stable across runs/tasks?
+   - diagonal (variance), offidagonal (covariance)? --- Should residual timeseries variance be used to downweight individual vertices?
+   - magnitude (scale), direction (pattern)? --- should covariance matrices be converted into correlation matrices?
+c. What is the impact on cross-task stability of concatenating timeseries across runs versus estimating runwise then aggregating over runs?
+   - how should noise models be estimated?
+
+Stability statistics:
+
+* stability can be assessed in mean (location), variance (scale/magnitude), angle (pattern 'shape')
+* cor: linear correlation, sensitive to pattern shape
+* cossim: cosine similarity, sensitive to pattern shape and location
+* rmse: root mean squared error (a distance measure), sensitive to shape, location, and scale
+
 
 ```{r setup, include = FALSE}
 
@@ -21,6 +44,7 @@ source(here("code", "_funs.R"))
 library(mikeutils)
 
 do.network <- TRUE
+do.calcstabil <- FALSE
 
 glminfo <- data.frame(
   task = c("Axcpt", "Cuedts", "Stern", "Stroop"),
@@ -112,170 +136,34 @@ get_diag <- function(m, vert_names, vert_names_keep) {
 
 }
 
+
 ```
-
-
-
-# intro
-
-Analysis to help guide use of noise models in pattern analysis.
-
-Questions this analysis might help inform:
-
-a. Is noise structure stable across runs within a task? across tasks?
-   - For a given run (or task), can noise estimates from different runs (or tasks) be used to normalize patterns?
-      - Does filtering higher-motion frames boost stability?
-   - Are there 'bad' tasks or glms whose noise models should be scrutinized further?
-b. What aspects of noise structure are stable across runs/tasks?
-   - diagonal (variance), offidagonal (covariance)? --- Should residual timeseries variance be used to downweight individual vertices?
-   - magnitude (scale), direction (pattern)? --- should covariance matrices be converted into correlation matrices?
-c. What is the impact on cross-task stability of concatenating timeseries across runs versus estimating runwise then aggregating over runs?
-   - how should noise models be estimated?
-
-
-
-
 
 
 
 ```{r}
 
 
-## runwise noise estimates ----
+if (do.calcstabil) {
+  
+  source(here("code", "noise", "est_noise_model_stabil_concat.R"))
+  source(here("code", "noise", "est_noise_model_stabil_runwise.R"))
+  
+} else {
 
+	R <- readRDS(here("out", "invcov", "invcov-stability_est-runwise.RDS"))
+	R_c <- readRDS(here("out", "invcov", "invcov-stability_est-concat.RDS"))
 
-R <- array(
-  NA,
-  c(length(taskruns), length(taskruns), n.subj, length(rois), length(fdmasks), 2, 3),
-  list(
-	 .row = taskruns, .col = taskruns, 
-	 subj = subjs, roi = rois, 
-	 fdmask = paste0("mask", fdmasks),
-	 component = c("var", "cov"),
-	 measure = c("cor", "cossim", "rmse")
-	 )
-)
-
-
-(start.time <- Sys.time())
-for (fdmask.i in seq_along(fdmasks)) {
-   
-   d <- enlist(glminfo$task)
-   for (subj.i in seq_along(subjs_have)) {
-		#subj.i = 1; fdmask.i = 1
-		
-		name.subj.i <- subjs[subj.i]
-		
-		## read inverse covariance matrices:
-		
-		for (glm.i in seq_len(nrow(glminfo))) {
-			# glm.i = 1; fdmask.i = 1; do.runwise = TRUE
-					
-			name.task.i <- glminfo[glm.i]$task
-			name.glm.i <- glminfo[glm.i]$name.glm
-			
-			d[[glm.i]] <- readRDS(
-				here(
-				  "out", "invcov", name.subj.i,
-				  paste0(
-				   "invcov_", name.task.i, "_", name.glm.i, 
-					"_est-runwise", 
-					"_parc-", switch(do.network + 1, "parcels400", "network7"), 
-					"_cens-fd", fdmasks[fdmask.i], 
-					".RDS"
-				  )
-				)
-			)
-			
-		}
-		
-		is.bad.task <- vapply(
-			d, 
-			function(x) {
-				x <- c(x)
-				any(is.na(x)) | any(is.null(x))
-			},
-			logical(1)
-		)
-		
-		if (any(is.bad.task)) next
-		
-		
-		## loop over ROIs, compute stability stats:
-		
-		for (roi.i in seq_along(rois)) {
-			# roi.i = 1
-			
-			name.roi.i <- rois[roi.i]
-			
-			ii_axcpt <- which(d$Axcpt$roi == name.roi.i)
-			ii_cuedts <- which(d$Cuedts$roi == name.roi.i)
-			ii_stern <- which(d$Stern$roi == name.roi.i)
-			ii_stroop <- which(d$Stroop$roi == name.roi.i)
-			 
-			axcpt_vert <- attr(d$Axcpt$invcov[[ii_axcpt]], "which.vert") %>% as.character
-			cuedts_vert <- attr(d$Cuedts$invcov[[ii_cuedts]], "which.vert") %>% as.character
-			stern_vert <- attr(d$Stern$invcov[[ii_stern]], "which.vert") %>% as.character
-			stroop_vert <- attr(d$Stroop$invcov[[ii_stroop]], "which.vert") %>% as.character
-			 
-			good_vert <- Reduce(intersect, list(axcpt_vert, cuedts_vert, stern_vert, stroop_vert)) %>% as.character
-			
-			if (length(good_vert) < 1) next	
-					 
-			 X_cov <- cbind(
-				get_lt(d$Axcpt$invcov[[ii_axcpt]], axcpt_vert, good_vert),
-				get_lt(d$Cuedts$invcov[[ii_cuedts]], cuedts_vert, good_vert),
-				get_lt(d$Stern$invcov[[ii_stern]], stern_vert, good_vert),
-				get_lt(d$Stroop$invcov[[ii_stroop]], stroop_vert, good_vert)
-				)
-			 
-			 X_var <- cbind(
-				get_diag(d$Axcpt$invcov[[ii_axcpt]], axcpt_vert, good_vert),
-				get_diag(d$Cuedts$invcov[[ii_cuedts]], cuedts_vert, good_vert),
-				get_diag(d$Stern$invcov[[ii_stern]], stern_vert, good_vert),
-				get_diag(d$Stroop$invcov[[ii_stroop]], stroop_vert, good_vert)
-				)
-			
-			## get stats:
-			
-			R[, , name.subj.i, name.roi.i, fdmask.i, "cov", "cor"] <- cor(X_cov)
-			R[, , name.subj.i, name.roi.i, fdmask.i, "cov", "cossim"] <- cosinesim_m(X_cov)
-			R[, , name.subj.i, name.roi.i, fdmask.i, "cov", "rmse"] <- sqrt(pdist2(t(X_cov), t(X_cov)) / nrow(X_cov))
-			
-			R[, , name.subj.i, name.roi.i, fdmask.i, "var", "cor"] <- cor(X_var)
-			R[, , name.subj.i, name.roi.i, fdmask.i, "var", "cossim"] <- cosinesim_m(X_var)
-			R[, , name.subj.i, name.roi.i, fdmask.i, "var", "rmse"] <- sqrt(pdist2(t(X_var), t(X_var)) / nrow(X_var))
-			
-		}
-		
-		print(paste0(subj.i, "/", length(subjs), " | ", fdmask.i, "/", length(fdmasks))))
-		
-	}
-	
 }
-(duration <- Sys.time() - start.time)
-saveRDS(R, here("out", "invcov", "invcov-stability_est-runwise1.RDS"))
 
-
-
-
-
-
-
-
-
-## run-concatenated noise estimates ----
-
-## TODO!
 
 ```
 
-
+subjs with complete data:
 
 ```{r}
 
-R <- readRDS(here("out", "invcov", "invcov-stability_est-runwise.RDS"))
-#dimnames(R)[1:2] <- list(.row = taskruns, .col = taskruns)
+## wrangle ----
 
 ## array -> data.frame
 
@@ -286,290 +174,555 @@ R_offd <- apply(
 
 r_offd <- reshape2::melt(R_offd)
 
-r_offd <- r_offd %>% filter(!is.na(value))
+r_offd <- r_offd %>% filter(!is.na(value))  ## get rid of bad subjs
 
 
-## get summary statistics ----
+unique(r_offd$subj)  ## subjs with complete data
 
+## bind row/col names:
 
-## get averaging matrix for within-task correlations:
+inds_lt <- matrix(1:length(taskruns)^2, nrow = length(taskruns))
+inds_lt <- inds_lt[lower.tri(inds_lt)]
+labs_lt <- 
+  reshape2::melt(R[, , 1, 1, 1, 1, 1])[inds_lt, c(".row", ".col")] %>%
+  separate(.row, into = c("row_task", "row_run")) %>%
+  separate(.col, into = c("col_task", "col_run"))
 
-W_wthntsk <- diag(length(taskruns))
-dimnames(W_wthntsk) <- list(.row = taskruns, .col = taskruns)
-W_wthntsk[(row(W_wthntsk) + 1) == col(W_wthntsk)] <- 1
-W_wthntsk[(row(W_wthntsk) - 1) == col(W_wthntsk)] <- 1
-w_wthntsk <- W_wthntsk[lower.tri(W_wthntsk)]
-w_wthntsk <- w_wthntsk / sum(w_wthntsk)
+labs_lt <- cbind(Var1 = 1:nrow(labs_lt), labs_lt)
 
+r_offd <- full_join(r_offd, labs_lt, by = "Var1")
 
-## get averaging matrix for cross-task correlations:
-
-W_btwntsk <- diag(length(taskruns))
-dimnames(W_btwntsk) <- list(.row = taskruns, .col = taskruns)
-W_btwntsk[W_wthntsk == 0] <- 1
-w_btwntsk <- W_btwntsk[lower.tri(W_btwntsk)]
-w_btwntsk <- w_btwntsk / sum(w_btwntsk)
-
-## summarize:
-
-r_simil <- r_offd %>%
-	
-	filter(measure %in% c("cor", "cossim")) %>%
-	group_by(subj, roi, fdmask, component, measure) %>%	
-	summarize(
-		wthntsk = c(tanh(atanh(value) %*% w_wthntsk)),
-		btwntsk = c(tanh(atanh(value) %*% w_btwntsk))
-	)
-
-
-r_error <- r_offd %>%
-	
-	filter(measure == "rmse") %>%
-	group_by(subj, roi, fdmask, component, measure) %>%	
-	summarize(
-		wthntsk = c(value %*% w_wthntsk),
-		btwntsk = c(value %*% w_btwntsk)
-	)
-
-r <- full_join(r_simil, r_error)
-
+r_offd %<>% mutate(fdmask = as.factor(gsub("mask", "", fdmask)))
 
 ```
 
 
 
-
-# cross-run consistency
+# cross-run stability
 
 Within-task comparisons.
 
-## mean acros tasks
+## mean across tasks
 
-```{r}
+```{r, fig.width = 9, fig.height = 5}
 
-r %>%
+
+r_offd <- r_offd %>% mutate(is_within_task = row_task == col_task)
+
+sum_task <- bind_rows(
+    
+    r_offd %>%
+    
+      filter(measure %in% c("cor", "cossim")) %>%
+    	group_by(subj, roi, fdmask, component, measure) %>%	
+      mutate(value = atanh(value)) %>%
+    	summarize(
+    		wthntsk = tanh(mean(value[is_within_task])),
+    		btwntsk = tanh(mean(value[!is_within_task]))
+    	),
+    
+    r_offd %>%
+      
+    	filter(measure == "rmse") %>%
+    	group_by(subj, roi, fdmask, component, measure) %>%	
+    	summarize(
+    		wthntsk = mean(value[is_within_task]),
+    		btwntsk = mean(value[!is_within_task])
+    	)
+
+  )
+
+
+sum_task %>%
    
    filter(component == "cov") %>%
    
-   ggplot(aes(fdmask, wthintsk)) +
+   ggplot(aes(fdmask, wthntsk)) +
    stat_summary(fun.data = "mean_cl_boot") +
    facet_grid(vars(measure), vars(roi), scales = "free_y") +
-   labs(x = "fdmask threshold", y = "estimate", title = "stability of noise covariance across runs (within-task)")
+   labs(
+	   x = "fdmask threshold",
+	   y = "estimate", 
+	   title = "stability of noise covariance across runs (within-task)"
+   )
 
 
-r %>%
+sum_task %>%
    
    filter(component == "var") %>%
    
-   ggplot(aes(fdmask, wthintsk)) +
+   ggplot(aes(fdmask, wthntsk)) +
    stat_summary(fun.data = "mean_cl_boot") +
    facet_grid(vars(measure), vars(roi), scales = "free_y") +
-   labs(x = "fdmask threshold", y = "estimate", title = "stability of noise variance across runs (within-task)")
+   labs(
+	   x = "fdmask threshold", 
+	   y = "estimate", 
+	   title = "stability of noise variance across runs (within-task)"
+   )
 
 
 ```
+
+Stability of covariance strongly depends on amount of data (number of frames), above and beyond amount of motion in frames.
+Similar story told with variances, but much less strongly.
 
 ## per task
 
 
+```{r, fig.width = 11, fig.height = 6}
 
-# cross-task consistency
+r_offd <- r_offd %>% 
+  mutate(
+    is_within_Axcpt = row_task == col_task & row_task == "Axcpt",
+    is_within_Cuedts = row_task == col_task & row_task == "Cuedts",
+    is_within_Stern = row_task == col_task & row_task == "Stern",
+    is_within_Stroop = row_task == col_task & row_task == "Stroop"
+    )
+
+
+r_offd$task <- apply(
+  r_offd[, c("is_within_Axcpt", "is_within_Cuedts", "is_within_Stern", "is_within_Stroop")],
+  1, 
+  function(x) {
+    ind <- which(x)
+    if (length(ind) == 0) ind <- 0
+    switch(ind + 1, "btwn_task", "Axcpt", "Cuedts", "Stern", "Stroop")
+  }
+)
+
+
+sum_task_each <- bind_rows(
+    
+   r_offd %>%
+    
+      filter(measure %in% c("cor", "cossim")) %>%
+    	group_by(subj, roi, fdmask, component, measure, task) %>%
+      mutate(value = atanh(value)) %>%
+    	summarize(value = tanh(mean(value))),
+    
+    r_offd %>%
+      
+    	filter(measure == "rmse") %>%
+    	group_by(subj, roi, fdmask, component, measure, task) %>%	
+    	summarize(value = mean(value))
+
+  )
+
+
+sum_task_each %>%
+   
+   filter(component == "cov", !task %in% "btwn_task") %>%
+   
+   ggplot(aes(fdmask, value, color = task)) +
+   stat_summary(fun.data = "mean_cl_boot", position = position_dodge(width = 0.5)) +
+   facet_grid(vars(measure), vars(roi), scales = "free_y") +
+   labs(
+	   x = "fdmask threshold",
+	   y = "estimate", 
+	   title = "Stability of noise covariance across runs"
+   ) +
+  
+  scale_color_viridis_d() +
+  theme(legend.position = "top")
+
+
+sum_task_each %>%
+   
+   filter(component == "var", !task %in% "btwn_task") %>%
+   
+   ggplot(aes(fdmask, value, color = task)) +
+   stat_summary(fun.data = "mean_cl_boot", position = position_dodge(width = 0.5)) +
+   facet_grid(vars(measure), vars(roi), scales = "free_y") +
+   labs(
+	   x = "fdmask threshold",
+	   y = "estimate", 
+	   title = "Stability of noise variance across runs"
+   ) +
+  
+  scale_color_viridis_d() +
+  theme(legend.position = "top")
+
+
+```
+
+Large differences in stability of covariance across tasks.
+Cuedts > Axcpt > Stern > Stroop.
+This also matches the rank order of the number of TRs per task (in alphabetical order): `r n.trs`
+
+
+
+# cross-task stability
 
 
 ## mean across tasks
 
-```{r}
+```{r, fig.width = 9, fig.height = 5}
 
 
-r %>%
+sum_task_each %>%
+
+  filter(component == "cov", task == "btwn_task") %>%
+  
+  ggplot(aes(fdmask, value)) +
+  stat_summary(fun.data = "mean_cl_boot") +
+  facet_grid(vars(measure), vars(roi), scales = "free_y") +
+  labs(
+    x = "fdmask threshold",
+    y = "estimate",
+    title = "stability of noise covariance across tasks"
+  )
+
+
+sum_task_each %>%
+
+   filter(component == "var", task == "btwn_task") %>%
+
+   ggplot(aes(fdmask, value)) +
+   stat_summary(fun.data = "mean_cl_boot") +
+   facet_grid(vars(measure), vars(roi), scales = "free_y") +
+   labs(
+	x = "fdmask threshold",
+	y = "estimate",
+	title = "stability of noise variance across tasks"
+	)
+
+
+```
+
+Similar story as cross-run within-task.
+More frames improves cross-task stability of noise covariance, above and beyond amount of motion.
+Less so with variances (variances already relatively stable).
+
+
+## per run
+
+Within run 1 (run1~run1), within run 2 (run2~run2), between run (run1~run2).
+All comparisons between task.
+
+
+```{r, fig.width = 10, fig.height = 6}
+
+
+
+r_offd <- r_offd %>% 
+  mutate(
+    is_within_run1 = row_run == col_run & row_run == "run1",
+    is_within_run2 = row_run == col_run & row_run == "run2"
+    )
+
+
+r_offd$run <- apply(
+  r_offd[, c("is_within_run1", "is_within_run2")],
+  1, 
+  function(x) {
+    ind <- which(x)
+    if (length(ind) == 0) ind <- 0
+    switch(ind + 1, "btwn_run", "run1", "run2")
+  }
+)
+
+
+
+
+sum_run <- bind_rows(
+    
+   r_offd %>%
+    
+      filter(measure %in% c("cor", "cossim"), task == "btwn_task") %>%
+    	group_by(subj, roi, fdmask, component, measure, run) %>%
+      mutate(value = atanh(value)) %>%
+    	summarize(value = tanh(mean(value))),
+    
+    r_offd %>%
+      
+    	filter(measure == "rmse", task == "btwn_task") %>%
+    	group_by(subj, roi, fdmask, component, measure, run) %>%	
+    	summarize(value = mean(value))
+
+  )
+
+
+
+
+sum_run %>%
    
    filter(component == "cov") %>%
    
-   ggplot(aes(fdmask, btwntsk)) +
-   stat_summary(fun.data = "mean_cl_boot") +
+   ggplot(aes(fdmask, value, color = run)) +
+   stat_summary(fun.data = "mean_cl_boot", position = position_dodge(width = 0.5)) +
    facet_grid(vars(measure), vars(roi), scales = "free_y") +
-   labs(x = "fdmask threshold", y = "estimate", title = "stability of noise covariance across tasks")
+   labs(
+	   x = "fdmask threshold",
+	   y = "estimate", 
+	   title = "Stability of noise covariance across runs"
+   ) +
+  
+  scale_color_brewer(type = 'qual', palette = 2) +
+  theme(legend.position = "top")
 
 
-r %>%
+
+sum_run %>%
    
    filter(component == "var") %>%
    
-   ggplot(aes(fdmask, btwntsk)) +
-   stat_summary(fun.data = "mean_cl_boot") +
+   ggplot(aes(fdmask, value, color = run)) +
+   stat_summary(fun.data = "mean_cl_boot", position = position_dodge(width = 0.5)) +
    facet_grid(vars(measure), vars(roi), scales = "free_y") +
-   labs(x = "fdmask threshold", y = "estimate", title = "stability of noise variance across tasks")
+   labs(
+	   x = "fdmask threshold",
+	   y = "estimate", 
+	   title = "Stability of noise variance across runs"
+   ) +
+  
+  scale_color_brewer(type = 'qual', palette = 2) +
+  theme(legend.position = "top")
+
+
+```
+
+Run (1_AP, 2_PA) has weak impact on covariances (between run less stable), but strong impact on variances.
+
+
+
+## concatenated
+
+With noise models from runs concatenated (along the time-dimension) prior to estimation.
+
+```{r}
+
+
+## ----
+
+R_c_offd <- apply(
+	R_c, c("subj", "roi", "component", "measure"),
+	function(x) x[lower.tri(x)]
+)
+
+r_c_offd <- reshape2::melt(R_c_offd)
+
+r_c_offd <- r_c_offd %>% filter(!is.na(value))  ## get rid of bad subjs
+
+
+unique(r_c_offd$subj)  ## subjs with complete data
+
+## bind row/col names:
+
+inds_lt <- matrix(1:length(tasks)^2, nrow = length(tasks))
+inds_lt <- inds_lt[lower.tri(inds_lt)]
+labs_lt <- reshape2::melt(R_c[, , 1, 1, 1, 1])[inds_lt, c(".row", ".col")]
+labs_lt <- cbind(Var1 = 1:nrow(labs_lt), labs_lt)
+
+r_c_offd <- full_join(r_c_offd, labs_lt, by = "Var1")
+
+
+
+
+## ----
+
+
+
+sum_task_c <- bind_rows(
+    
+    r_c_offd %>%
+    
+      filter(measure %in% c("cor", "cossim")) %>%
+    	group_by(subj, roi, component, measure) %>%	
+      mutate(value = atanh(value)) %>%
+    	summarize(value = tanh(mean(value))),
+    
+    r_c_offd %>%
+      
+    	filter(measure == "rmse") %>%
+    	group_by(subj, roi, component, measure) %>%	
+    	summarize(value = mean(value))
+
+  )
+
+
+
+
+sum_task_c %>%
+  
+  filter(component == "cov") %>%
+  
+  ggplot(aes(roi, value)) +
+  stat_summary(fun.data = "mean_cl_boot") +
+  facet_grid(vars(measure), scales = "free_y") +
+  labs(
+    x = "ROI",
+    y = "estimate",
+    title = "stability of noise covariance across tasks"
+  )
+
+
+
+sum_task_c %>%
+  
+  filter(component == "var") %>%
+
+  ggplot(aes(roi, value)) +
+  stat_summary(fun.data = "mean_cl_boot") +
+  facet_grid(vars(measure), scales = "free_y") +
+  labs(
+    x = "ROI",
+    y = "estimate",
+    title = "stability of noise variance across tasks"
+  )
+
+
 
 
 ```
 
 
-## per run
+```{r fig.width = 10, fig.height = 3}
 
-### run1, run2, btw-run
+## matrices ----
+
+R_bar_cor <- 
+  apply(
+    atanh(R_c[, , , , , c("cor", "cossim")]),
+    c(".row", ".col", "roi", "component", "measure"), 
+    mean, na.rm = TRUE
+    ) %>% tanh
+
+R_bar_rmse <- 
+  apply(
+    R_c[, , , , , c("rmse"), drop = FALSE],
+    c(".row", ".col", "roi", "component", "measure"), 
+    mean, na.rm = TRUE
+    )
+
+R_bar <- abind(R_bar_cor, R_bar_rmse, along = length(dim(R_bar_cor)))
+dimnames(R_bar) <- dimnames(R_c)[-3]
+r_bar <- reshape2::melt(R_bar)
+
+
+## plot ----
+
+
+r_bar$value[is_equal(r_bar$value, 0)] <- NA
+r_bar$value[is_equal(r_bar$value, 1)] <- NA
+
+for (component.i in c("cov", "var")) {
+  
+  for (stat.i in c("cor", "cossim", "rmse")) {
+
+    p_bar <- r_bar %>%
+    	
+    	filter(component == component.i, measure == stat.i) %>%
+      
+      mutate(.col = factor(.col, levels = rev(unique(.col)))) %>%
+      
+    	ggplot(aes(.row, .col, fill = value)) +
+    	
+    	geom_raster() +
+    	facet_grid(cols = vars(roi)) +
+    	scale_fill_viridis_c(option = "magma") +
+    	theme(
+    	  axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), 
+    	  legend.position = "top",
+    	  axis.title = element_blank(),
+    	  legend.text = element_text(size = 8)
+    	  ) +
+    	
+      labs(
+        title = paste0("fdmask 0.9, component: ", component.i, ", measure: ", stat.i)
+      )
+    
+    print(p_bar)
+    
+    
+  }
+  
+}
+
+```
 
 
 
-## per task
 
-### axcpt, cuedts, stroop, stern
+
+
+
+
+
+
+
+
+
+
 
 
 # matrices
 
 
 
+```{r fig.width = 12, fig.height = 4}
+
+## aggregate ----
+
+R_bar_cor <- 
+  apply(
+    atanh(R[, , , , , , c("cor", "cossim")]),
+    c(".row", ".col", "roi", "fdmask", "component", "measure"), 
+    mean, na.rm = TRUE
+    ) %>% tanh
+
+R_bar_rmse <- 
+  apply(
+    R[, , , , , , c("rmse"), drop = FALSE],
+    c(".row", ".col", "roi", "fdmask", "component", "measure"), 
+    mean, na.rm = TRUE
+    )
+
+R_bar <- abind(R_bar_cor, R_bar_rmse, along = length(dim(R_bar_cor)))
+dimnames(R_bar) <- dimnames(R)[-3]
+r_bar <- reshape2::melt(R_bar)
 
 
+## plot ----
 
 
+r_bar$value[is_equal(r_bar$value, 0)] <- NA
+r_bar$value[is_equal(r_bar$value, 1)] <- NA
 
-
-
-
-
-
-
-
-
-
-
-## scratch
-
-```{r}
-
-
-
-## scratch ----
-
-## get cross-run stuff
-# 
-# 
-# (start.time <- Sys.time())
-# l <- enlist(length(fdmasks))
-# for (fdmask.i in seq_along(fdmasks)) {
-#    
-#   for (glm.i in seq_len(nrow(glminfo))) {
-#     # glm.i = 1; fdmask.i = 1; do.runwise = TRUE
-#     
-#     name.task.i <- glminfo[glm.i]$task
-#     name.glm.i <- glminfo[glm.i]$name.glm
-#     
-#     d <- readRDS(
-#       here(
-#         "out", "invcov", 
-#          paste0(
-#            "invcov_", name.task.i, "_", name.glm.i, 
-#            "_est-", switch(do.runwise + 1, "concat", "runwise"), 
-#            "_parc-", switch(do.network + 1, "parcels400", "network7"), 
-#            "_cens-fd", fdmasks[fdmask.i], 
-#            ".RDS"
-#          )
-#       )
-#     )
-# 
-#    stats <- lapply(d$invcov, crossrun_stats)
-#    stats <- bind_cols(d %>% select(-invcov), rbindlist(stats))
-#    stats$fdmask <- fdmasks[fdmask.i]
-#    
-#    l[[fdmask.i]] <- stats
-#    
-#    rm(d)
-#    gc()
-#    
-#     
-#   }
-# 
-# }
-# (duration <- Sys.time() - start.time)
-# 
-# res <- rbindlist(l)
-# 
-# 
-# 
-# ## get cross-task stuff
-# 
-# 
-# (start.time <- Sys.time())
-# l <- vector("list", length(fdmasks))
-# for (fdmask.i in seq_along(fdmasks)) {
-#    
-#    d <- enlist(glminfo$task)
-#    for (glm.i in seq_len(nrow(glminfo))) {
-#     # glm.i = 1; fdmask.i = 1; do.runwise = TRUE
-#     
-#     name.task.i <- glminfo[glm.i]$task
-#     name.glm.i <- glminfo[glm.i]$name.glm
-#     
-#     d_i <- readRDS(
-#       here(
-#         "out", "invcov", 
-#          paste0(
-#            "invcov_", name.task.i, "_", name.glm.i, 
-#            "_est-", switch(do.runwise + 1, "concat", "runwise"), 
-#            "_parc-", switch(do.network + 1, "parcels400", "network7"), 
-#            "_cens-fd", fdmasks[fdmask.i], 
-#            ".RDS"
-#          )
-#       )
-#     )
-#     
-#     d_i$invcov <- lapply(d_i$invcov, get_lt)
-#     d_i$task <- name.task.i
-#     
-#     d[[glm.i]] <- d_i
-#     
-#     rm(d_i)
-#     gc()
-#     
-#    }
-#    
-#    d$r <- NA
-#    d$s <- NA
-#    d$e <- NA
-#    d_idcols <- d[[1]][, c("subj", "roi")]
-#    d_idcols[, c("r", "s", "e")] <- NA
-#    for (ii in seq_len(nrow(d_idcols))) {
-#       # ii = 1
-#       
-#       ## average across run per task:
-#       
-#       X <- cbind(
-#          rowMeans(d$Axcpt$invcov[[ii]]),
-#          rowMeans(d$Axcpt$invcov[[ii]]),
-#          rowMeans(d$Axcpt$invcov[[ii]]),
-#          rowMeans(d$Axcpt$invcov[[ii]])
-#       )
-#       
-#       ## get stats:
-#       
-#       r <- cor(X)
-#       s <- cosinesim_m(X)
-#       e <- sqrt(pdist2(t(X), t(X)) / nrow(X))  ## RMSE
-#       
-#       d_idcols$r[[ii]] <- list(r)
-#       d_idcols$s[[ii]] <- list(s)
-#       d_idcols$e[[ii]] <- list(e)
-#       
-#    }
-#    
-#    l[[fdmask.i]] <- d_idcols
-#    
-#    rm(X, d)
-#    gc()
-#    
-#    
-#    ## TODO:
-#    ## cross-task correlation
-#    
-#    
-#    
-# }
-# (duration <- Sys.time() - start.time)
-# 
-# str(m[lower.tri(m)])
-# 
+for (component.i in c("cov", "var")) {
+  
+  for (stat.i in c("cor", "cossim", "rmse")) {
+    
+    
+    p_bar <- r_bar %>%
+    	
+    	filter(fdmask == "mask0.9", component == component.i, measure == stat.i) %>%
+      
+      mutate(.col = factor(.col, levels = rev(unique(.col)))) %>%
+      
+    	ggplot(aes(.row, .col, fill = value)) +
+    	
+    	geom_raster() +
+    	facet_grid(cols = vars(roi)) +
+    	scale_fill_viridis_c(option = "magma") +
+    	theme(
+    	  axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1), 
+    	  legend.position = "top",
+    	  axis.title = element_blank(),
+    	  legend.text = element_text(size = 8)
+    	  ) +
+    	
+      labs(
+        title = paste0("fdmask 0.9, component: ", component.i, ", measure: ", stat.i)
+      )
+    
+    print(p_bar)
+    
+    
+  }
+  
+}
 
 
 
 ```
+
