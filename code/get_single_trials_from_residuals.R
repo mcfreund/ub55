@@ -1,23 +1,204 @@
+## setup ----
+
 source(here::here("code", "_packages.R"))
 source(here("code", "read-behav.R"))
 source(here("code", "_vars.R"))
 source(here("code", "_atlases.R"))
 source(here("code", "_settings.R"))
 source(here("code", "_funs.R"))
+library(tibble)
 
-glminfo <- data.table(
+glminfo_null <- data.table(
+  task = c("Axcpt", "Cuedts", "Stern", "Stroop"),
+  name.glm = c("baseline_null")
+)
+
+glminfo_events <- data.table(
   task = c("Axcpt", "Cuedts", "Stern", "Stroop"),
   name.glm = c(
-    "baseline_null"
-  ),
-  stringsAsFactors = FALSE
+    "baseline_Cues_EVENTS_censored_shifted",
+    "baseline_CongruencySwitch_EVENTS_censored_shifted",
+    "baseline_ListLength_EVENTS_censored_shifted",
+    "baseline_Congruency_EVENTS_censored_shifted"
+  )
 )
 
 resid_type <- "errts"  ## "wherr" or "errts"
 
 
+target_trs <- list(
+  Axcpt = 8:10,
+  Cuedts = 9:11,
+  Stern = 12:14,
+  Stroop = 3:5
+)
 
-## read in design matrices
+# subjs <- subjs[!subjs %in% c("432332")]
+
+
+## run ----
+
+
+## 1. build averaging matrix A, of dimension trial by TR.
+## when applied to BOLD time series E (TR by vertex), A aggregates across target TRs within each trial.
+## that is, Z = A %*% E  is a trial-by-vertex matrix.
+## To do this, rows (TRs) of A must be >0 when the TR belongs to the target window of a given trial, 0 otherwise.
+## Further, rows must sum to one.
+
+
+
+## get trial info from design matrices
+
+## read in design matrices (all subjs):
+
+fname.xmat <- here("out", "glms", paste0("xmats_", glminfo_events$task, "_", glminfo_events$name.glm, ".RDS"))
+X_list <- setNames(lapply(fname.xmat, readRDS), glminfo_events$task)
+
+n.trials <- c(Axcpt = 72, Cuedts = 51, Stern = 45, Stroop = 108)  ## number of trials (events) per subj*run
+
+
+## initialize list for holding A matrices:
+
+A_list <- expand.grid(
+  task = tasks,
+  subj = subjs,
+  run = 1:2,
+  mat = vector("list", 1)
+)
+A_list <- as_tibble(A_list)
+
+
+for (task.i in seq_along(tasks)) {
+  # task.i = 1
+  
+  ## get event regressors:
+  
+  X <- X_list[[task.i]]
+  X <- X[, -grep("Pol|block|movregs", colnames(X)), , ]
+  X <- X > 0.9  ## threshold (b/c some non-'active' TRs will nevertheless have >0 value, though quite small)
+  
+  
+  ## get matrix that dummy codes for target TR windows:
+  
+  targets <- X[, grep(paste0("#", target_trs[[task.i]], "$", collapse = "|"), colnames(X)), , ]
+  
+  
+  ## create averaging matrix A per subj*run:
+  
+  for (subj.i in seq_along(subjs)) {
+    # subj.i <- 1; run.i <- 1
+    
+    name.subj.i <- subjs[subj.i]
+    
+    if (name.subj.i == "432332") next
+    
+    for (run.i in 1:2) {
+      
+      
+      A <- matrix(
+        0, 
+        nrow = n.trials[task.i], ncol = n.trs[task.i]/2, 
+        dimnames = list(trial = paste0("trial_", 1:n.trials[task.i]), tr = NULL)
+      )
+      
+      targets_i <- targets[, , name.subj.i, run.i]
+
+      
+      ## loop over rows (TRs) of targets_i, filling in relevant columns of A:
+      
+      trial.i <- 1  ## start trial counter
+      two_trials_counter <- 0  ## start multiple simultaneous trials couter (see below)
+      # for (tr.i in seq_len(nrow(targets_i))) {
+      tr.i <- 0
+      while (tr.i < nrow(targets_i)) {  ## while loop for control over iteration (can repeat if necessary)
+        tr.i <- tr.i + 1  ## iterate tr
+        # print(tr.i)
+        
+        is_target_tr <- any(targets_i[tr.i, ])
+        if (!is_target_tr) next
+        
+        condition_tr_i <- gsub("#[0-9]*$", "", colnames(targets_i)[targets_i[tr.i, ]])  ## get name of cond, rm knot #
+        knot_tr_i <- as.numeric(gsub(".*#", "", colnames(targets_i)[targets_i[tr.i, ]]))  ## get knot #, remove name of cond
+        
+        ## handling cases when multiple trials have overlapping target TRs (in Stroop):
+        
+        has_multiple_targets <- length(condition_tr_i) > 1
+        # if (has_multiple_targets) stop("bad TR: multiple regressors are in 'target' window!")
+        if (has_multiple_targets) {
+          
+          if (length(condition_tr_i) == 2) {
+            ## when a double count/overlapping target trs is *first* encountered, we want to take the earliest knot.
+            ## then we want to iterate the trial count, but hold the tr.i back one iteration, so the later knot at tr.i
+            ## would be picked up on the next iteration.
+            ## on the subsequent iteration, we don't want to hold the trial count back.
+            ## so, we need to track whether this is the earlier or later knot (via is_first_of_two).
+            ## seems the only subj with this issue is 672756...
+
+            two_trials_counter <- two_trials_counter + 1
+            is_first_of_two <- two_trials_counter == 1  ## behavior only needs to change if two
+            
+            if (is_first_of_two) {
+              ind <- which.max(knot_tr_i)  ## take max b/c first knot of overlap will be a knot towards the end of the trial
+            } else {
+              ind <- which.min(knot_tr_i)
+            }
+            
+            condition_tr_i <- condition_tr_i[ind]
+            knot_tr_i <- knot_tr_i[ind]
+            
+            print(paste0("2 targets: ", tasks[task.i], " ", name.subj.i, ", tr ", tr.i))
+
+          } else stop("cant handle this right now")
+          
+        } else {
+          
+          ## for resetting counters (following )
+          two_trials_counter <- 0
+          is_first_of_two <- two_trials_counter == 1  ## behavior only needs to change if true
+          
+        }
+        
+        ## mark trial and save info:
+        
+        A[trial.i, tr.i] <- 1  ## mark trial
+        ## label row with condition and trial number info:
+        rownames(A)[trial.i] <- paste0(condition_tr_i, "_", formatC(knot_tr_i, width = 3, format = "d", flag = "0"))
+        
+        if (is_first_of_two) tr.i <- tr.i - 1  ## re-do this iteration to catch the second trial with target at this TR
+        
+        is_final_knot <- knot_tr_i == max(target_trs[[task.i]])  ## iterate trial counter if final knot
+        if (is_final_knot) trial.i <- trial.i + 1
+        
+      }
+      
+      ## normalize rows to sum to one:
+      
+      divisor <- rowSums(A)
+      divisor[divisor == 0] <- NA ## when this is zero, means TRs of the trial were fully censored due to motion
+      A <- sweep(A, 1, divisor, "/")
+      
+      is_unexpeted_res <- any(!unique(rowSums(A)) %in% c(1, NA))  ## a final check
+      if (is_unexpeted_res) stop("unexpected result: rows do not sum to one")
+      
+      
+      ## save:
+      
+      which.el <- which(A_list$task == tasks[task.i] & A_list$subj == subjs[subj.i] & A_list$run == run.i)
+      A_list$mat[[which.el]] <- A
+      
+    }
+  }
+  
+  
+  
+}
+
+
+
+
+## 2. apply A to residuals and save resulting trial-wise BOLD activity estimates.
+## TODO
+
 
 
 ## get residuals
