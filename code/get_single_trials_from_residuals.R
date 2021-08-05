@@ -1,5 +1,6 @@
 ## setup ----
 
+library(colorout)
 source(here::here("code", "_packages.R"))
 source(here("code", "read-behav.R"))
 source(here("code", "_vars.R"))
@@ -17,7 +18,8 @@ glminfo_events <- data.table(
   task = c("Axcpt", "Cuedts", "Stern", "Stroop"),
   name.glm = c(
     "baseline_Cues_EVENTS_censored_shifted",
-    "baseline_CongruencySwitch_EVENTS_censored_shifted",
+    "baseline_cueletnum_EVENTS_censored_shifted",
+    # "baseline_CongruencySwitch_EVENTS_censored_shifted",
     "baseline_ListLength_EVENTS_censored_shifted",
     "baseline_Congruency_EVENTS_censored_shifted"
   )
@@ -39,7 +41,7 @@ target_trs <- list(
 ## run ----
 
 
-## 1. build averaging matrix A, of dimension trial by TR.
+## 1. build averaging matrix A, of dimension trial by TR. ----
 ## when applied to BOLD time series E (TR by vertex), A aggregates across target TRs within each trial.
 ## that is, Z = A %*% E  is a trial-by-vertex matrix.
 ## To do this, rows (TRs) of A must be >0 when the TR belongs to the target window of a given trial, 0 otherwise.
@@ -54,7 +56,7 @@ target_trs <- list(
 fname.xmat <- here("out", "glms", paste0("xmats_", glminfo_events$task, "_", glminfo_events$name.glm, ".RDS"))
 X_list <- setNames(lapply(fname.xmat, readRDS), glminfo_events$task)
 
-n.trials <- c(Axcpt = 72, Cuedts = 51, Stern = 45, Stroop = 108)  ## number of trials (events) per subj*run
+n.trials <- c(Axcpt = 72, Cuedts = 54, Stern = 45, Stroop = 108)  ## number of trials (events) per subj*run
 
 
 ## initialize list for holding A matrices:
@@ -90,7 +92,7 @@ for (task.i in seq_along(tasks)) {
     
     name.subj.i <- subjs[subj.i]
     
-    if (name.subj.i == "432332") next
+    if (name.subj.i %in% c("432332", "DMCC5820265")) next
     
     for (run.i in 1:2) {
       
@@ -162,7 +164,8 @@ for (task.i in seq_along(tasks)) {
         
         A[trial.i, tr.i] <- 1  ## mark trial
         ## label row with condition and trial number info:
-        rownames(A)[trial.i] <- paste0(condition_tr_i, "_", formatC(knot_tr_i, width = 3, format = "d", flag = "0"))
+        # rownames(A)[trial.i] <- paste0(condition_tr_i, "_", formatC(trial.i, width = 3, format = "d", flag = "0"))
+        rownames(A)[trial.i] <- condition_tr_i
         
         if (is_first_of_two) tr.i <- tr.i - 1  ## re-do this iteration to catch the second trial with target at this TR
         
@@ -196,59 +199,77 @@ for (task.i in seq_along(tasks)) {
 
 
 
-## 2. apply A to residuals and save resulting trial-wise BOLD activity estimates.
-## TODO
+## 2. apply A to residuals and save resulting trial-wise BOLD activity estimates. ----
 
 
-
-## get residuals
-
-
-# subj.i = 1
-
-name.subj.i <- subjs[subj.i]
-
-
-## read residuals:
-
-E_list <- enlist(tasks)
-
-for (task.i in seq_along(tasks)) {
-  # task.i = 1
+cl <- makeCluster(n.core / 2)
+registerDoParallel(cl)
+res <- foreach(
+  subj.i = seq_along(subjs),
+  .final = function(x) setNames(x, subjs),
+  .verbose = TRUE,
+  .packages = c("data.table", "here", "mikeutils")
+) %dopar% {
+  # subj.i = 1
   
-  name.task.i <- glminfo[task.i]$task
-  name.glm.i <- glminfo[task.i]$name.glm
+  name.subj.i <- subjs[subj.i]
   
-  for (run.i in c(1, 2)) {
+  if (name.subj.i == "432332") return()
+      
+  for (task.i in seq_along(tasks)) {
+    # task.i = 1
+    
+    name.task.i <- glminfo_null[task.i]$task
+    name.glm.i <- glminfo_null[task.i]$name.glm
     
     
+
+    for (run.i in 1:2) {
+      # run.i = 1
+      
+      B <- array(
+        NA,
+        c(n.trials[task.i], n.vert, 2),
+        dimnames = list(trial = NULL, vertex = NULL)
+        )
+      
+      eps.name <- here(
+        "out", "glms", name.subj.i, "RESULTS", name.task.i, paste0(name.glm.i, "_", run.i),
+        paste0(resid_type, "_", name.subj.i, "_", run.i, "_", c("L", "R"), "_REML.func.gii")
+      )  ## LEFT then RIGHT
+      
+      if (any(!file.exists(eps.name))) return(NA)
+      
+      E <- cbind(
+        read_gifti2matrix(eps.name[1]),
+        read_gifti2matrix(eps.name[2])
+      )  ## LEFT then RIGHT
+      
+      dims.bad <- any(dim(E) != c(n.trs[name.task.i]/2, n.vert))
+      if (dims.bad) stop ("bad dims: error time-series")
+      
+      ii <- which(A_list$subj == subjs[subj.i] & A_list$task == tasks[task.i] & A_list$run == run.i)
+      A <- A_list$mat[[ii]]
+      
+      B <- A %*% E
+      ## store condition names as attribute so can be wrangled into array later:
+      attr(B, paste0("order", run.i)) <- rownames(A)
+      dimnames(B)$trial <- NULL
+      
+      saveRDS(
+        B,
+        here(
+          "out", "glms", name.subj.i, "RESULTS", name.task.i, paste0("baseline_null_", run.i), 
+          "errts_trials_target_epoch.RDS"
+          )
+        )
+      
+    }
+      
     
   }
-  
-  ## load residuals
-  
-  l <- enlist(c("run1", "run2"))
-  for (run.i in 1:2) {  ## test run
-    # run.i = 1
-    
-    eps.name <- here::here(
-      "out", "glms", name.subj.i, "RESULTS", name.task.i, paste0(name.glm.i, "_", run.i),
-      paste0(resid_type, "_", name.subj.i, "_", run.i, "_", c("L", "R"), "_REML.func.gii")
-    )  ## LEFT then RIGHT
-    
-    if (any(!file.exists(eps.name))) return(NA)
-    
-    l[[run.i]] <- cbind(
-      mikeutils::read_gifti2matrix(eps.name[1]),
-      mikeutils::read_gifti2matrix(eps.name[2])
-    )  ## LEFT then RIGHT
-    
-    dims.bad <- any(dim(E_list[[task.i]]) != c(n.trs[name.task.i]/2, n.vert))
-    if (dims.bad) stop ("bad dims: error time-series")
 
-  }
   
-  
-  
-  
-}
+} ## end subj loop
+stopCluster(cl)
+
