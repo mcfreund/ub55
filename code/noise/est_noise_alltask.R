@@ -1,33 +1,4 @@
-source(here::here("code", "_packages.R"))
-source(here("code", "read-behav.R"))
-source(here("code", "_vars.R"))
-source(here("code", "_atlases.R"))
-source(here("code", "_settings.R"))
-source(here("code", "_funs.R"))
 
-do.network <- TRUE
-
-glminfo <- data.frame(
-  task = c("Axcpt", "Cuedts", "Stern", "Stroop"),
-  name.glm = c(
-    "baseline_aggressive1_EVENTS_censored_shifted"
-  ),
-  stringsAsFactors = FALSE
-)
-glminfo <- as.data.table(glminfo)
-
-
-
-
-
-if (do.network) {
-  rois <- unique(get.network(parcellation$key))
-} else {
-  rois <- parcellation$key
-}
-
-
-(time.start <- Sys.time())
 
 ## loop over subjs in parallel ----
 
@@ -77,16 +48,19 @@ res <- foreach(
   
   ## loop over ROIs
   
-  l <- enlist(rois)
-  for (roi.i in seq_along(rois)) {
+  l <- enlist(names(rois))
+  for (roi.i in seq_along(l)) {
     # roi.i = 3
     
     ## mask:
+    name.roi.i <- names(rois)[roi.i]
     
-    which.parcels <- grep(rois[roi.i], parcellation$key)  ## works with both network and parcel level
+    which.parcels <- match(rois[[name.roi.i]], parcellation$key)  ## ACTUALLY works with both network and parcel level
+    ### which.parcels <- grep(rois[[name.roi.i]], parcellation$key)  ## BUG! do not un-comment! 2021-08-07
+    
     is.roi <- schaefer10k %in% which.parcels
     E_ii <- map(E_list, ~.x[, is.roi])
-
+    
     ## get vertices that have time-series variance in both runs:
     ## NB: filter by those that have time-series variance in EACH run? --- may need to split runs
     is.good.v <- rowSums(map_df(E_ii, ~apply(.x, 2, var) > .Machine$double.eps)) == 4
