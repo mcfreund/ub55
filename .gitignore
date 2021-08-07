@@ -22,3 +22,4 @@
 ## RDS files too large
 out/taskcoding/*RDS
 out/cuedts/*parcels400*RDS
+*_trials_target_epoch.RDS

@@ -25,7 +25,7 @@ glminfo_events <- data.table(
   )
 )
 
-resid_type <- "errts"  ## "wherr" or "errts"
+resid_type <- "wherr"  ## "wherr" or "errts"
 
 
 target_trs <- list(
@@ -260,7 +260,7 @@ res <- foreach(
         B,
         here(
           "out", "glms", name.subj.i, "RESULTS", name.task.i, paste0("baseline_null_", run.i), 
-          "errts_trials_target_epoch.RDS"
+          paste0(resid_type, "_trials_target_epoch.RDS")
           )
         )
       
