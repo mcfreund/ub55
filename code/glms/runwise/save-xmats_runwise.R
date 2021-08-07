@@ -6,7 +6,7 @@
 
 ## setup ----
 
-
+library(colorout)
 library(here)
 library(dplyr)
 library(tidyr)
@@ -25,18 +25,24 @@ source(here("code", "_vars.R"))
 
 ## build data.frame for looping
 
-dirs <- expand.grid(subj = subjs, task = tasks, session = "baseline", stringsAsFactors = FALSE)
 glminfo <- data.frame(
-  task = c("Axcpt", "Cuedts", "Stern", "Stroop", "Stroop"),
+  task = "Cuedts",
+  # task = c("Axcpt", "Cuedts", "Stern", "Stroop", "Stroop"),
   name.glm = c(
-    "Cues_EVENTS_censored_shifted", 
+    # "null"
+    "baseline_cueletnum_EVENTS_censored_shifted"
+    # "Cues_EVENTS_censored_shifted", 
     # "CongruencyIncentive_EVENTS_censored_shifted",
-    "CongruencySwitch_EVENTS_censored_shifted",
-    "ListLength_EVENTS_censored_shifted",
-    "Congruency_EVENTS_censored_shifted",
-    "fix-item_EVENTS_censored"
+    # "CongruencySwitch_EVENTS_censored_shifted",
+    # "ListLength_EVENTS_censored_shifted",
+    # "Congruency_EVENTS_censored_shifted",
+    # "fix-item_EVENTS_censored"
     )
 )
+
+tasks <- tasks[tasks %in% glminfo$task]
+
+dirs <- expand.grid(subj = subjs, task = tasks, session = "baseline", stringsAsFactors = FALSE)
 dirs <- full_join(dirs, glminfo, by = "task")
 dirs$name.glm <- paste0(dirs$session, "_", dirs$name.glm)
 dirs$run1 <- file.path(dir.analysis, dirs$subj, "RESULTS", dirs$task, paste0(dirs$name.glm, "_1"), "X_1.xmat.1D")
@@ -47,7 +53,7 @@ dirs$exists.xmat <- file.exists(dirs$fname.xmat)
 dirs$fname.censor <- dirs$fname.xmat %>% gsub("RESULTS", "INPUT_DATA", .) %>% gsub("/baseline_.*", "/baseline/movregs_FD_mask_", .)
 dirs$fname.censor <- paste0(dirs$fname.censor, dirs$run, ".txt")
 
-dirs <- filter(dirs, !subj %in% "432332")  ## for now, remove those that don't exist
+dirs <- filter(dirs, !subj %in% c("432332", "DMCC5820265"))  ## for now, remove those that don't exist
 
 dirs <- as.data.table(dirs)  ## for fast extracting
 
@@ -65,8 +71,10 @@ pb <- progress_bar$new(
   total = nrow(glminfo)*length(unique(dirs$subj)), clear = FALSE, width = 120
 )
 
+
+
 for (task.i in seq_along(tasks)) {
-  # task.i = 4
+  # task.i = 1
   
   name.task.i <- tasks[task.i]
   
@@ -101,7 +109,7 @@ for (task.i in seq_along(tasks)) {
       
       name.subj.i <- subjs[subj.i]
       
-      if (name.subj.i == "432332") next
+      if (name.subj.i %in% c("432332", "DMCC5820265")) next
       
       fname.i <- dirs[subj == name.subj.i & task == name.task.i & name.glm == name.glm.i]$fname.xmat
       

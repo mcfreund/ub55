@@ -72,6 +72,7 @@ gc()
 
 d <- bind_rows(d, .id = "task")
 
+n.cores <- parallel::detectCores()
 
 ```
 
@@ -566,6 +567,80 @@ term.i <- "stroop"
 
 
 ```
+
+
+# split-half reliability
+
+```{r}
+a <- lmer(
+  b ~ term*run + (term*run | subj), l$LH_DorsAttn_Post_10[term %in% c("biasInCon", "biasCon")]
+  )
+summary(a)
+
+m <- rbind(c(0, 1, 0, 0), c(0, 1, 0, 1))  ## contrast matrix
+
+tau <- VarCorr(a)$subj
+(tau <- m %*% tau %*% t(m))
+(r <- cov2cor(tau)[1, 2])
+svd(VarCorr(a)$subj, nv = 0L)$d
+
+
+tcrossprod(as.matrix(coef(a)$subj), m)
+cor(tcrossprod(as.matrix(coef(a)$subj), m))
+plot(tcrossprod(as.matrix(coef(a)$subj), m))
+
+
+
+
+
+
+# l <- split(d, d$parcel)
+m0_run <- mclapply(
+  l, 
+  function(x) lmer(b ~ 0 + term + (0 + term  | subj), x),
+  mc.cores = n.cores / 2
+  )
+
+
+## contrast coefficients
+
+h0 <- mclapply(m0, function(x) multcomp::glht(x, A), mc.cores = n.cores / 2)
+h0 <- mclapply(
+  h0, 
+  function(x) {
+    
+    a <- summary(x, test = adjusted("none"))$test
+    
+    data.table(
+      estimate = a$coefficients,
+      se = a$sigma,
+      statistic = a$tstat,
+      p.value = a$pvalue,
+      term = names(a$coefficients)
+    )
+
+    },
+  
+  mc.cores = n.cores / 2
+  
+)
+
+stats.group.m0 <- rbindlist(h0, idcol = "parcel")
+
+stats.group.m0 %<>%
+  group_by(term) %>%
+  mutate(
+    p.fdr = p.adjust(p.value, "fdr"),
+    hemi = substr(parcel, 1, 1),
+    num.roi = row_number()
+    )
+
+
+
+
+
+```
+
 
 
 
