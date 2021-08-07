@@ -1,3 +1,5 @@
+# source("code/noise/est_noise_alltask_master.R")
+
 library(colorout)
 source(here::here("code", "_packages.R"))
 source(here("code", "read-behav.R"))
@@ -26,6 +28,6 @@ for (do.network in c(TRUE, FALSE)) {
     rois <- split(parcellation$key, parcellation$key)
   }
   
-  source(here("code", "est_noise_alltask.R"))
+  source(here("code", "noise", "est_noise_alltask.R"))
   
 }
